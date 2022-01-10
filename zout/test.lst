@@ -1,0 +1,25 @@
+   1:				
+   2:     -	0000          	init:
+   3:    0+7	0000  3E00    	    LD A,0x00
+   4:    7+7	0002  0600    	    LD B,0x00
+   5:     -	0004          	loop1:
+   6:   14+7	0004  C601    	    ADD A,1
+   7:   21+7+5	0006  30FC    	    JR NC, loop1
+**** test.asm ****
+   8:   28+4	0008  76      	    halt
+
+
+
+Statistics:
+
+     3	passes
+     0	jr promotions
+     2	symbols
+     9	bytes
+
+
+
+Symbol Table:
+
+init            00        0
+loop1           04        4

@@ -1,0 +1,32 @@
+   1:				
+   2:     -	0000          	        org 0x0000
+   3:     -	0000          	init:
+   4:    0+7	0000  3E00    	        LD A,0x00
+   5:    7+7	0002  0600    	        LD B,0x00
+   6:     -	0004          	loop1:
+   7:   14+7	0004  C601    	        ADD A,1
+   8:   21+7+5	0006  30FC    	        JR NC, loop1
+   9:     -	0008          	output:
+  10:   28+4	0008  78      	        LD A,B
+  11:   32+11	0009  D320    	        OUT (0x20),A
+  12:   43+7	000B  EEFF    	        XOR 0xFF
+  13:   50+4	000D  47      	        LD B,A
+  14:   54+7	000E  3E00    	        LD A,0x00
+  15:   61+12	0010  18F2    	        JR loop1
+
+
+
+Statistics:
+
+     3	passes
+     0	jr promotions
+     3	symbols
+    18	bytes
+
+
+
+Symbol Table:
+
+init            00        0
+loop1           04        4
+output          08        8
