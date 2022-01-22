@@ -14,6 +14,9 @@ CMD_CRS_SPEED equ 0xE000
 .include "conversions.s"
 .include "console.s"
 
+; include subroutines
+.include "sub_soundtest.s"
+
 ;Strings
 STRINGS:
     org 0x0600
@@ -50,7 +53,9 @@ MSG_CLEAR:
 
 CMD_PS_HD   db 'hd $',0
 CMD_PS_PT   db 'pt $',0
+
 CMD_PS_EXEC db 'exec $',0
+CMD_PS_CALL db 'call $',0
 CMD_PS_MGET db 'mget $',0
 CMD_PS_MSET db 'mset $',0
 CMD_PS_HELP db '?',0
@@ -458,6 +463,7 @@ CONSOLE_PARSE_LINE_EXEC:
     LD SP,0x7FFF
     JP HL
 
+
 CONSOLE_PARSE_LINE_MGET:
     LD DE,[CMD_PS_MGET]
     LD HL,MEM_PROMPT_START
@@ -561,11 +567,25 @@ CONSOLE_PARSE_LINE_IOSET:
     
     LD BC,MEM_PROMPT_START + 7
     CALL DHEX_TO_BYTE
-    LD C,A
+    LD H,A
 
     LD BC,MEM_PROMPT_START + 10
     CALL DHEX_TO_BYTE
 
+    ;; DEBUG START
+    PUSH AF
+
+    LD A,' '
+    out (IO_SIO0B_D),A
+    call TX_EMP
+
+    LD A,H
+    CALL PRINT_A_HEX
+
+    POP AF
+    ;; DEBUG END
+
+    LD C,H
     OUT (C),A
 
     LD A,13
@@ -676,8 +696,8 @@ HEX_TO_INVALID_2:
     RET
 
 ; BC Contains Address to string
-; D is 0xFF if error
-; D is 0x00 if okay
+; E is 0xFF if error
+; E is 0x00 if okay
 DHEX_TO_BYTE:
     PUSH BC
     ; Load First Byte
@@ -697,10 +717,10 @@ DHEX_TO_BYTE:
     OR D ; Merge
     
     POP BC
-    LD D,0x00
+    LD E,0x00
     RET
 DHEX_TO_BYTE_FAILED:
-    LD D,0xFF
+    LD E,0xFF
     ;LD A,0x00
     POP BC
     RET

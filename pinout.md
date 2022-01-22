@@ -5,7 +5,7 @@
 Head1
 
     NC      CTC_CLK
-    NC      NC
+    NC      HALT
     NC      BUSACK
     NC      BUSREQ
     NC      RESET

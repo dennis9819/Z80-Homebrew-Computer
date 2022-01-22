@@ -1,0 +1,36 @@
+%SIGNAL
+PIN   2 =  A0 
+PIN   3 =  A1 
+PIN   4 =  A2 
+PIN   5 =  A3 
+PIN   6 =  A4 
+PIN   7 =  A5 
+PIN   8 =  A6 
+PIN   9 =  A7 
+PIN  17 =  AY1_BC1 
+PIN  16 =  AY1_BDRI 
+PIN  19 =  AY2_BC1 
+PIN  18 =  AY2_BDRI 
+PIN   1 =  IOREQ 
+PIN  11 =  WR 
+%END
+
+%FIELD
+%END
+
+%EQUATION
+AY1_BC1 =>
+    A0 & !A1 & !A2 & !A3 & !A4 & !A5 & A6 & !A7 & !IOREQ & WR
+  # !A0 & !A1 & !A2 & !A3 & !A4 & !A5 & A6 & !A7 & !IOREQ & !WR
+
+AY1_BDRI =>
+    !A1 & !A2 & !A3 & !A4 & !A5 & A6 & !A7 & !IOREQ & !WR
+
+AY2_BC1 =>
+    A0 & A1 & !A2 & !A3 & !A4 & !A5 & A6 & !A7 & !IOREQ & WR
+  # !A0 & A1 & !A2 & !A3 & !A4 & !A5 & A6 & !A7 & !IOREQ & !WR
+
+AY2_BDRI =>
+    A1 & !A2 & !A3 & !A4 & !A5 & A6 & !A7 & !IOREQ & !WR
+
+%END

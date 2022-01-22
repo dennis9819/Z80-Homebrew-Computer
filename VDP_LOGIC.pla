@@ -1,0 +1,29 @@
+# Berkeley PLA format generated using
+#
+# CUPL(WM)        5.0a Serial# 60008009
+# Device          g16v8as  Library DLIB-h-40-2
+# Created         Sun Jan 16 23:26:23 2022
+# Name            XXXXX
+# Partno          XXXXX
+# Revision        XX
+# Date            XX/XX/XX
+# Designer        XXXXX
+# Company         XXXXX
+# Assembly        XXXXX
+# Location        XXXXX
+#
+# Inputs  A0 A1 A2 A3 
+#         A4 A5 A6 A7 
+#         AY1_BC1 AY1_BDRI AY2_BC1 AY2_BDRI 
+#         IOREQ WR 
+# Outputs AY1_BC1 AY1_BDRI AY2_BC1 AY2_BDRI 
+.i 14
+.o 4
+.p 6
+10000010----01 1~~~
+00000010----00 1~~~
+-0000010----00 ~1~~
+11000010----01 ~~1~
+01000010----00 ~~1~
+-1000010----00 ~~~1
+.end

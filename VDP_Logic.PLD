@@ -1,0 +1,39 @@
+Name       XXXXX;
+Partno     XXXXX;
+Date       XX/XX/XX;
+Revision   XX;
+Designer   XXXXX;
+Company    XXXXX;
+Assembly   XXXXX;
+Location   XXXXX;
+DEVICE g16v8a;
+
+Pin 2 = A0;
+Pin 3 = A1;
+Pin 4 = A2;
+Pin 5 = A3;
+Pin 6 = A4;
+Pin 7 = A5;
+Pin 8 = A6;
+Pin 9 = A7;
+Pin 1 = IOREQ;
+Pin 11 = WR;
+
+
+Pin 16 = AY1_BDRI;
+Pin 17 = AY1_BC1;
+
+
+Pin 18 = AY2_BDRI;
+Pin 19 = AY2_BC1;
+
+
+AY1_BDRI  = !IOREQ & !A7 & A6 & !A5 & !A4 & !A3 & !A2 & !A1 & !WR;
+
+AY1_BC1  = (!IOREQ & !A7 & A6 & !A5 & !A4 & !A3 & !A2 & !A1 & A0 & WR) # (!IOREQ & !A7 & A6 & !A5 & !A4 & !A3 & !A2 & !A1 & !A0 & !WR) ;
+
+
+AY2_BDRI  = !IOREQ & !A7 & A6 & !A5 & !A4 & !A3 & !A2 & A1 & !WR;
+
+AY2_BC1  = (!IOREQ & !A7 & A6 & !A5 & !A4 & !A3 & !A2 & A1 & A0 & WR) # (!IOREQ & !A7 & A6 & !A5 & !A4 & !A3 & !A2 & A1 & !A0 & !WR) ;
+
