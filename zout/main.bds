@@ -409,6 +409,10 @@ binary-debuggable-source
 08a7 08a7 s ; include subroutines
 08a7 08a7 s .include "sub_soundtest.s"
 08a7 08a7 f sub_soundtest.s
+08a7 08a7 s MEM_MUSIC_POINTER equ 0x40F0
+08a7 08a7 s MEM_MUSIC_DELAY equ 0x40F2
+08a7 08a7 s MEM_MUSIC_STATE equ 0x40F3
+08a7 08a7 s 
 08a7 08a7 s SUB_SOUNDCHECK:
 0a00 0a00 s     org 0x0A00
 0a00 0a00 s     ; turn on channel A
@@ -418,7 +422,7 @@ binary-debuggable-source
 0a02 0a02 d 3e0f
 0a04 0a02 u 02 01
 0a02 0a02 s     LD	  A,0x0F	; Volume channel A full
-0a04 0a04 d cd670a
+0a04 0a04 d cdde0a
 0a07 0a04 u 03 01
 0a04 0a04 s     CALL AY0_WRITE_REG
 0a07 0a07 s 
@@ -428,7 +432,7 @@ binary-debuggable-source
 0a09 0a09 d 3e5d
 0a0b 0a09 u 02 01
 0a09 0a09 s     LD	  A,0x5D	; Write #93 into register #0
-0a0b 0a0b d cd670a
+0a0b 0a0b d cdde0a
 0a0e 0a0b u 03 01
 0a0b 0a0b s     CALL AY0_WRITE_REG	
 0a0e 0a0e s 
@@ -438,7 +442,7 @@ binary-debuggable-source
 0a10 0a10 d 3e0d
 0a12 0a10 u 02 01
 0a10 0a10 s     LD	  A,0x0D	; Write #13 into register #1
-0a12 0a12 d cd670a
+0a12 0a12 d cdde0a
 0a15 0a12 u 03 01
 0a12 0a12 s     CALL AY0_WRITE_REG
 0a15 0a15 s 
@@ -448,13 +452,13 @@ binary-debuggable-source
 0a17 0a17 d 3e3e
 0a19 0a17 u 02 01
 0a17 0a17 s     LD	  A,0x3E	; Enable output Channel A (0011 1110)
-0a19 0a19 d cd670a
+0a19 0a19 d cdde0a
 0a1c 0a19 u 03 01
 0a19 0a19 s     CALL AY0_WRITE_REG
 0a1c 0a1c s 
 0a1c 0a1c s 
 0a1c 0a1c s 
-0a1c 0a1c d 016f0a
+0a1c 0a1c d 01e60a
 0a1f 0a1c u 03 01
 0a1c 0a1c s     LD BC, [STR_SOUNDCHECK_DONE]
 0a1f 0a1f d cd3a08
@@ -468,7 +472,7 @@ binary-debuggable-source
 0a25 0a25 s SUB_PLAY:
 0a30 0a30 s     org 0x0A30
 0a30 0a30 s 
-0a30 0a30 d 01970a
+0a30 0a30 d 010e0b
 0a33 0a30 u 03 01
 0a30 0a30 s     LD BC,[tune_test1]
 0a33 0a33 s 
@@ -519,7 +523,7 @@ binary-debuggable-source
 0a46 0a46 s     JR SUB_PLAY_LOOP
 0a48 0a48 s 
 0a48 0a48 s SUB_PLAY_EXIT:
-0a48 0a48 d 01840a
+0a48 0a48 d 01fb0a
 0a4b 0a48 u 03 01
 0a48 0a48 s     LD BC, [STR_PLAYBACK_DONE]
 0a4b 0a4b d cd3a08
@@ -528,6 +532,7 @@ binary-debuggable-source
 0a4e 0a4e d c37801
 0a51 0a4e u 03 01
 0a4e 0a4e s     JP CONSOLE_PROMPT
+0a51 0a51 s 
 0a51 0a51 s 
 0a51 0a51 s PLAY_DELAY:
 0a51 0a51 d 03
@@ -578,84 +583,366 @@ binary-debuggable-source
 0a67 0a64 u 03 01
 0a64 0a64 s     JP SUB_PLAY_LOOP
 0a67 0a67 s 
-0a67 0a67 s ; A contains Data
-0a67 0a67 s ; C Contains Addr
-0a67 0a67 s AY0_WRITE_REG:
-0a67 0a67 d 47
-0a68 0a67 u 01 01
-0a67 0a67 s     LD B,A
-0a68 0a68 d 7a
-0a69 0a68 u 01 01
-0a68 0a68 s     LD A,D
-0a69 0a69 d d340
-0a6b 0a69 u 02 01
-0a69 0a69 s     OUT (IO_AY0_ADDR),A
-0a6b 0a6b d 78
-0a6c 0a6b u 01 01
-0a6b 0a6b s     LD A,B
-0a6c 0a6c d d341
+0a67 0a67 s 
+0a67 0a67 s ; Start Addr = MEM_MUSIC_POINTER
+0a67 0a67 s SUB_PLAY_CTC:
+0a67 0a67 d 3e00
+0a69 0a67 u 02 01
+0a67 0a67 s     LD A,0x00
+0a69 0a69 d 32f240
+0a6c 0a69 u 03 01
+0a69 0a69 s     LD (MEM_MUSIC_DELAY),A  ;Reset delay counter
+0a6c 0a6c d 3e01
 0a6e 0a6c u 02 01
-0a6c 0a6c s     OUT (IO_AY0_DATA),A
-0a6e 0a6e d c9
-0a6f 0a6e u 01 01
-0a6e 0a6e s     RET
-0a6f 0a6f s     
-0a6f 0a6f s 
-0a6f 0a6f s STR_SOUNDCHECK_DONE:
-0a6f 0a6f d 0d0a536f756e64636865636b20646f6e65210d0a00
-0a84 0a6f u 15 02
-0a6f 0a6f s     db 13,10,"Soundcheck done!",13,10,0
-0a84 0a84 s STR_PLAYBACK_DONE:
-0a84 0a84 d 0d0a506c61796261636b20646f6e65210d0a00
-0a97 0a84 u 13 02
-0a84 0a84 s     db 13,10,"Playback done!",13,10,0
-0a97 0a97 s 
-0a97 0a97 s .include "tune_test1.s"
-0a97 0a97 f tune_test1.s
-0a97 0a97 s tune_test1:
-0a97 0a97 s     ;commands are a set of two bytes each
-0a97 0a97 s     ;byte 0 register
-0a97 0a97 s     ;byte 1 data
-0a97 0a97 s     ;if byte 0 is 10h, byte 1 is delay
-0a97 0a97 s     ;if byte FF then exit
-0a97 0a97 d 080f
-0a99 0a97 u 02 02
-0a97 0a97 s     db 0x08,0x0F ; R08 - Ch A Amplitude
-0a99 0a99 d 00ff
-0a9b 0a99 u 02 02
-0a99 0a99 s     db 0x00,0xFF ; R00 - Ch A Tone Period
-0a9b 0a9b d 0104
-0a9d 0a9b u 02 02
-0a9b 0a9b s     db 0x01,0x04 ; R01 - Ch A Tone Period
-0a9d 0a9d d 073e
-0a9f 0a9d u 02 02
-0a9d 0a9d s     db 0x07,0x3E ; R07 - Enable 
-0a9f 0a9f d 10ff
-0aa1 0a9f u 02 02
-0a9f 0a9f s     db 0x10,0xFF ; Delay
-0aa1 0aa1 d 0107
-0aa3 0aa1 u 02 02
-0aa1 0aa1 s     db 0x01,0x07 ; R01 - Ch A Tone Period
-0aa3 0aa3 d 10ff
-0aa5 0aa3 u 02 02
-0aa3 0aa3 s     db 0x10,0xFF ; Delay
-0aa5 0aa5 d 0103
-0aa7 0aa5 u 02 02
-0aa5 0aa5 s     db 0x01,0x03 ; R01 - Ch A Tone Period
-0aa7 0aa7 d 10ff
-0aa9 0aa7 u 02 02
-0aa7 0aa7 s     db 0x10,0xFF ; Delay
-0aa9 0aa9 d 0800
-0aab 0aa9 u 02 02
-0aa9 0aa9 s     db 0x08,0x00 ; R08 - Ch A Amplitude
-0aab 0aab f functions/sub_soundtest.s
-0aab 0aab d ff
-0aac 0aab u 01 02
-0aab 0aab s     db 0xFF      ; END
-0aac 0aac f main.asm
-0aac 0aac s 
-0aac 0aac s ;Strings
-0aac 0aac s STRINGS:
+0a6c 0a6c s     LD A,0x01
+0a6e 0a6e d 32f340
+0a71 0a6e u 03 01
+0a6e 0a6e s     LD (MEM_MUSIC_STATE),A  ; Set playback-status to 0x01 = Running
+0a71 0a71 d 010e0b
+0a74 0a71 u 03 01
+0a71 0a71 s     LD BC,[tune_test1]
+0a74 0a74 d ed43f040
+0a78 0a74 u 04 01
+0a74 0a74 s     LD (MEM_MUSIC_POINTER), BC  ; Preload Music Counter
+0a78 0a78 s     ; Set CTC Ch3 Interrupt Vector
+0a78 0a78 d 3e10
+0a7a 0a78 u 02 01
+0a78 0a78 s     LD A,10h    ; it vector defined in bit 7­3,bit 2­1 don't care, bit 0 = 0
+0a7a 0a7a d d300
+0a7c 0a7a u 02 01
+0a7a 0a7a s     OUT (IO_CTC0_C0),A
+0a7c 0a7c s     ; Init CTC Channel 3
+0a7c 0a7c d 3ea7
+0a7e 0a7c u 02 01
+0a7c 0a7c s     LD A,10100111b
+0a7e 0a7e d d302
+0a80 0a7e u 02 01
+0a7e 0a7e s     OUT (IO_CTC0_C2),A
+0a80 0a80 d 3e34
+0a82 0a80 u 02 01
+0a80 0a80 s     LD A,0x34 ; 55Hz ISR
+0a82 0a82 d d302
+0a84 0a82 u 02 01
+0a82 0a82 s     OUT (IO_CTC0_C2),A
+0a84 0a84 s 
+0a84 0a84 d 3e00
+0a86 0a84 u 02 01
+0a84 0a84 s     LD A,0
+0a86 0a86 d ed47
+0a88 0a86 u 02 01
+0a86 0a86 s     LD I,A  ;load I reg with zero
+0a88 0a88 d ed5e
+0a8a 0a88 u 02 01
+0a88 0a88 s     IM 2    ;set int mode 2
+0a8a 0a8a d fb
+0a8b 0a8a u 01 01
+0a8a 0a8a s     EI  ; Enable Interrupts
+0a8b 0a8b s     ;JP CONSOLE_PROMPT
+0a8b 0a8b s 
+0a8b 0a8b s 
+0a8b 0a8b s SUB_PLAY_CTC_LOOP:
+0a8b 0a8b d 3af340
+0a8e 0a8b u 03 01
+0a8b 0a8b s     LD A,(MEM_MUSIC_STATE)
+0a8e 0a8e d a7
+0a8f 0a8e u 01 01
+0a8e 0a8e s     AND A
+0a8f 0a8f d 00
+0a90 0a8f u 01 01
+0a8f 0a8f s     NOP
+0a90 0a90 d 20f9
+0a92 0a90 u 02 01
+0a90 0a90 s     JR NZ, SUB_PLAY_CTC_LOOP    ; Loop as long as Status is not 0x00
+0a92 0a92 s 
+0a92 0a92 s SUB_PLAY_CTC_END:
+0a92 0a92 d f3
+0a93 0a92 u 01 01
+0a92 0a92 s     DI
+0a93 0a93 d 3e00
+0a95 0a93 u 02 01
+0a93 0a93 s     LD A,0x00           ; Disable CTC2
+0a95 0a95 d d302
+0a97 0a95 u 02 01
+0a95 0a95 s     OUT (IO_CTC0_C2),A
+0a97 0a97 s     
+0a97 0a97 d 01fb0a
+0a9a 0a97 u 03 01
+0a97 0a97 s     LD BC, [STR_PLAYBACK_DONE]
+0a9a 0a9a d cd3a08
+0a9d 0a9a u 03 01
+0a9a 0a9a s     CALL CONSOLE_PRINTSTR
+0a9d 0a9d d c37801
+0aa0 0a9d u 03 01
+0a9d 0a9d s     JP CONSOLE_PROMPT
+0aa0 0aa0 s 
+0aa0 0aa0 s 
+0aa0 0aa0 s ; Music Interrupt Service Routine
+0aa0 0aa0 s SUB_PLAY_CTC_ISR:
+0aa0 0aa0 d f3
+0aa1 0aa0 u 01 01
+0aa0 0aa0 s     DI          ; Disable INT and swap registers
+0aa1 0aa1 d 08
+0aa2 0aa1 u 01 01
+0aa1 0aa1 s     EX AF,AF'   ;
+0aa2 0aa2 d d9
+0aa3 0aa2 u 01 01
+0aa2 0aa2 s     EXX         ;
+0aa3 0aa3 s 
+0aa3 0aa3 s     ; Check if delay
+0aa3 0aa3 d 3af240
+0aa6 0aa3 u 03 01
+0aa3 0aa3 s     LD A,(MEM_MUSIC_DELAY)
+0aa6 0aa6 d a7
+0aa7 0aa6 u 01 01
+0aa6 0aa6 s     AND A                       ; If Countdown == 0
+0aa7 0aa7 d 2806
+0aa9 0aa7 u 02 01
+0aa7 0aa7 s     JR Z, SUB_PLAY_CTC_ISR_CONT ; Execute SUB_PLAY_CTC_ISR_CONT
+0aa9 0aa9 s                                 ; Else continue with delay routine
+0aa9 0aa9 d 3d
+0aaa 0aa9 u 01 01
+0aa9 0aa9 s     DEC A
+0aaa 0aaa d 32f240
+0aad 0aaa u 03 01
+0aaa 0aaa s     LD (MEM_MUSIC_DELAY),A      ; Dec Delay and store to RAM
+0aad 0aad d 1817
+0aaf 0aad u 02 01
+0aad 0aad s     JR SUB_PLAY_CTC_ISR_END     ; Always end ISR
+0aaf 0aaf s 
+0aaf 0aaf s     ; Playback routine
+0aaf 0aaf s SUB_PLAY_CTC_ISR_CONT:
+0aaf 0aaf d ed4bf040
+0ab3 0aaf u 04 01
+0aaf 0aaf s     LD BC,(MEM_MUSIC_POINTER)
+0ab3 0ab3 s SUB_PLAY_CTC_ISR_CONT_LOOP:
+0ab3 0ab3 d 0a
+0ab4 0ab3 u 01 01
+0ab3 0ab3 s     LD A,(BC)   ; Load first byte of Instruction
+0ab4 0ab4 d 57
+0ab5 0ab4 u 01 01
+0ab4 0ab4 s     LD D,A      ; Backup A (Register Addr)
+0ab5 0ab5 s     
+0ab5 0ab5 d 3c
+0ab6 0ab5 u 01 01
+0ab5 0ab5 s     INC A; Test if FF
+0ab6 0ab6 d 281f
+0ab8 0ab6 u 02 01
+0ab6 0ab6 s     JR Z, SUB_PLAY_CTC_ISR_EXIT_RTE ; Exit on 0xFF
+0ab8 0ab8 s 
+0ab8 0ab8 d fe11
+0aba 0ab8 u 02 01
+0ab8 0ab8 s     CP 0x11
+0aba 0aba d 280f
+0abc 0aba u 02 01
+0aba 0aba s     JR Z, SUB_PLAY_CTC_ISR_INIT_DELAY; Delay if 0x10
+0abc 0abc s 
+0abc 0abc s     ; Execute Instruction
+0abc 0abc d 7a
+0abd 0abc u 01 01
+0abc 0abc s     LD A,D          
+0abd 0abd d d340
+0abf 0abd u 02 01
+0abd 0abd s     OUT (IO_AY0_ADDR),A ; Set Register Addr (1st byte)
+0abf 0abf d 03
+0ac0 0abf u 01 01
+0abf 0abf s     INC BC
+0ac0 0ac0 d 0a
+0ac1 0ac0 u 01 01
+0ac0 0ac0 s     LD A,(BC)
+0ac1 0ac1 d d341
+0ac3 0ac1 u 02 01
+0ac1 0ac1 s     OUT (IO_AY0_DATA),A ; Set Data Register (2nd byte)
+0ac3 0ac3 d 03
+0ac4 0ac3 u 01 01
+0ac3 0ac3 s     INC BC
+0ac4 0ac4 d 18ed
+0ac6 0ac4 u 02 01
+0ac4 0ac4 s     JR SUB_PLAY_CTC_ISR_CONT_LOOP
+0ac6 0ac6 s 
+0ac6 0ac6 s SUB_PLAY_CTC_ISR_END:
+0ac6 0ac6 d d9
+0ac7 0ac6 u 01 01
+0ac6 0ac6 s     EXX         ; swap registers and enable INT
+0ac7 0ac7 d 08
+0ac8 0ac7 u 01 01
+0ac7 0ac7 s     EX AF,AF'   ;
+0ac8 0ac8 d fb
+0ac9 0ac8 u 01 01
+0ac8 0ac8 s     EI          ;
+0ac9 0ac9 d ed4d
+0acb 0ac9 u 02 01
+0ac9 0ac9 s     RETI        ; Exit ISR
+0acb 0acb s 
+0acb 0acb s SUB_PLAY_CTC_ISR_INIT_DELAY:
+0acb 0acb d 03
+0acc 0acb u 01 01
+0acb 0acb s     INC BC
+0acc 0acc d 0a
+0acd 0acc u 01 01
+0acc 0acc s     LD A,(BC)
+0acd 0acd d 32f240
+0ad0 0acd u 03 01
+0acd 0acd s     LD (MEM_MUSIC_DELAY),A      ; Store delay to RAM
+0ad0 0ad0 d 03
+0ad1 0ad0 u 01 01
+0ad0 0ad0 s     INC BC
+0ad1 0ad1 d ed43f040
+0ad5 0ad1 u 04 01
+0ad1 0ad1 s     LD (MEM_MUSIC_POINTER),BC   ; Update Music Pointer in Ram
+0ad5 0ad5 d 18ef
+0ad7 0ad5 u 02 01
+0ad5 0ad5 s     JR SUB_PLAY_CTC_ISR_END
+0ad7 0ad7 s 
+0ad7 0ad7 s SUB_PLAY_CTC_ISR_EXIT_RTE:  ; Called when end of song is reached
+0ad7 0ad7 d 3e00
+0ad9 0ad7 u 02 01
+0ad7 0ad7 s     LD A,0x00
+0ad9 0ad9 d 32f340
+0adc 0ad9 u 03 01
+0ad9 0ad9 s     LD (MEM_MUSIC_STATE),A  ; Set playback-status to 0x00 = Stopped
+0adc 0adc d 18e8
+0ade 0adc u 02 01
+0adc 0adc s     JR SUB_PLAY_CTC_ISR_END
+0ade 0ade s 
+0ade 0ade s ; A contains Data
+0ade 0ade s ; C Contains Addr
+0ade 0ade s AY0_WRITE_REG:
+0ade 0ade d 47
+0adf 0ade u 01 01
+0ade 0ade s     LD B,A
+0adf 0adf d 7a
+0ae0 0adf u 01 01
+0adf 0adf s     LD A,D
+0ae0 0ae0 d d340
+0ae2 0ae0 u 02 01
+0ae0 0ae0 s     OUT (IO_AY0_ADDR),A
+0ae2 0ae2 d 78
+0ae3 0ae2 u 01 01
+0ae2 0ae2 s     LD A,B
+0ae3 0ae3 d d341
+0ae5 0ae3 u 02 01
+0ae3 0ae3 s     OUT (IO_AY0_DATA),A
+0ae5 0ae5 d c9
+0ae6 0ae5 u 01 01
+0ae5 0ae5 s     RET
+0ae6 0ae6 s     
+0ae6 0ae6 s 
+0ae6 0ae6 s STR_SOUNDCHECK_DONE:
+0ae6 0ae6 d 0d0a536f756e64636865636b20646f6e65210d0a00
+0afb 0ae6 u 15 02
+0ae6 0ae6 s     db 13,10,"Soundcheck done!",13,10,0
+0afb 0afb s STR_PLAYBACK_DONE:
+0afb 0afb d 0d0a506c61796261636b20646f6e65210d0a00
+0b0e 0afb u 13 02
+0afb 0afb s     db 13,10,"Playback done!",13,10,0
+0b0e 0b0e s 
+0b0e 0b0e s 
+0b0e 0b0e s 
+0b0e 0b0e s .include "tune_test1.s"
+0b0e 0b0e f tune_test1.s
+0b0e 0b0e s tune_test1:
+0b0e 0b0e s     ;commands are a set of two bytes each
+0b0e 0b0e s     ;byte 0 register
+0b0e 0b0e s     ;byte 1 data
+0b0e 0b0e s     ;if byte 0 is 10h, byte 1 is delay
+0b0e 0b0e s     ;if byte FF then exit
+0b0e 0b0e d 080f
+0b10 0b0e u 02 02
+0b0e 0b0e s     db 0x08,0x0F ; R08 - Ch A Amplitude
+0b10 0b10 d 00ff
+0b12 0b10 u 02 02
+0b10 0b10 s     db 0x00,0xFF ; R00 - Ch A Tone Period
+0b12 0b12 d 0104
+0b14 0b12 u 02 02
+0b12 0b12 s     db 0x01,0x04 ; R01 - Ch A Tone Period
+0b14 0b14 d 073e
+0b16 0b14 u 02 02
+0b14 0b14 s     db 0x07,0x3E ; R07 - Enable 
+0b16 0b16 d 102f
+0b18 0b16 u 02 02
+0b16 0b16 s     db 0x10,0x2F ; Delay
+0b18 0b18 d 0107
+0b1a 0b18 u 02 02
+0b18 0b18 s     db 0x01,0x07 ; R01 - Ch A Tone Period
+0b1a 0b1a d 102f
+0b1c 0b1a u 02 02
+0b1a 0b1a s     db 0x10,0x2F ; Delay
+0b1c 0b1c d 0103
+0b1e 0b1c u 02 02
+0b1c 0b1c s     db 0x01,0x03 ; R01 - Ch A Tone Period
+0b1e 0b1e d 102f
+0b20 0b1e u 02 02
+0b1e 0b1e s     db 0x10,0x2F ; Delay
+0b20 0b20 s 
+0b20 0b20 d 0107
+0b22 0b20 u 02 02
+0b20 0b20 s     db 0x01,0x07 ; R01 - Ch A Tone Period
+0b22 0b22 d 100f
+0b24 0b22 u 02 02
+0b22 0b22 s     db 0x10,0x0F ; Delay
+0b24 0b24 d 0103
+0b26 0b24 u 02 02
+0b24 0b24 s     db 0x01,0x03 ; R01 - Ch A Tone Period
+0b26 0b26 d 100f
+0b28 0b26 u 02 02
+0b26 0b26 s     db 0x10,0x0F ; Delay
+0b28 0b28 d 0107
+0b2a 0b28 u 02 02
+0b28 0b28 s     db 0x01,0x07 ; R01 - Ch A Tone Period
+0b2a 0b2a d 100f
+0b2c 0b2a u 02 02
+0b2a 0b2a s     db 0x10,0x0F ; Delay
+0b2c 0b2c d 0103
+0b2e 0b2c u 02 02
+0b2c 0b2c s     db 0x01,0x03 ; R01 - Ch A Tone Period
+0b2e 0b2e d 100f
+0b30 0b2e u 02 02
+0b2e 0b2e s     db 0x10,0x0F ; Delay
+0b30 0b30 d 0107
+0b32 0b30 u 02 02
+0b30 0b30 s     db 0x01,0x07 ; R01 - Ch A Tone Period
+0b32 0b32 d 100f
+0b34 0b32 u 02 02
+0b32 0b32 s     db 0x10,0x0F ; Delay
+0b34 0b34 d 0103
+0b36 0b34 u 02 02
+0b34 0b34 s     db 0x01,0x03 ; R01 - Ch A Tone Period
+0b36 0b36 d 100f
+0b38 0b36 u 02 02
+0b36 0b36 s     db 0x10,0x0F ; Delay
+0b38 0b38 d 0107
+0b3a 0b38 u 02 02
+0b38 0b38 s     db 0x01,0x07 ; R01 - Ch A Tone Period
+0b3a 0b3a d 100f
+0b3c 0b3a u 02 02
+0b3a 0b3a s     db 0x10,0x0F ; Delay
+0b3c 0b3c d 0103
+0b3e 0b3c u 02 02
+0b3c 0b3c s     db 0x01,0x03 ; R01 - Ch A Tone Period
+0b3e 0b3e d 100f
+0b40 0b3e u 02 02
+0b3e 0b3e s     db 0x10,0x0F ; Delay
+0b40 0b40 s 
+0b40 0b40 d 0800
+0b42 0b40 u 02 02
+0b40 0b40 s     db 0x08,0x00 ; R08 - Ch A Amplitude
+0b42 0b42 s 
+0b42 0b42 s 
+0b42 0b42 s 
+0b42 0b42 f functions/sub_soundtest.s
+0b42 0b42 d ff
+0b43 0b42 u 01 02
+0b42 0b42 s     db 0xFF      ; END
+0b43 0b43 s 
+0b43 0b43 s INT_VEC_SND:
+0014 0014 s     org 14h
+0014 0014 f main.asm
+0014 0014 d a00a
+0016 0014 u 02 02
+0014 0014 s     DEFW SUB_PLAY_CTC_ISR
+0016 0016 s 
+0016 0016 s ;Strings
+0016 0016 s STRINGS:
 0600 0600 s     org 0x0600
 0600 0600 s MSG_SYS_VER:
 0600 0600 d 1b5b324a1b5b48
@@ -2283,7 +2570,7 @@ binary-debuggable-source
 0858 a TX_EMP
 0020 v IO_REG0
 0807 a INT_VEC
-0aac a STRINGS
+0016 a STRINGS
 0003 a init_led
 0144 a A_RTS_ON
 0a25 a SUB_PLAY
@@ -2300,7 +2587,7 @@ binary-debuggable-source
 0013 v IO_SIO0B_C
 0011 v IO_SIO0B_D
 0000 v START_ROM
-0a97 a tune_test1
+0b0e a tune_test1
 047e a HEX_TO_BIN
 07f3 a CMD_PS_VER
 0a51 a PLAY_DELAY
@@ -2324,6 +2611,7 @@ binary-debuggable-source
 06e8 a MSG_CMD_VER
 0025 v IO_RTC_AMPM
 002c v IO_RTC_WEEK
+0b43 a INT_VEC_SND
 07e6 a CMD_PS_MSET
 0257 a PRINT_A_HEX
 0024 v IO_RTC_HOUR
@@ -2337,11 +2625,12 @@ binary-debuggable-source
 002e v IO_RTC_CTR_E
 002f v IO_RTC_CTR_F
 07f7 a CMD_PS_IOGET
+0a67 a SUB_PLAY_CTC
 07ff a CMD_PS_IOSET
 0498 a DHEX_TO_BYTE
 0867 a CONSOLE_INIT
 0104 a init_console
-0a67 a AY0_WRITE_REG
+0ade a AY0_WRITE_REG
 e000 v CMD_CRS_SPEED
 4001 v MEM_LAST_CHAR
 0a33 a SUB_PLAY_LOOP
@@ -2351,13 +2640,17 @@ e000 v CMD_CRS_SPEED
 4000 v PROG_MEM_START
 0100 v PROG_ROM_START
 0178 a CONSOLE_PROMPT
+40f2 v MEM_MUSIC_DELAY
 0a53 a PLAY_DELAY_LOOP
+40f3 v MEM_MUSIC_STATE
 0772 a MSG_CMD_UNKNOWN
 085b a CONSOLE_TX_WAIT
 4003 v MEM_PROMPT_SIZE
 0493 a HEX_TO_INVALID_2
 014d a RX_CHA_AVAILABLE
+0a92 a SUB_PLAY_CTC_END
 0010 v VAR_CONSOLE_BAUD
+0aa0 a SUB_PLAY_CTC_ISR
 0163 a SPEC_RX_CONDITON
 4000 v MEM_CURSOR_STATE
 0471 a CMP_STRING_START
@@ -2365,19 +2658,23 @@ e000 v CMD_CRS_SPEED
 0a56 a PLAY_DELAY_LOOP_1
 083a a CONSOLE_PRINTSTR
 084d a CONSOLE_READ_CHAR
-0a84 a STR_PLAYBACK_DONE
+0afb a STR_PLAYBACK_DONE
+0a8b a SUB_PLAY_CTC_LOOP
+40f0 v MEM_MUSIC_POINTER
 0276 a PRINT_HEXDUMP_SOL
 0787 a MSG_HEXDUMP_HEADER
 02cf a CONSOLE_PARSE_LINE
 04b0 a DHEX_TO_BYTE_FAILED
 02a3 a PRINT_HEXDUMP_LOOP1
-0a6f a STR_SOUNDCHECK_DONE
+0ae6 a STR_SOUNDCHECK_DONE
 01ac a CONSOLE_PROMPT_LOOP
+0ac6 a SUB_PLAY_CTC_ISR_END
 0820 a STRCONV_BYTES_TO_HEX
 01c1 a CONSOLE_PROMPT_LOOP_1
 021c a CONSOLE_PROMPT_LOOP_2
 023f a CONSOLE_PROMPT_LOOP_3
 02e3 a CONSOLE_PARSE_LINE_HD
+0aaf a SUB_PLAY_CTC_ISR_CONT
 083c a CONSOLE_PRINTSTR_LOOP
 084a a CONSOLE_PRINTSTR_EXIT
 01ed a CONSOLE_PROMPT_LOOP_1B
@@ -2392,5 +2689,8 @@ e000 v CMD_CRS_SPEED
 0393 a CONSOLE_PARSE_LINE_IOGET
 03cf a CONSOLE_PARSE_LINE_IOSET
 0476 a CMP_STRING_START_MATCHED
+0ad7 a SUB_PLAY_CTC_ISR_EXIT_RTE
 0479 a CMP_STRING_START_CONTINUE
+0ab3 a SUB_PLAY_CTC_ISR_CONT_LOOP
 0428 a CONSOLE_PARSE_LINE_VERSION
+0acb a SUB_PLAY_CTC_ISR_INIT_DELAY
