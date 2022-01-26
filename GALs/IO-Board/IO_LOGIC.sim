@@ -1,0 +1,27 @@
+%SIGNAL
+PIN   1 =  A2 
+PIN   2 =  A3 
+PIN   3 =  A4 
+PIN   4 =  A5 
+PIN   5 =  A6 
+PIN   6 =  A7 
+PIN  19 =  CS_PIO0 
+PIN  18 =  CS_PIO1 
+PIN   9 =  IOREQ 
+PIN  16 =  RTC_CS0 
+%END
+
+%FIELD
+%END
+
+%EQUATION
+CS_PIO0 =>
+    !A2 & !A3 & !A4 & A5 & A6 & !A7 & !IOREQ
+
+CS_PIO1 =>
+    A2 & !A3 & !A4 & A5 & A6 & !A7 & !IOREQ
+
+RTC_CS0 =>
+    A4 & A5 & A6 & !A7 & !IOREQ
+
+%END

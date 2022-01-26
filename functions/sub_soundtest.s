@@ -85,7 +85,7 @@ SUB_PLAY_CTC:
     LD (MEM_MUSIC_DELAY),A  ;Reset delay counter
     LD A,0x01
     LD (MEM_MUSIC_STATE),A  ; Set playback-status to 0x01 = Running
-    LD BC,[tune_test1]
+    LD BC,[song_demo2]
     LD (MEM_MUSIC_POINTER), BC  ; Preload Music Counter
     ; Set CTC Ch3 Interrupt Vector
     LD A,10h    ; it vector defined in bit 7­3,bit 2­1 don't care, bit 0 = 0
@@ -93,7 +93,8 @@ SUB_PLAY_CTC:
     ; Init CTC Channel 3
     LD A,10100111b
     OUT (IO_CTC0_C2),A
-    LD A,0x34 ; 55Hz ISR
+    ;LD A,0x34 ; 55Hz ISR
+    LD A,0xFF ; 55Hz ISR
     OUT (IO_CTC0_C2),A
 
     LD A,0
@@ -104,15 +105,25 @@ SUB_PLAY_CTC:
 
 
 SUB_PLAY_CTC_LOOP:
-    LD A,(MEM_MUSIC_STATE)
-    AND A
-    NOP
-    JR NZ, SUB_PLAY_CTC_LOOP    ; Loop as long as Status is not 0x00
+    LD A,(MEM_MUSIC_STATE)      ; wait until playback is complete
+    AND A                       ; check if a == 0x00
+    NOP                         ; sit here and wait
+    JR NZ, SUB_PLAY_CTC_LOOP    ; Loop as long as Status is not 0x00, loop
 
 SUB_PLAY_CTC_END:
-    DI
-    LD A,0x00           ; Disable CTC2
-    OUT (IO_CTC0_C2),A
+    DI                          ; disable interrupts
+    LD A,0x00                   ; load CTC controll register value in A -> 0x00 eq stop
+    OUT (IO_CTC0_C2),A          ; write to CTC Ch2 -> disable CTC2
+
+    LD	  D,0x08	; Select register #8
+    LD	  A,0x00	; Volume channel A 0
+    CALL AY0_WRITE_REG
+    LD	  D,0x09	; Select register #9
+    LD	  A,0x00	; Volume channel B 0
+    CALL AY0_WRITE_REG
+    LD	  D,0x0A	; Select register #10
+    LD	  A,0x00	; Volume channel C 0
+    CALL AY0_WRITE_REG
     
     LD BC, [STR_PLAYBACK_DONE]
     CALL CONSOLE_PRINTSTR
@@ -141,11 +152,17 @@ SUB_PLAY_CTC_ISR_CONT_LOOP:
     LD A,(BC)   ; Load first byte of Instruction
     LD D,A      ; Backup A (Register Addr)
     
-    INC A; Test if FF
-    JR Z, SUB_PLAY_CTC_ISR_EXIT_RTE ; Exit on 0xFF
+    CP 0xF0; Test if F0
+    JR Z, SUB_PLAY_CTC_ISR_EXIT_RTE ; Exit on 0xF0
 
-    CP 0x11
-    JR Z, SUB_PLAY_CTC_ISR_INIT_DELAY; Delay if 0x10
+    CP 0xFF; Test if FF
+    JR Z, SUB_PLAY_CTC_ISR_NEXT ; Skip ISR on 0xFF
+
+    ;CP 0x10; Test if 0-15
+    ;JR NC, SUB_PLAY_CTC_ISR_NEXT_BYTE  ;if true continue (is valid)
+
+    CP 0xFE
+    JR Z, SUB_PLAY_CTC_ISR_INIT_DELAY; Delay if 0xFE. duration: next byte x4
 
     ; Execute Instruction
     LD A,D          
@@ -165,7 +182,16 @@ SUB_PLAY_CTC_ISR_END:
 SUB_PLAY_CTC_ISR_INIT_DELAY:
     INC BC
     LD A,(BC)
+    ADD A   ; x2
+    ADD A   ; x2x2 (x4)
+    SUB 1   ; sub 1 to account for this ISR
     LD (MEM_MUSIC_DELAY),A      ; Store delay to RAM
+    ;CALL PRINT_A_HEX
+    INC BC
+    LD (MEM_MUSIC_POINTER),BC   ; Update Music Pointer in Ram
+    JR SUB_PLAY_CTC_ISR_END
+
+SUB_PLAY_CTC_ISR_NEXT:
     INC BC
     LD (MEM_MUSIC_POINTER),BC   ; Update Music Pointer in Ram
     JR SUB_PLAY_CTC_ISR_END
@@ -175,17 +201,12 @@ SUB_PLAY_CTC_ISR_EXIT_RTE:  ; Called when end of song is reached
     LD (MEM_MUSIC_STATE),A  ; Set playback-status to 0x00 = Stopped
     JR SUB_PLAY_CTC_ISR_END
 
-; A contains Data
-; C Contains Addr
-AY0_WRITE_REG:
-    LD B,A
-    LD A,D
-    OUT (IO_AY0_ADDR),A
-    LD A,B
-    OUT (IO_AY0_DATA),A
-    RET
-    
+SUB_PLAY_CTC_ISR_NEXT_BYTE:
+    INC BC
+    JR SUB_PLAY_CTC_ISR_CONT_LOOP
 
+
+    
 STR_SOUNDCHECK_DONE:
     db 13,10,"Soundcheck done!",13,10,0
 STR_PLAYBACK_DONE:
@@ -194,7 +215,8 @@ STR_PLAYBACK_DONE:
 
 
 .include "tune_test1.s"
+.include "song.s"
 
-INT_VEC_SND:
+INT_VEC_SND:    ;interrupt vector table entry for CTC Ch2
     org 14h
     DEFW SUB_PLAY_CTC_ISR

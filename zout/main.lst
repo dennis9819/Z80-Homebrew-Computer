@@ -44,13 +44,11 @@
    6:     -	4003          	MEM_PROMPT_SIZE equ 0x4003
    7:     -	4005          	MEM_PROMPT_START equ 0x4005
    8:				
-   9:				
-  10:     -	E000          	CMD_CRS_SPEED equ 0xE000
-  11:				
-  12:				
-  13:				; Include Kernel Libs at 0x0800
-  14:     -	0820          	    org 0x0820
-  15:				.include "conversions.s"
+   9:     -	E000          	CMD_CRS_SPEED equ 0xE000
+  10:				
+  11:				; Include Kernel Libs at 0x0380
+  12:     -	0380          	    org 0x0380
+  13:				.include "conversions.s"
 **** functions/conversions.s ****
    1:				
    2:				; Kernel Conversion Functions
@@ -67,35 +65,35 @@
   13:				;Outputs: BC contains 2 Bytes of ASCII (HEX)
   14:				;
   15:				;Destroys: A, BC,
-  16:     -	0820          	STRCONV_BYTES_TO_HEX:
-  17:    0+11	0820  F5      	    PUSH AF;Backup A Register
-  18:   11+4	0821  1F      	    RRA
-  19:   15+4	0822  1F      	    RRA
-  20:   19+4	0823  1F      	    RRA
-  21:   23+4	0824  1F      	    RRA
-  22:   27+17	0825  CD2F08  	    CALL STRCONV_BYTES_TO_HEX_1
+  16:     -	0380          	STRCONV_BYTES_TO_HEX:
+  17:    0+11	0380  F5      	    PUSH AF;Backup A Register
+  18:   11+4	0381  1F      	    RRA
+  19:   15+4	0382  1F      	    RRA
+  20:   19+4	0383  1F      	    RRA
+  21:   23+4	0384  1F      	    RRA
+  22:   27+17	0385  CD8F03  	    CALL STRCONV_BYTES_TO_HEX_1
   23:				    ;LD A,D
-  24:   44+4	0828  47      	    LD B,A  
-  25:   48+10	0829  F1      	    POP AF ; Reload first Byte
-  26:   58+17	082A  CD2F08  	    CALL STRCONV_BYTES_TO_HEX_1
+  24:   44+4	0388  47      	    LD B,A  
+  25:   48+10	0389  F1      	    POP AF ; Reload first Byte
+  26:   58+17	038A  CD8F03  	    CALL STRCONV_BYTES_TO_HEX_1
   27:				    ;LD A,D
-  28:   75+4	082D  4F      	    LD C,A
-  29:   79+10	082E  C9      	    RET
+  28:   75+4	038D  4F      	    LD C,A
+  29:   79+10	038E  C9      	    RET
   30:				
-  31:     -	082F          	STRCONV_BYTES_TO_HEX_1:
-  32:   89+7	082F  E60F    	    AND 0x0F
-  33:   96+7	0831  C630    	    ADD 48
-  34:  103+7	0833  FE3A    	    CP 58 ; Check if less than 58 (less than ASCII 9)
-  35:  110+7+5	0835  3802    	    JR C, STRCONV_BYTES_TO_HEX_2
-  36:  117+7	0837  C607    	    ADD 7 ; A-F
-  37:     -	0839          	STRCONV_BYTES_TO_HEX_2:
+  31:     -	038F          	STRCONV_BYTES_TO_HEX_1:
+  32:   89+7	038F  E60F    	    AND 0x0F
+  33:   96+7	0391  C630    	    ADD 48
+  34:  103+7	0393  FE3A    	    CP 58 ; Check if less than 58 (less than ASCII 9)
+  35:  110+7+5	0395  3802    	    JR C, STRCONV_BYTES_TO_HEX_2
+  36:  117+7	0397  C607    	    ADD 7 ; A-F
+  37:     -	0399          	STRCONV_BYTES_TO_HEX_2:
   38:				    ;LD D,A
-  39:  124+10	0839  C9      	    RET
+  39:  124+10	0399  C9      	    RET
   40:				
   41:				
   42:				
 **** main.asm ****
-  16:				.include "console.s"
+  14:				.include "console.s"
 **** functions/console.s ****
    1:				; Kernel Konsole Functions
    2:				
@@ -111,28 +109,28 @@
   12:				;Outputs: Output to IO_SIO0B_D
   13:				;
   14:				;Destroys: none
-  15:     -	083A          	CONSOLE_PRINTSTR:
+  15:     -	039A          	CONSOLE_PRINTSTR:
   16:				    ; BC contains String offset
   17:				    ; Prints null terminated string
-  18:  134+11	083A  F5      	    PUSH AF
-  19:  145+11	083B  C5      	    PUSH BC
-  20:     -	083C          	CONSOLE_PRINTSTR_LOOP:
-  21:  156+7	083C  0A      	    LD A,(BC)
+  18:  134+11	039A  F5      	    PUSH AF
+  19:  145+11	039B  C5      	    PUSH BC
+  20:     -	039C          	CONSOLE_PRINTSTR_LOOP:
+  21:  156+7	039C  0A      	    LD A,(BC)
   22:				
   23:				    ; Return if nullbyte
-  24:  163+7	083D  F600    	    OR 0
-  25:  170+7+5	083F  2809    	    JR Z, CONSOLE_PRINTSTR_EXIT
+  24:  163+7	039D  F600    	    OR 0
+  25:  170+7+5	039F  2809    	    JR Z, CONSOLE_PRINTSTR_EXIT
   26:				    ; Print Char
-  27:  177+11	0841  D311    	    out (IO_SIO0B_D),A
-  28:  188+17	0843  CD5808  	    call TX_EMP
+  27:  177+11	03A1  D311    	    out (IO_SIO0B_D),A
+  28:  188+17	03A3  CDB803  	    call TX_EMP
   29:				
   30:				    ; INC BC and JP start of loop
-  31:  205+6	0846  03      	    INC BC
-  32:  211+10	0847  C33C08  	    jp CONSOLE_PRINTSTR_LOOP
-  33:     -	084A          	CONSOLE_PRINTSTR_EXIT:
-  34:  221+10	084A  C1      	    POP BC
-  35:  231+10	084B  F1      	    POP AF
-  36:  241+10	084C  C9      	    RET
+  31:  205+6	03A6  03      	    INC BC
+  32:  211+10	03A7  C39C03  	    jp CONSOLE_PRINTSTR_LOOP
+  33:     -	03AA          	CONSOLE_PRINTSTR_EXIT:
+  34:  221+10	03AA  C1      	    POP BC
+  35:  231+10	03AB  F1      	    POP AF
+  36:  241+10	03AC  C9      	    RET
   37:				
   38:				;*****************
   39:				; CONSOLE_READ_CHAR
@@ -145,15 +143,15 @@
   46:				;
   47:				;Destroys: A
   48:				
-  49:     -	084D          	CONSOLE_READ_CHAR:
-  50:  251+4	084D  AF      	    XOR	A
-  51:  255+11	084E  D313    	    OUT (IO_SIO0B_C), A
-  52:  266+11	0850  DB13    	    IN A, (IO_SIO0B_C)
-  53:  277+7	0852  E601    	    AND	1
-  54:  284+5+6	0854  C8      	    RET	Z	
-  55:  289+11	0855  DB11    	    IN A, (IO_SIO0B_D)
+  49:     -	03AD          	CONSOLE_READ_CHAR:
+  50:  251+4	03AD  AF      	    XOR	A
+  51:  255+11	03AE  D313    	    OUT (IO_SIO0B_C), A
+  52:  266+11	03B0  DB13    	    IN A, (IO_SIO0B_C)
+  53:  277+7	03B2  E601    	    AND	1
+  54:  284+5+6	03B4  C8      	    RET	Z	
+  55:  289+11	03B5  DB11    	    IN A, (IO_SIO0B_D)
   56:				    ;LD D,A
-  57:  300+10	0857  C9      	    RET
+  57:  300+10	03B7  C9      	    RET
   58:				
   59:				;*****************
   60:				; CONSOLE_TX_WAIT/TX_EMP
@@ -165,17 +163,17 @@
   66:				;Outputs: none
   67:				;
   68:				;Destroys: A
-  69:     -	0858          	TX_EMP: ; DONT USE!!! DEPRECATED
-  70:  310+10	0858  C35B08  	    jp CONSOLE_TX_WAIT
-  71:     -	085B          	CONSOLE_TX_WAIT:
+  69:     -	03B8          	TX_EMP: ; DONT USE!!! DEPRECATED
+  70:  310+10	03B8  C3BB03  	    jp CONSOLE_TX_WAIT
+  71:     -	03BB          	CONSOLE_TX_WAIT:
   72:				    ; check for TX buffer empty
-  73:  320+4	085B  97      	    sub a ;clear a, write into WR0: select RR0
-  74:  324+4	085C  3C      	    inc a ;select RR1
-  75:  328+11	085D  D313    	    out (IO_SIO0B_C),A
-  76:  339+11	085F  DB13    	    in A,(IO_SIO0B_C) ;read RRx
-  77:  350+8	0861  CB47    	    bit 0,A
-  78:  358+10	0863  CA5B08  	    jp z,CONSOLE_TX_WAIT
-  79:  368+10	0866  C9      	    ret
+  73:  320+4	03BB  97      	    sub a ;clear a, write into WR0: select RR0
+  74:  324+4	03BC  3C      	    inc a ;select RR1
+  75:  328+11	03BD  D313    	    out (IO_SIO0B_C),A
+  76:  339+11	03BF  DB13    	    in A,(IO_SIO0B_C) ;read RRx
+  77:  350+8	03C1  CB47    	    bit 0,A
+  78:  358+10	03C3  CABB03  	    jp z,CONSOLE_TX_WAIT
+  79:  368+10	03C6  C9      	    ret
   80:				
   81:				;*****************
   82:				; CONSOLE_INIT
@@ -187,46 +185,46 @@
   88:				;Outputs: none
   89:				;
   90:				;Destroys: A
-  91:     -	0867          	CONSOLE_INIT:
+  91:     -	03C7          	CONSOLE_INIT:
   92:				    ; Setup CTC
   93:				    ; Init Ch1 (SIO0B)
   94:				    ; For 4MHz CPU CLK 00000111b
   95:				    ; For EXT CLK
-  96:  378+7	0867  3E0F    	    LD A,00001111b
-  97:  385+11	0869  D301    	    OUT (IO_CTC0_C1),A
+  96:  378+7	03C7  3E0F    	    LD A,00001111b
+  97:  385+11	03C9  D301    	    OUT (IO_CTC0_C1),A
   98:				
-  99:  396+7	086B  3E10    	    LD A,VAR_CONSOLE_BAUD
- 100:  403+11	086D  D301    	    OUT (IO_CTC0_C1),A
+  99:  396+7	03CB  3E10    	    LD A,VAR_CONSOLE_BAUD
+ 100:  403+11	03CD  D301    	    OUT (IO_CTC0_C1),A
  101:				
  102:				    ; Setup SIO
  103:				     ;set up TX and RX:W
- 104:  414+7	086F  3E30    	    ld a,00110000b ;write into WR0: error reset, select WR0
- 105:  421+11	0871  D313    	    out (IO_SIO0B_C),A
- 106:  432+7	0873  3E18    	    ld a,018h ;write into WR0: channel reset
- 107:  439+11	0875  D313    	    out (IO_SIO0B_C),A
+ 104:  414+7	03CF  3E30    	    ld a,00110000b ;write into WR0: error reset, select WR0
+ 105:  421+11	03D1  D313    	    out (IO_SIO0B_C),A
+ 106:  432+7	03D3  3E18    	    ld a,018h ;write into WR0: channel reset
+ 107:  439+11	03D5  D313    	    out (IO_SIO0B_C),A
  108:				
- 109:  450+7	0877  3E04    	    ld a,004h ;write into WR0: select WR4
- 110:  457+11	0879  D313    	    out (IO_SIO0B_C),A
+ 109:  450+7	03D7  3E04    	    ld a,004h ;write into WR0: select WR4
+ 110:  457+11	03D9  D313    	    out (IO_SIO0B_C),A
  111:				    ;ld a,44h ;44h write into WR4: clkx16,1 stop bit, no parity
- 112:  468+7	087B  3E04    	    ld a,04h ;44h write into WR4: clkx1,1 stop bit, no parity
- 113:  475+11	087D  D313    	    out (IO_SIO0B_C),A
+ 112:  468+7	03DB  3E04    	    ld a,04h ;44h write into WR4: clkx1,1 stop bit, no parity
+ 113:  475+11	03DD  D313    	    out (IO_SIO0B_C),A
  114:				
- 115:  486+7	087F  3E05    	    ld a,005h ;write into WR0: select WR5
- 116:  493+11	0881  D313    	    out (IO_SIO0B_C),A
+ 115:  486+7	03DF  3E05    	    ld a,005h ;write into WR0: select WR5
+ 116:  493+11	03E1  D313    	    out (IO_SIO0B_C),A
  117:				    ;ld a,0E8h ;DTR active, TX 8bit, BREAK off, TX on, RTS inactive
- 118:  504+7	0883  3E68    	    ld a,068h ;DTR active, TX 8bit, BREAK off, TX on, RTS inactive
- 119:  511+11	0885  D313    	    out (IO_SIO0B_C),A
+ 118:  504+7	03E3  3E68    	    ld a,068h ;DTR active, TX 8bit, BREAK off, TX on, RTS inactive
+ 119:  511+11	03E5  D313    	    out (IO_SIO0B_C),A
  120:				
- 121:  522+7	0887  3E01    	    ld a,01h ;write into WR0: select WR1
- 122:  529+11	0889  D313    	    out (IO_SIO0B_C),A
- 123:  540+7	088B  3E04    	    ld a,00000100b ;no interrupt in CH B, special RX condition affects vect
- 124:  547+11	088D  D313    	    out (IO_SIO0B_C),A
+ 121:  522+7	03E7  3E01    	    ld a,01h ;write into WR0: select WR1
+ 122:  529+11	03E9  D313    	    out (IO_SIO0B_C),A
+ 123:  540+7	03EB  3E04    	    ld a,00000100b ;no interrupt in CH B, special RX condition affects vect
+ 124:  547+11	03ED  D313    	    out (IO_SIO0B_C),A
  125:				
- 126:  558+7	088F  3E02    	    ld a,02h ;write into WR0: select WR2
- 127:  565+11	0891  D313    	    out (IO_SIO0B_C),A
- 128:  576+7	0893  3E00    	    ld a,0h ;write into WR2: cmd line int vect (see int vec table)
+ 126:  558+7	03EF  3E02    	    ld a,02h ;write into WR0: select WR2
+ 127:  565+11	03F1  D313    	    out (IO_SIO0B_C),A
+ 128:  576+7	03F3  3E00    	    ld a,0h ;write into WR2: cmd line int vect (see int vec table)
  129:				    ;bits D3,D2,D1 are changed according to RX condition
- 130:  583+11	0895  D313    	    out (IO_SIO0B_C),A
+ 130:  583+11	03F5  D313    	    out (IO_SIO0B_C),A
  131:				
  132:				    ;ld a,01h ;write into WR0: select WR1
  133:				    ;out (IO_SIO0B_C),A
@@ -235,284 +233,376 @@
  136:				    ;out (IO_SIO0B_C),A
  137:				
  138:				    ;enable SIO channel A RX
- 139:  594+7	0897  3E03    	    ld a,003h ;write into WR0: select WR3
- 140:  601+11	0899  D313    	    out (IO_SIO0B_C),A
- 141:  612+7	089B  3EC1    	    ld a,0C1h ;RX 8bit, auto enable off, RX on
- 142:  619+11	089D  D313    	    out (IO_SIO0B_C),A
+ 139:  594+7	03F7  3E03    	    ld a,003h ;write into WR0: select WR3
+ 140:  601+11	03F9  D313    	    out (IO_SIO0B_C),A
+ 141:  612+7	03FB  3EC1    	    ld a,0C1h ;RX 8bit, auto enable off, RX on
+ 142:  619+11	03FD  D313    	    out (IO_SIO0B_C),A
  143:				    ;Channel A RX active
  144:				
- 145:  630+7	089F  3E25    	    LD A,'%'
- 146:  637+11	08A1  D311    	    out (IO_SIO0B_D),A
- 147:  648+17	08A3  CD5B08  	    call CONSOLE_TX_WAIT
+ 145:  630+7	03FF  3E25    	    LD A,'%'
+ 146:  637+11	0401  D311    	    out (IO_SIO0B_D),A
+ 147:  648+17	0403  CDBB03  	    call CONSOLE_TX_WAIT
  148:				
- 149:  665+10	08A6  C9      	    RET
+ 149:  665+10	0406  C9      	    RET
  150:				
  151:				
  152:				
  153:				;;
+ 154:				
+ 155:				
 **** main.asm ****
-  17:				
-  18:				; include subroutines
-  19:				.include "sub_soundtest.s"
-**** functions/sub_soundtest.s ****
-   1:     -	40F0          	MEM_MUSIC_POINTER equ 0x40F0
-   2:     -	40F2          	MEM_MUSIC_DELAY equ 0x40F2
-   3:     -	40F3          	MEM_MUSIC_STATE equ 0x40F3
-   4:				
-   5:     -	08A7          	SUB_SOUNDCHECK:
-   6:     -	0A00          	    org 0x0A00
-   7:				    ; turn on channel A
-   8:  675+7	0A00  1608    	    LD	  D,0x08	; Select register #8
-   9:  682+7	0A02  3E0F    	    LD	  A,0x0F	; Volume channel A full
-  10:  689+17	0A04  CDDE0A  	    CALL AY0_WRITE_REG
-  11:				
-  12:  706+7	0A07  1600    	    LD	  D,0x00	; Select register #0
-  13:  713+7	0A09  3E5D    	    LD	  A,0x5D	; Write #93 into register #0
-  14:  720+17	0A0B  CDDE0A  	    CALL AY0_WRITE_REG	
-  15:				
-  16:  737+7	0A0E  1601    	    LD	  D,0x01	; Select register #1
-  17:  744+7	0A10  3E0D    	    LD	  A,0x0D	; Write #13 into register #1
-  18:  751+17	0A12  CDDE0A  	    CALL AY0_WRITE_REG
-  19:				
-  20:  768+7	0A15  1607    	    LD	  D,0x07	; Select register #7
-  21:  775+7	0A17  3E3E    	    LD	  A,0x3E	; Enable output Channel A (0011 1110)
-  22:  782+17	0A19  CDDE0A  	    CALL AY0_WRITE_REG
-  23:				
+  15:				.include "io.s"
+**** functions/io.s ****
+   1:				; A contains Data
+   2:				; C Contains Addr
+   3:     -	0407          	AY0_WRITE_REG:
+   4:  675+4	0407  47      	    LD B,A
+   5:  679+4	0408  7A      	    LD A,D
+   6:  683+11	0409  D340    	    OUT (IO_AY0_ADDR),A
+   7:  694+4	040B  78      	    LD A,B
+   8:  698+11	040C  D341    	    OUT (IO_AY0_DATA),A
+   9:  709+10	040E  C9      	    RET
+  10:				
+  11:				; Serial Util Functions
+  12:     -	040F          	A_RTS_OFF:
+  13:  719+7	040F  3E05    	    ld a,005h ;write into WR0: select WR5
+  14:  726+11	0411  D313    	    out (IO_SIO0B_C),A
+  15:  737+7	0413  3EE8    	    ld a,0E8h ;DTR active, TX 8bit, BREAK off, TX on, RTS inactive
+  16:  744+11	0415  D313    	    out (IO_SIO0B_C),A
+  17:  755+10	0417  C9      	    ret
+  18:     -	0418          	A_RTS_ON:
+  19:  765+7	0418  3E05    	    ld a,005h ;write into WR0: select WR5
+  20:  772+11	041A  D313    	    out (IO_SIO0B_C),A
+  21:  783+7	041C  3EEA    	    ld a,0EAh ;DTR active, TX 8bit, BREAK off, TX on, RTS active
+  22:  790+11	041E  D313    	    out (IO_SIO0B_C),A
+  23:  801+10	0420  C9      	    ret
   24:				
-  25:				
-  26:  799+10	0A1C  01E60A  	    LD BC, [STR_SOUNDCHECK_DONE]
-  27:  809+17	0A1F  CD3A08  	    CALL CONSOLE_PRINTSTR
-  28:				
-  29:  826+10	0A22  C37801  	    JP CONSOLE_PROMPT
+  25:     -	0421          	RX_CHA_AVAILABLE:
+  26:  811+11	0421  F5      	    push AF ;backup AF
+  27:				
+  28:  822+7	0422  3EFF    	    LD A,0xFF
+  29:  829+11	0424  D320    	    OUT (IO_REG0),A
   30:				
-  31:     -	0A25          	SUB_PLAY:
-  32:     -	0A30          	    org 0x0A30
-  33:				
-  34:  836+10	0A30  010E0B  	    LD BC,[tune_test1]
-  35:				
-  36:     -	0A33          	SUB_PLAY_LOOP:
-  37:				    ; Load next byte of melody
-  38:  846+7	0A33  0A      	    LD A,(BC)
-  39:  853+4	0A34  57      	    LD D,A; Backup A
-  40:				    
-  41:  857+4	0A35  3C      	    INC A; Test if FF
-  42:  861+10	0A36  CA480A  	    JP Z, SUB_PLAY_EXIT ; Exit on 0xFF
+  31:  840+17	0426  CD0F04  	    call A_RTS_OFF
+  32:  857+11	0429  DB11    	    in A,(IO_SIO0B_D) ;read RX character into A
+  33:				    ; A holds received character
+  34:				    ;do something with the received character
+  35:				    ;echo character to host
+  36:  868+11	042B  D311    	    out (IO_SIO0B_D),A
+  37:  879+17	042D  CDB803  	    call TX_EMP
+  38:  896+4	0430  FB      	    ei ;see comments below
+  39:  900+17	0431  CD1804  	    call A_RTS_ON ;see comments below
+  40:				
+  41:				    ;LD A,0x00
+  42:				    ;OUT (IO_REG0),A
   43:				
-  44:  871+7	0A39  FE11    	    CP 0x11
-  45:  878+10	0A3B  CA510A  	    JP Z, PLAY_DELAY; Delay function
-  46:				
-  47:  888+4	0A3E  7A      	    LD A,D
-  48:  892+11	0A3F  D340    	    OUT (IO_AY0_ADDR),A
-  49:  903+6	0A41  03      	    INC BC
-  50:  909+7	0A42  0A      	    LD A,(BC)
-  51:  916+11	0A43  D341    	    OUT (IO_AY0_DATA),A
-  52:  927+6	0A45  03      	    INC BC
-  53:				
-  54:  933+12	0A46  18EB    	    JR SUB_PLAY_LOOP
-  55:				
-  56:     -	0A48          	SUB_PLAY_EXIT:
-  57:  945+10	0A48  01FB0A  	    LD BC, [STR_PLAYBACK_DONE]
-  58:  955+17	0A4B  CD3A08  	    CALL CONSOLE_PRINTSTR
-  59:  972+10	0A4E  C37801  	    JP CONSOLE_PROMPT
-  60:				
-  61:				
-  62:     -	0A51          	PLAY_DELAY:
-  63:  982+6	0A51  03      	    INC BC
-  64:  988+7	0A52  0A      	    LD A,(BC)
-  65:     -	0A53          	PLAY_DELAY_LOOP:
-  66:  995+4	0A53  57      	    LD D,A
-  67:  999+7	0A54  3EFF    	    LD A,255
-  68:     -	0A56          	PLAY_DELAY_LOOP_1:
-  69: 1006+4	0A56  00      	    NOP
-  70: 1010+4	0A57  00      	    NOP
-  71: 1014+4	0A58  00      	    NOP
-  72: 1018+4	0A59  00      	    NOP
-  73: 1022+4	0A5A  3D      	    DEC A
-  74: 1026+10	0A5B  C2560A  	    JP NZ, PLAY_DELAY_LOOP_1
-  75: 1036+4	0A5E  7A      	    LD A,D
-  76: 1040+4	0A5F  3D      	    DEC A
-  77: 1044+10	0A60  C2530A  	    JP NZ, PLAY_DELAY_LOOP
-  78: 1054+6	0A63  03      	    INC BC
-  79: 1060+10	0A64  C3330A  	    JP SUB_PLAY_LOOP
-  80:				
-  81:				
-  82:				; Start Addr = MEM_MUSIC_POINTER
-  83:     -	0A67          	SUB_PLAY_CTC:
-  84: 1070+7	0A67  3E00    	    LD A,0x00
-  85: 1077+13	0A69  32F240  	    LD (MEM_MUSIC_DELAY),A  ;Reset delay counter
-  86: 1090+7	0A6C  3E01    	    LD A,0x01
-  87: 1097+13	0A6E  32F340  	    LD (MEM_MUSIC_STATE),A  ; Set playback-status to 0x01 = Running
-  88: 1110+10	0A71  010E0B  	    LD BC,[tune_test1]
-  89: 1120+20	0A74  ED43F040	    LD (MEM_MUSIC_POINTER), BC  ; Preload Music Counter
-  90:				    ; Set CTC Ch3 Interrupt Vector
-  91: 1140+7	0A78  3E10    	    LD A,10h    ; it vector defined in bit 7­3,bit 2­1 don't care, bit 0 = 0
-  92: 1147+11	0A7A  D300    	    OUT (IO_CTC0_C0),A
-  93:				    ; Init CTC Channel 3
-  94: 1158+7	0A7C  3EA7    	    LD A,10100111b
-  95: 1165+11	0A7E  D302    	    OUT (IO_CTC0_C2),A
-  96: 1176+7	0A80  3E34    	    LD A,0x34 ; 55Hz ISR
-  97: 1183+11	0A82  D302    	    OUT (IO_CTC0_C2),A
-  98:				
-  99: 1194+7	0A84  3E00    	    LD A,0
- 100: 1201+9	0A86  ED47    	    LD I,A  ;load I reg with zero
- 101: 1210+8	0A88  ED5E    	    IM 2    ;set int mode 2
- 102: 1218+4	0A8A  FB      	    EI  ; Enable Interrupts
- 103:				    ;JP CONSOLE_PROMPT
- 104:				
- 105:				
- 106:     -	0A8B          	SUB_PLAY_CTC_LOOP:
- 107: 1222+13	0A8B  3AF340  	    LD A,(MEM_MUSIC_STATE)
- 108: 1235+4	0A8E  A7      	    AND A
- 109: 1239+4	0A8F  00      	    NOP
- 110: 1243+7+5	0A90  20F9    	    JR NZ, SUB_PLAY_CTC_LOOP    ; Loop as long as Status is not 0x00
- 111:				
- 112:     -	0A92          	SUB_PLAY_CTC_END:
- 113: 1250+4	0A92  F3      	    DI
- 114: 1254+7	0A93  3E00    	    LD A,0x00           ; Disable CTC2
- 115: 1261+11	0A95  D302    	    OUT (IO_CTC0_C2),A
- 116:				    
- 117: 1272+10	0A97  01FB0A  	    LD BC, [STR_PLAYBACK_DONE]
- 118: 1282+17	0A9A  CD3A08  	    CALL CONSOLE_PRINTSTR
- 119: 1299+10	0A9D  C37801  	    JP CONSOLE_PROMPT
- 120:				
- 121:				
- 122:				; Music Interrupt Service Routine
- 123:     -	0AA0          	SUB_PLAY_CTC_ISR:
- 124: 1309+4	0AA0  F3      	    DI          ; Disable INT and swap registers
- 125: 1313+4	0AA1  08      	    EX AF,AF'   ;
- 126: 1317+4	0AA2  D9      	    EXX         ;
- 127:				
- 128:				    ; Check if delay
- 129: 1321+13	0AA3  3AF240  	    LD A,(MEM_MUSIC_DELAY)
- 130: 1334+4	0AA6  A7      	    AND A                       ; If Countdown == 0
- 131: 1338+7+5	0AA7  2806    	    JR Z, SUB_PLAY_CTC_ISR_CONT ; Execute SUB_PLAY_CTC_ISR_CONT
- 132:				                                ; Else continue with delay routine
- 133: 1345+4	0AA9  3D      	    DEC A
- 134: 1349+13	0AAA  32F240  	    LD (MEM_MUSIC_DELAY),A      ; Dec Delay and store to RAM
- 135: 1362+12	0AAD  1817    	    JR SUB_PLAY_CTC_ISR_END     ; Always end ISR
- 136:				
- 137:				    ; Playback routine
- 138:     -	0AAF          	SUB_PLAY_CTC_ISR_CONT:
- 139: 1374+20	0AAF  ED4BF040	    LD BC,(MEM_MUSIC_POINTER)
- 140:     -	0AB3          	SUB_PLAY_CTC_ISR_CONT_LOOP:
- 141: 1394+7	0AB3  0A      	    LD A,(BC)   ; Load first byte of Instruction
- 142: 1401+4	0AB4  57      	    LD D,A      ; Backup A (Register Addr)
- 143:				    
- 144: 1405+4	0AB5  3C      	    INC A; Test if FF
- 145: 1409+7+5	0AB6  281F    	    JR Z, SUB_PLAY_CTC_ISR_EXIT_RTE ; Exit on 0xFF
- 146:				
- 147: 1416+7	0AB8  FE11    	    CP 0x11
- 148: 1423+7+5	0ABA  280F    	    JR Z, SUB_PLAY_CTC_ISR_INIT_DELAY; Delay if 0x10
- 149:				
- 150:				    ; Execute Instruction
- 151: 1430+4	0ABC  7A      	    LD A,D          
- 152: 1434+11	0ABD  D340    	    OUT (IO_AY0_ADDR),A ; Set Register Addr (1st byte)
- 153: 1445+6	0ABF  03      	    INC BC
- 154: 1451+7	0AC0  0A      	    LD A,(BC)
- 155: 1458+11	0AC1  D341    	    OUT (IO_AY0_DATA),A ; Set Data Register (2nd byte)
- 156: 1469+6	0AC3  03      	    INC BC
- 157: 1475+12	0AC4  18ED    	    JR SUB_PLAY_CTC_ISR_CONT_LOOP
- 158:				
- 159:     -	0AC6          	SUB_PLAY_CTC_ISR_END:
- 160: 1487+4	0AC6  D9      	    EXX         ; swap registers and enable INT
- 161: 1491+4	0AC7  08      	    EX AF,AF'   ;
- 162: 1495+4	0AC8  FB      	    EI          ;
- 163: 1499+14	0AC9  ED4D    	    RETI        ; Exit ISR
- 164:				
- 165:     -	0ACB          	SUB_PLAY_CTC_ISR_INIT_DELAY:
- 166: 1513+6	0ACB  03      	    INC BC
- 167: 1519+7	0ACC  0A      	    LD A,(BC)
- 168: 1526+13	0ACD  32F240  	    LD (MEM_MUSIC_DELAY),A      ; Store delay to RAM
- 169: 1539+6	0AD0  03      	    INC BC
- 170: 1545+20	0AD1  ED43F040	    LD (MEM_MUSIC_POINTER),BC   ; Update Music Pointer in Ram
- 171: 1565+12	0AD5  18EF    	    JR SUB_PLAY_CTC_ISR_END
- 172:				
- 173:     -	0AD7          	SUB_PLAY_CTC_ISR_EXIT_RTE:  ; Called when end of song is reached
- 174: 1577+7	0AD7  3E00    	    LD A,0x00
- 175: 1584+13	0AD9  32F340  	    LD (MEM_MUSIC_STATE),A  ; Set playback-status to 0x00 = Stopped
- 176: 1597+12	0ADC  18E8    	    JR SUB_PLAY_CTC_ISR_END
- 177:				
- 178:				; A contains Data
- 179:				; C Contains Addr
- 180:     -	0ADE          	AY0_WRITE_REG:
- 181: 1609+4	0ADE  47      	    LD B,A
- 182: 1613+4	0ADF  7A      	    LD A,D
- 183: 1617+11	0AE0  D340    	    OUT (IO_AY0_ADDR),A
- 184: 1628+4	0AE2  78      	    LD A,B
- 185: 1632+11	0AE3  D341    	    OUT (IO_AY0_DATA),A
- 186: 1643+10	0AE5  C9      	    RET
- 187:				    
- 188:				
- 189:     -	0AE6          	STR_SOUNDCHECK_DONE:
- 190:     -	0AE6  0D0A536F	    db 13,10,"Soundcheck done!",13,10,0
-	              756E6463
-	              6865636B
-	              20646F6E
-	              65210D0A
-	              00
- 191:     -	0AFB          	STR_PLAYBACK_DONE:
- 192:     -	0AFB  0D0A506C	    db 13,10,"Playback done!",13,10,0
-	              61796261
-	              636B2064
-	              6F6E6521
-	              0D0A00
- 193:				
- 194:				
- 195:				
- 196:				.include "tune_test1.s"
-**** functions/tune_test1.s ****
-   1:     -	0B0E          	tune_test1:
-   2:				    ;commands are a set of two bytes each
-   3:				    ;byte 0 register
-   4:				    ;byte 1 data
-   5:				    ;if byte 0 is 10h, byte 1 is delay
-   6:				    ;if byte FF then exit
-   7:     -	0B0E  080F    	    db 0x08,0x0F ; R08 - Ch A Amplitude
-   8:     -	0B10  00FF    	    db 0x00,0xFF ; R00 - Ch A Tone Period
-   9:     -	0B12  0104    	    db 0x01,0x04 ; R01 - Ch A Tone Period
-  10:     -	0B14  073E    	    db 0x07,0x3E ; R07 - Enable 
-  11:     -	0B16  102F    	    db 0x10,0x2F ; Delay
-  12:     -	0B18  0107    	    db 0x01,0x07 ; R01 - Ch A Tone Period
-  13:     -	0B1A  102F    	    db 0x10,0x2F ; Delay
-  14:     -	0B1C  0103    	    db 0x01,0x03 ; R01 - Ch A Tone Period
-  15:     -	0B1E  102F    	    db 0x10,0x2F ; Delay
-  16:				
-  17:     -	0B20  0107    	    db 0x01,0x07 ; R01 - Ch A Tone Period
-  18:     -	0B22  100F    	    db 0x10,0x0F ; Delay
-  19:     -	0B24  0103    	    db 0x01,0x03 ; R01 - Ch A Tone Period
-  20:     -	0B26  100F    	    db 0x10,0x0F ; Delay
-  21:     -	0B28  0107    	    db 0x01,0x07 ; R01 - Ch A Tone Period
-  22:     -	0B2A  100F    	    db 0x10,0x0F ; Delay
-  23:     -	0B2C  0103    	    db 0x01,0x03 ; R01 - Ch A Tone Period
-  24:     -	0B2E  100F    	    db 0x10,0x0F ; Delay
-  25:     -	0B30  0107    	    db 0x01,0x07 ; R01 - Ch A Tone Period
-  26:     -	0B32  100F    	    db 0x10,0x0F ; Delay
-  27:     -	0B34  0103    	    db 0x01,0x03 ; R01 - Ch A Tone Period
-  28:     -	0B36  100F    	    db 0x10,0x0F ; Delay
-  29:     -	0B38  0107    	    db 0x01,0x07 ; R01 - Ch A Tone Period
-  30:     -	0B3A  100F    	    db 0x10,0x0F ; Delay
-  31:     -	0B3C  0103    	    db 0x01,0x03 ; R01 - Ch A Tone Period
-  32:     -	0B3E  100F    	    db 0x10,0x0F ; Delay
-  33:				
-  34:     -	0B40  0800    	    db 0x08,0x00 ; R08 - Ch A Amplitude
-  35:				
-  36:				
-  37:				
-**** functions/sub_soundtest.s ****
- 197:     -	0B42  FF      	    db 0xFF      ; END
- 198:				
- 199:     -	0B43          	INT_VEC_SND:
- 200:     -	0014          	    org 14h
+  44:  917+10	0434  F1      	    pop AF ;restore AF
 **** main.asm ****
-  20:     -	0014  A00A    	    DEFW SUB_PLAY_CTC_ISR
-  21:				
-  22:				;Strings
-  23:     -	0016          	STRINGS:
-  24:     -	0600          	    org 0x0600
-  25:     -	0600          	MSG_SYS_VER:
-  26:     -	0600  1B5B324A	    db 27, '[2J', 27, '[H'
+  16:  927+14	0435  ED4D    	    Reti
+  17:				.include "commands.s"
+**** functions/commands.s ****
+   1:     -	0437          	MOD_COMMANDS:
+   2:				    ;org 0x0370
+   3:				
+   4:				;-------------------------------------------------------------
+   5:				; command directory
+   6:				;-------------------------------------------------------------
+   7:     -	0437          	ARR_COMMANDS:
+   8:				    ; Version
+   9:     -	0437  ED04    	    word [CMD_VERSION]
+  10:     -	0439  76657200	    db "ver",0
+  11:				    ; Clear Screen
+  12:     -	043D  0205    	    word [CMD_CLEAR]
+  13:     -	043F  636C7200	    db "clr",0
+  14:				    ; Help
+  15:     -	0443  D804    	    word [CMD_HELP]
+  16:     -	0445  3F00    	    db "?",0
+  17:				    ; Set Memory
+  18:     -	0447  8B05    	    word [CMD_MSET]
+  19:     -	0449  6D736574	    db "mset $",0
+	              202400
+  20:				    ; Get Memory
+  21:     -	0450  AF05    	    word [CMD_MGET]
+  22:     -	0452  6D676574	    db "mget $",0
+	              202400
+  23:				    ; IO Set
+  24:     -	0459  5F05    	    word [CMD_IOSET]
+  25:     -	045B  696F7365	    db "ioset $",0
+	              74202400
+  26:				    ; IO Get
+  27:     -	0463  2F05    	    word [CMD_IOGET]
+  28:     -	0465  696F6765	    db "ioget $",0
+	              74202400
+  29:				    ; Hey-Dump
+  30:     -	046D  0905    	    word [CMD_HEXDUMP]
+  31:     -	046F  68642024	    db "hd $",0
+	              00
+  32:				    ; Exec
+  33:     -	0474  1D05    	    word [CMD_EXEC]
+  34:     -	0476  65786563	    db "exec $",0
+	              202400
+  35:				    
+  36:     -	047D  0000    	    word 0x0000 ; END
+  37:				
+  38:     -	047F          	STR_NOTFOUND:
+  39:     -	047F  0D0A696E	    db 13,10,"invalid command/syntax",13,10,0
+	              76616C69
+	              6420636F
+	              6D6D616E
+	              642F7379
+	              6E746178
+	              0D0A00
+  40:				
+  41:				;-------------------------------------------------------------
+  42:				; command parser
+  43:				;-------------------------------------------------------------
+  44:				
+  45:				;*****************
+  46:				; PARSE_CMD
+  47:				;*****************
+  48:				;Description: Pares Input Command
+  49:				;
+  50:				;Inputs: none
+  51:				;
+  52:				;Outputs: none
+  53:				;
+  54:				;Destroys: A, BC, DE, HL
+  55:     -	049A          	PARSE_CMD:
+  56:  941+10	049A  113704  	    LD DE, [ARR_COMMANDS]           ; Load compare ADDR 
+  57:				
+  58:     -	049D          	PARSE_CMD_START:
+  59:  951+7	049D  1A      	    LD A, (DE)                       ;Load first 2 bytes: Jump address
+  60:  958+4	049E  4F      	    LD C,A
+  61:  962+6	049F  13      	    INC DE   
+  62:  968+7	04A0  1A      	    LD A, (DE)                       ;Load first 2 bytes: Jump address
+  63:  975+4	04A1  47      	    LD B,A
+  64:  979+6	04A2  13      	    INC DE                          ;DE is now the starting address of the null-terminated-string 
+  65:				    
+  66:				    ; Compare 16 bit routine pointer
+  67:  985+10	04A3  210000  	    LD HL,0000h                     ;load HL with value to compare -> 0x0000
+  68:  995+15	04A6  ED42    	    SBC HL,BC                       ;substract HL from BC. If both match, Z flag will be set
+  69: 1010+10	04A8  CAC404  	    JP Z,PARSE_CMD_NO_MATCH         ;jmp to exit block for parser
+  70:				    ; if > 0 -> continue
+  71:				
+  72: 1020+10	04AB  210540  	    LD HL, [MEM_PROMPT_START]       ; Input Buffer
+  73: 1030+17	04AE  CDCB04  	    CALL PARSE_CMD_CMP_STRING_START ;parse 1st elemeent
+  74: 1047+10	04B1  CABD04  	    JP Z,PARSE_CMD_START_FOUND      ;jmp to pointer if match
+  75:				
+  76:     -	04B4          	PARSE_CMD_START_NOT_FOUND:          ;inc DE to next element
+  77: 1057+7	04B4  1A      	    LD A,(DE)                       ;find end of string -> load current byte
+  78: 1064+6	04B5  13      	    INC DE                          
+  79: 1070+4	04B6  A7      	    AND A                           ;find null termination
+  80: 1074+10	04B7  CA9D04  	    JP Z, PARSE_CMD_START          ;if current byte-1 == 0x00 -> continue loop @ PARSE_CMD_START
+  81: 1084+10	04BA  C3B404  	    JP PARSE_CMD_START_NOT_FOUND
+  82:				
+  83:     -	04BD          	PARSE_CMD_START_FOUND:              ;if command matched
+  84: 1094+17	04BD  CDC104  	    CALL PARSE_CMD_START_EXEC       ;call routine
+  85: 1111+10	04C0  C9      	    RET                             ;exit parser
+  86:				
+  87:     -	04C1          	PARSE_CMD_START_EXEC:               ;dynamic Z80 call -> serves as function and will put last PC value on stack
+  88:				
+  89:				
+  90: 1121+4	04C1  60      	    LD H,B                       ;load HL with pointer to routine
+  91: 1125+4	04C2  69      	    LD L,C
+  92: 1129+4	04C3  E9      	    JP (HL)                         ;jmp to routine
+  93:				    
+  94:     -	04C4          	PARSE_CMD_NO_MATCH:                 ;if no command matched
+  95: 1133+10	04C4  017F04  	    LD BC,[STR_NOTFOUND]            ;load pointer to string STR_NOTFOUND
+  96: 1143+17	04C7  CD9A03  	    CALL CONSOLE_PRINTSTR           ;print null-terminated string to console
+  97: 1160+10	04CA  C9      	    RET                             ;exit parser
+  98:				
+  99:				; HL = String to compare
+ 100:				; DE = String Pattern
+ 101:     -	04CB          	PARSE_CMD_CMP_STRING_START:
+ 102: 1170+7	04CB  1A      	    LD A,(DE)
+ 103: 1177+4	04CC  A7      	    AND A
+ 104: 1181+5+6	04CD  C8      	    RET Z; RETURN Z=1 if reached END wizhout mismatch
+ 105: 1186+7	04CE  BE      	    CP (HL)
+ 106: 1193+5+6	04CF  C0      	    RET NZ; If not Match (z=0) exit
+ 107:     -	04D0          	PARSE_CMD_CMP_STRING_START_MATCHED:
+ 108: 1198+7	04D0  7E      	    LD A,(HL)
+ 109: 1205+4	04D1  A7      	    AND A; String to compare reached end
+ 110: 1209+5+6	04D2  C8      	    RET Z
+ 111:     -	04D3          	PARSE_CMD_CMP_STRING_START_CONTINUE:
+ 112: 1214+6	04D3  23      	    INC HL
+ 113: 1220+6	04D4  13      	    INC DE
+ 114: 1226+10	04D5  C3CB04  	    JP PARSE_CMD_CMP_STRING_START
+ 115:				    
+ 116:				;-------------------------------------------------------------
+ 117:				; commands routines
+ 118:				;-------------------------------------------------------------
+ 119:     -	04D8          	CMD_HELP:
+ 120: 1236+10	04D8  015F06  	    LD BC,[MSG_CMD_HELP]
+ 121: 1246+17	04DB  CD9A03  	    CALL CONSOLE_PRINTSTR
+ 122:				
+ 123: 1263+7	04DE  3E0D    	    LD A,13
+ 124: 1270+11	04E0  D311    	    out (IO_SIO0B_D),A
+ 125: 1281+17	04E2  CDB803  	    call TX_EMP
+ 126: 1298+7	04E5  3E0A    	    LD A,10
+ 127: 1305+11	04E7  D311    	    out (IO_SIO0B_D),A
+ 128: 1316+17	04E9  CDB803  	    call TX_EMP
+ 129: 1333+10	04EC  C9      	    RET
+ 130:				
+ 131:     -	04ED          	CMD_VERSION:
+ 132: 1343+10	04ED  01CD06  	    LD BC,[MSG_CMD_VER]
+ 133: 1353+17	04F0  CD9A03  	    CALL CONSOLE_PRINTSTR
+ 134:				
+ 135: 1370+7	04F3  3E0D    	    LD A,13
+ 136: 1377+11	04F5  D311    	    out (IO_SIO0B_D),A
+ 137: 1388+17	04F7  CDB803  	    call TX_EMP
+ 138: 1405+7	04FA  3E0A    	    LD A,10
+ 139: 1412+11	04FC  D311    	    out (IO_SIO0B_D),A
+ 140: 1423+17	04FE  CDB803  	    call TX_EMP
+ 141: 1440+10	0501  C9      	    RET
+ 142:				
+ 143:     -	0502          	CMD_CLEAR:
+ 144: 1450+10	0502  013703  	    LD BC,[MSG_CLEAR]
+ 145: 1460+17	0505  CD9A03  	    CALL CONSOLE_PRINTSTR
+ 146: 1477+10	0508  C9      	    RET
+ 147:				
+ 148:     -	0509          	CMD_HEXDUMP:
+ 149: 1487+10	0509  010940  	    LD BC,MEM_PROMPT_START + 4
+ 150: 1497+17	050C  CD1B03  	    CALL DHEX_TO_BYTE
+ 151: 1514+4	050F  67      	    LD H,A
+ 152:				
+ 153: 1518+10	0510  010B40  	    LD BC,MEM_PROMPT_START + 6
+ 154: 1528+17	0513  CD1B03  	    CALL DHEX_TO_BYTE
+ 155: 1545+7	0516  E6F0    	    AND 0xF0
+ 156: 1552+4	0518  6F      	    LD L,A
+ 157:				
+ 158: 1556+17	0519  CD9002  	    CALL PRINT_HEXDUMP
+ 159: 1573+10	051C  C9      	    RET
+ 160:				
+ 161:     -	051D          	CMD_EXEC:
+ 162: 1583+10	051D  010B40  	    LD BC,MEM_PROMPT_START + 6
+ 163: 1593+17	0520  CD1B03  	    CALL DHEX_TO_BYTE
+ 164: 1610+4	0523  67      	    LD H,A
+ 165:				
+ 166: 1614+10	0524  010D40  	    LD BC,MEM_PROMPT_START + 8
+ 167: 1624+17	0527  CD1B03  	    CALL DHEX_TO_BYTE
+ 168: 1641+4	052A  6F      	    LD L,A
+ 169:				
+ 170: 1645+10	052B  31FF7F  	    LD SP,0x7FFF
+ 171: 1655+4	052E  E9      	    JP HL
+ 172:				
+ 173:     -	052F          	CMD_IOGET:
+ 174: 1659+10	052F  010C40  	    LD BC,MEM_PROMPT_START + 7
+ 175: 1669+17	0532  CD1B03  	    CALL DHEX_TO_BYTE
+ 176: 1686+4	0535  4F      	    LD C, A
+ 177:				
+ 178: 1690+7	0536  3E0D    	    LD A,13
+ 179: 1697+11	0538  D311    	    out (IO_SIO0B_D),A
+ 180: 1708+17	053A  CDB803  	    call TX_EMP
+ 181: 1725+7	053D  3E0A    	    LD A,10
+ 182: 1732+11	053F  D311    	    out (IO_SIO0B_D),A
+ 183: 1743+17	0541  CDB803  	    call TX_EMP
+ 184:				
+ 185: 1760+12	0544  ED78    	    IN A,(C)
+ 186: 1772+17	0546  CD4402  	    CALL PRINT_A_HEX
+ 187: 1789+7	0549  3E68    	    LD A,'h'
+ 188:				
+ 189: 1796+11	054B  D311    	    out (IO_SIO0B_D),A
+ 190: 1807+17	054D  CDB803  	    call TX_EMP
+ 191: 1824+7	0550  3E0D    	    LD A,13
+ 192: 1831+11	0552  D311    	    out (IO_SIO0B_D),A
+ 193: 1842+17	0554  CDB803  	    call TX_EMP
+ 194: 1859+7	0557  3E0A    	    LD A,10
+ 195: 1866+11	0559  D311    	    out (IO_SIO0B_D),A
+ 196: 1877+17	055B  CDB803  	    call TX_EMP
+ 197: 1894+10	055E  C9      	    RET
+ 198:				
+ 199:     -	055F          	CMD_IOSET:
+ 200: 1904+10	055F  010C40  	    LD BC,MEM_PROMPT_START + 7
+ 201: 1914+17	0562  CD1B03  	    CALL DHEX_TO_BYTE
+ 202: 1931+4	0565  67      	    LD H,A
+ 203:				
+ 204: 1935+10	0566  010F40  	    LD BC,MEM_PROMPT_START + 10
+ 205: 1945+17	0569  CD1B03  	    CALL DHEX_TO_BYTE
+ 206:				
+ 207:				    ;; DEBUG START
+ 208: 1962+11	056C  F5      	    PUSH AF
+ 209:				
+ 210: 1973+7	056D  3E20    	    LD A,' '
+ 211: 1980+11	056F  D311    	    out (IO_SIO0B_D),A
+ 212: 1991+17	0571  CDB803  	    call TX_EMP
+ 213:				
+ 214: 2008+4	0574  7C      	    LD A,H
+ 215: 2012+17	0575  CD4402  	    CALL PRINT_A_HEX
+ 216:				
+ 217: 2029+10	0578  F1      	    POP AF
+ 218:				    ;; DEBUG END
+ 219:				
+ 220: 2039+4	0579  4C      	    LD C,H
+ 221: 2043+12	057A  ED79    	    OUT (C),A
+ 222:				
+ 223: 2055+7	057C  3E0D    	    LD A,13
+ 224: 2062+11	057E  D311    	    out (IO_SIO0B_D),A
+ 225: 2073+17	0580  CDB803  	    call TX_EMP
+ 226: 2090+7	0583  3E0A    	    LD A,10
+ 227: 2097+11	0585  D311    	    out (IO_SIO0B_D),A
+ 228: 2108+17	0587  CDB803  	    call TX_EMP
+ 229: 2125+10	058A  C9      	    RET
+ 230:				
+ 231:     -	058B          	CMD_MSET:
+ 232: 2135+10	058B  010B40  	    LD BC,MEM_PROMPT_START + 6
+ 233: 2145+17	058E  CD1B03  	    CALL DHEX_TO_BYTE
+ 234: 2162+4	0591  67      	    LD H,A
+ 235:				
+ 236: 2166+10	0592  010D40  	    LD BC,MEM_PROMPT_START + 8
+ 237: 2176+17	0595  CD1B03  	    CALL DHEX_TO_BYTE
+ 238: 2193+4	0598  6F      	    LD L,A
+ 239:				
+ 240:				    
+ 241: 2197+10	0599  011040  	    LD BC,MEM_PROMPT_START + 11
+ 242: 2207+17	059C  CD1B03  	    CALL DHEX_TO_BYTE
+ 243:				    
+ 244: 2224+7	059F  77      	    LD (HL),A
+ 245:				
+ 246: 2231+7	05A0  3E0D    	    LD A,13
+ 247: 2238+11	05A2  D311    	    out (IO_SIO0B_D),A
+ 248: 2249+17	05A4  CDB803  	    call TX_EMP
+ 249: 2266+7	05A7  3E0A    	    LD A,10
+ 250: 2273+11	05A9  D311    	    out (IO_SIO0B_D),A
+ 251: 2284+17	05AB  CDB803  	    call TX_EMP
+ 252: 2301+10	05AE  C9      	    RET
+ 253:				
+ 254:     -	05AF          	CMD_MGET:
+ 255: 2311+10	05AF  010B40  	    LD BC,MEM_PROMPT_START + 6
+ 256: 2321+17	05B2  CD1B03  	    CALL DHEX_TO_BYTE
+ 257: 2338+4	05B5  67      	    LD H,A
+ 258:				
+ 259: 2342+10	05B6  010D40  	    LD BC,MEM_PROMPT_START + 8
+ 260: 2352+17	05B9  CD1B03  	    CALL DHEX_TO_BYTE
+ 261: 2369+4	05BC  6F      	    LD L,A
+ 262:				
+ 263: 2373+7	05BD  3E0D    	    LD A,13
+ 264: 2380+11	05BF  D311    	    out (IO_SIO0B_D),A
+ 265: 2391+17	05C1  CDB803  	    call TX_EMP
+ 266: 2408+7	05C4  3E0A    	    LD A,10
+ 267: 2415+11	05C6  D311    	    out (IO_SIO0B_D),A
+ 268: 2426+17	05C8  CDB803  	    call TX_EMP
+ 269: 2443+7	05CB  7E      	    LD A,(HL)
+ 270: 2450+17	05CC  CD4402  	    CALL PRINT_A_HEX
+ 271: 2467+7	05CF  3E68    	    LD A,'h'
+ 272: 2474+11	05D1  D311    	    out (IO_SIO0B_D),A
+ 273: 2485+17	05D3  CDB803  	    call TX_EMP
+ 274: 2502+7	05D6  3E0D    	    LD A,13
+ 275: 2509+11	05D8  D311    	    out (IO_SIO0B_D),A
+ 276: 2520+17	05DA  CDB803  	    call TX_EMP
+ 277: 2537+7	05DD  3E0A    	    LD A,10
+ 278: 2544+11	05DF  D311    	    out (IO_SIO0B_D),A
+ 279: 2555+17	05E1  CDB803  	    call TX_EMP
+ 280: 2572+10	05E4  C9      	    RET
+ 281:				
+ 282:				
+ 283:				
+ 284:				;-------------------------------------------------------------
+ 285:				; commands strings
+ 286:				;-------------------------------------------------------------
+ 287:     -	05E5          	MSG_SYS_VER:
+ 288:     -	05E5  1B5B324A	    db 27, '[2J', 27, '[H'
 	              1B5B48
-  27:     -	0607  5A384320	    db 'Z8C Mk IV - A Z80 Homebrew Computer',13,10
+ 289:     -	05EC  5A384320	    db 'Z8C Mk IV - A Z80 Homebrew Computer',13,10
 	              4D6B2049
 	              56202D20
 	              41205A38
@@ -522,7 +612,7 @@
 	              6F6D7075
 	              7465720D
 	              0A
-  28:     -	062C  4D6F6E69	    db 'Monitor ROM Ver. 1.0 by Dennis Gunia (2022)',13,10
+ 290:     -	0611  4D6F6E69	    db 'Monitor ROM Ver. 1.0 by Dennis Gunia (2022)',13,10
 	              746F7220
 	              524F4D20
 	              5665722E
@@ -534,7 +624,7 @@
 	              20283230
 	              3232290D
 	              0A
-  29:     -	0659  34386B20	    db '48k RAM - 4MHz Z80 CPU - Stack $',0
+ 291:     -	063E  34386B20	    db '48k RAM - 4MHz Z80 CPU - Stack $',0
 	              52414D20
 	              2D20344D
 	              487A205A
@@ -543,10 +633,10 @@
 	              20537461
 	              636B2024
 	              00
-  30:				
-  31:     -	067A          	MSG_CMD_HELP:
-  32:     -	067A  0D0A    	    db 13,10
-  33:     -	067C  68642024	    db "hd $<addr>  mget $<addr>  mset $<addr> <val>",13,10
+ 292:				
+ 293:     -	065F          	MSG_CMD_HELP:
+ 294:     -	065F  0D0A    	    db 13,10
+ 295:     -	0661  68642024	    db "hd $<addr>  mget $<addr>  mset $<addr> <val>",13,10
 	              3C616464
 	              723E2020
 	              6D676574
@@ -558,7 +648,7 @@
 	              723E203C
 	              76616C3E
 	              0D0A
-  34:     -	06AA  696F6765	    db "ioget $<addr>  ioset $<addr> <val>",13,10
+ 296:     -	068F  696F6765	    db "ioget $<addr>  ioset $<addr> <val>",13,10
 	              7420243C
 	              61646472
 	              3E202069
@@ -567,24 +657,24 @@
 	              6464723E
 	              203C7661
 	              6C3E0D0A
-  35:     -	06CE  3F202065	    db "?  exec $<addr>  clr  ver"
+ 297:     -	06B3  3F202065	    db "?  exec $<addr>  clr  ver"
 	              78656320
 	              243C6164
 	              64723E20
 	              20636C72
 	              20207665
 	              72
-  36:     -	06E7  00      	    db 0
-  37:				
-  38:     -	06E8          	MSG_CMD_VER:
-  39:     -	06E8  0D0A    	    db 13,10
-  40:     -	06EA  5A384320	    db "Z8C Monitor Programm",13,10
+ 298:     -	06CC  00      	    db 0
+ 299:				
+ 300:     -	06CD          	MSG_CMD_VER:
+ 301:     -	06CD  0D0A    	    db 13,10
+ 302:     -	06CF  5A384320	    db "Z8C Monitor Programm",13,10
 	              4D6F6E69
 	              746F7220
 	              50726F67
 	              72616D6D
 	              0D0A
-  41:     -	0700  524F4D20	    db "ROM Version 1.0 - Written by Dennis Gunia, 2022",13,10
+ 303:     -	06E5  524F4D20	    db "ROM Version 1.0 - Written by Dennis Gunia, 2022",13,10
 	              56657273
 	              696F6E20
 	              312E3020
@@ -597,7 +687,7 @@
 	              612C2032
 	              3032320D
 	              0A
-  42:     -	0731  332E3638	    db "3.686411MHz CPU, 48K RAM System, John 3,16",13,10
+ 304:     -	0716  332E3638	    db "3.686411MHz CPU, 48K RAM System, John 3,16",13,10
 	              36343131
 	              4D487A20
 	              4350552C
@@ -608,24 +698,262 @@
 	              204A6F68
 	              6E20332C
 	              31360D0A
-  43:     -	075D  7777772E	    db "www.dennisgunia.de",13,10
+ 305:     -	0742  7777772E	    db "www.dennisgunia.de"
 	              64656E6E
 	              69736775
 	              6E69612E
-	              64650D0A
-  44:     -	0771  00      	    db 0
-  45:				
-  46:				
-  47:     -	0772          	MSG_CMD_UNKNOWN:
-  48:     -	0772  0D0A496E	    db 13,10,'Invalid operation',0,13
-	              76616C69
-	              64206F70
-	              65726174
-	              696F6E00
-	              0D
-  49:				
-  50:     -	0787          	MSG_HEXDUMP_HEADER:
-  51:     -	0787  0D0A4241	    db 13,10,'BASE   0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F',0
+	              6465
+**** main.asm ****
+  18:     -	0754  00      	    db 0
+  19:				
+  20:				; include subroutines
+  21:				;.include "sub_soundtest.s"
+  22:				
+  23:     -	0755          	INT_VEC:
+  24:     -	000C          	    org 0Ch
+  25:     -	000C  2104    	    DEFW RX_CHA_AVAILABLE
+  26:     -	000E          	    org 0Eh
+  27:     -	000E  5001    	    DEFW SPEC_RX_CONDITON
+  28:				    
+  29:     -	0010          	init:
+  30:     -	0000          	    org 0x0000
+  31: 2582+10	0000  C30001  	    jp PROG_ROM_START
+  32:				
+  33:     -	0003          	init_led:
+  34:     -	0100          	    org PROG_ROM_START
+  35: 2592+7	0100  3E00    	    LD A,0x00
+  36: 2599+11	0102  D320    	    OUT (IO_REG0),A
+  37:				
+  38:     -	0104          	init_console:
+  39: 2610+17	0104  CDC703  	    CALL CONSOLE_INIT
+  40:				
+  41: 2627+7	0107  1608    	    LD	  D,0x08	; Select register #8
+  42: 2634+7	0109  3E00    	    LD	  A,0x00	; Volume channel A 0
+  43: 2641+17	010B  CD0704  	    CALL AY0_WRITE_REG
+  44: 2658+7	010E  1609    	    LD	  D,0x09	; Select register #9
+  45: 2665+7	0110  3E00    	    LD	  A,0x00	; Volume channel B 0
+  46: 2672+17	0112  CD0704  	    CALL AY0_WRITE_REG
+  47: 2689+7	0115  160A    	    LD	  D,0x0A	; Select register #10
+  48: 2696+7	0117  3E00    	    LD	  A,0x00	; Volume channel C 0
+  49: 2703+17	0119  CD0704  	    CALL AY0_WRITE_REG
+  50:				    
+  51:				
+  52:				;INT_INI:
+  53:				;    ld A,0
+  54:				;    ld I,A  ;load I reg with zero
+  55:				;    im 2    ;set int mode 2
+  56:				;    ei      ;enable interupt
+  57:				
+  58: 2720+7	011C  3E00    	    LD A,0x00
+  59: 2727+11	011E  D311    	    OUT (IO_SIO0B_D),A
+  60: 2738+17	0120  CDB803  	    CALL TX_EMP
+  61:				
+  62: 2755+17	0123  CD1804  	    call A_RTS_ON
+  63:				
+  64:				    ; PRINT BANNER
+  65: 2772+10	0126  01E505  	    LD BC, [MSG_SYS_VER]
+  66: 2782+17	0129  CD9A03  	    CALL CONSOLE_PRINTSTR
+  67:				
+  68: 2799+10	012C  31FF7F  	    LD SP,07FFFh
+  69:				    ; Print SP Location
+  70: 2809+20	012F  ED730040	    LD (0x4000),SP
+  71: 2829+13	0133  3A0140  	    LD A,(0x4001)
+  72: 2842+17	0136  CD4402  	    CALL PRINT_A_HEX
+  73: 2859+13	0139  3A0040  	    LD A,(0x4000)
+  74: 2872+17	013C  CD4402  	    CALL PRINT_A_HEX
+  75:				
+  76: 2889+7	013F  3E0D    	    LD A,13
+  77: 2896+11	0141  D311    	    out (IO_SIO0B_D),A
+  78: 2907+17	0143  CDB803  	    call TX_EMP
+  79: 2924+7	0146  3E0A    	    LD A,10
+  80: 2931+11	0148  D311    	    out (IO_SIO0B_D),A
+  81: 2942+17	014A  CDB803  	    call TX_EMP
+  82:				
+  83: 2959+10	014D  C36501  	    JP CONSOLE_PROMPT
+  84:				
+  85:				
+  86:				
+  87:				
+  88:     -	0150          	SPEC_RX_CONDITON:
+  89:				    
+  90: 2969+10	0150  C30000  	    jp 0000h
+  91:				
+  92:				
+  93:     -	0153          	DELAY:
+  94: 2979+15	0153  DDE5    	    PUSH IX
+  95: 2994+11	0155  C5      	    PUSH BC
+  96: 3005+14	0156  DD210040	    LD IX,0x4000
+  97: 3019+10	015A  010100  	    LD BC,1
+  98:     -	015D          	DELAY_LOOP:
+  99: 3029+15	015D  DD09    	    ADD IX,BC
+ 100: 3044+7+5	015F  30FC    	    JR NC, DELAY_LOOP
+ 101: 3051+10	0161  C1      	    POP BC
+ 102: 3061+14	0162  DDE1    	    POP IX
+ 103: 3075+10	0164  C9      	    RET
+ 104:				
+ 105:				; Console Functions
+ 106:				
+ 107:				
+ 108:     -	0165          	CONSOLE_PROMPT:
+ 109:				    ;Console Prompt
+ 110: 3085+7	0165  3E0A    	    LD A, 10
+ 111: 3092+11	0167  D311    	    out (IO_SIO0B_D),A
+ 112: 3103+17	0169  CDB803  	    call TX_EMP
+ 113: 3120+7	016C  3E3F    	    LD A,'?'
+ 114: 3127+11	016E  D311    	    out (IO_SIO0B_D),A
+ 115: 3138+17	0170  CDB803  	    call TX_EMP
+ 116: 3155+7	0173  3E3E    	    LD A,'>'
+ 117: 3162+11	0175  D311    	    out (IO_SIO0B_D),A
+ 118: 3173+17	0177  CDB803  	    call TX_EMP
+ 119: 3190+7	017A  3E20    	    LD A,' '
+ 120: 3197+11	017C  D311    	    out (IO_SIO0B_D),A
+ 121: 3208+17	017E  CDB803  	    call TX_EMP
+ 122: 3225+7	0181  3E5F    	    LD A,"_"
+ 123: 3232+11	0183  D311    	    out (IO_SIO0B_D),A 
+ 124: 3243+17	0185  CDB803  	    call TX_EMP
+ 125:				
+ 126:				    ; Blinking Cursor
+ 127: 3260+14	0188  DD2100E0	    LD IX,CMD_CRS_SPEED
+ 128: 3274+10	018C  010100  	    LD BC,1
+ 129: 3284+7	018F  3E00    	    LD A,0
+ 130: 3291+13	0191  320040  	    LD (MEM_CURSOR_STATE),A
+ 131:				    ; SET PROMPT LENGTH TO 0
+ 132: 3304+7	0194  3E00    	    LD A,0
+ 133: 3311+13	0196  320340  	    LD (MEM_PROMPT_SIZE),A
+ 134:				
+ 135:     -	0199          	CONSOLE_PROMPT_LOOP:
+ 136:				    ; READ INPUT
+ 137:				    ; Delete Cursor if input Avail
+ 138:				    ;JP CONSOLE_PROMPT_LOOP_2
+ 139: 3324+17	0199  CDAD03  	    CALL CONSOLE_READ_CHAR
+ 140: 3341+4	019C  A7      	    AND A
+ 141: 3345+13	019D  320140  	    LD (MEM_LAST_CHAR),A
+ 142:				
+ 143: 3358+10	01A0  CA0902  	    JP Z, CONSOLE_PROMPT_LOOP_2
+ 144:				    ; if newline
+ 145: 3368+7	01A3  160D    	    LD D, 13
+ 146: 3375+4	01A5  BA      	    CP D
+ 147: 3379+7+5	01A6  2006    	    JR NZ, CONSOLE_PROMPT_LOOP_1
+ 148:				
+ 149: 3386+17	01A8  CD9A04  	    CALL PARSE_CMD
+ 150:				
+ 151: 3403+10	01AB  C36501  	    JP CONSOLE_PROMPT
+ 152:				
+ 153:     -	01AE          	CONSOLE_PROMPT_LOOP_1: ; Not new line
+ 154:				   
+ 155: 3413+13	01AE  3A0140  	    LD A,(MEM_LAST_CHAR)
+ 156: 3426+7	01B1  167F    	    LD D, 0x7F
+ 157: 3433+4	01B3  BA      	    CP D
+ 158: 3437+7+5	01B4  2024    	    JR NZ, CONSOLE_PROMPT_LOOP_1B
+ 159:				
+ 160:				    ; if Backspace
+ 161: 3444+13	01B6  3A0340  	    LD A,(MEM_PROMPT_SIZE); test if 0
+ 162: 3457+4	01B9  A7      	    AND A
+ 163: 3461+10	01BA  CA0902  	    JP Z,CONSOLE_PROMPT_LOOP_2; no action if buffer empty
+ 164:				
+ 165:				    ;EXEC this if backspace (08d)
+ 166: 3471+4	01BD  3D      	    DEC A
+ 167: 3475+13	01BE  320340  	    LD (MEM_PROMPT_SIZE),A  ; store size to mem
+ 168:				
+ 169: 3488+7	01C1  3E7F    	    LD A, 0x7F
+ 170: 3495+11	01C3  D311    	    out (IO_SIO0B_D),A
+ 171: 3506+17	01C5  CDB803  	    call TX_EMP
+ 172:				
+ 173: 3523+13	01C8  3A0140  	    LD A,(MEM_LAST_CHAR)
+ 174: 3536+11	01CB  D311    	    out (IO_SIO0B_D),A
+ 175: 3547+17	01CD  CDB803  	    call TX_EMP
+ 176:				
+ 177: 3564+7	01D0  3E20    	    LD A," "
+ 178: 3571+11	01D2  D311    	    out (IO_SIO0B_D),A 
+ 179: 3582+17	01D4  CDB803  	    call TX_EMP
+ 180:				
+ 181: 3599+10	01D7  C30902  	    JP CONSOLE_PROMPT_LOOP_2
+ 182:				
+ 183:     -	01DA          	CONSOLE_PROMPT_LOOP_1B: ;IF not Backspace 
+ 184:				
+ 185:				
+ 186:				    ; CHECK if Controll Sequence
+ 187:				    
+ 188:				
+ 189:				    ; Continue
+ 190:				
+ 191: 3609+13	01DA  3A0340  	    LD A,(MEM_PROMPT_SIZE)
+ 192: 3622+4	01DD  3C      	    INC A
+ 193: 3626+13	01DE  320340  	    LD (MEM_PROMPT_SIZE),A  ; store size to mem
+ 194:				
+ 195: 3639+7	01E1  3E7F    	    LD A, 0x7F
+ 196: 3646+11	01E3  D311    	    out (IO_SIO0B_D),A
+ 197: 3657+17	01E5  CDB803  	    call TX_EMP
+ 198:				
+ 199: 3674+13	01E8  3A0140  	    LD A,(MEM_LAST_CHAR)
+ 200: 3687+11	01EB  D311    	    out (IO_SIO0B_D),A
+ 201: 3698+17	01ED  CDB803  	    call TX_EMP
+ 202:				
+ 203: 3715+7	01F0  3E20    	    LD A," "
+ 204: 3722+11	01F2  D311    	    out (IO_SIO0B_D),A 
+ 205: 3733+17	01F4  CDB803  	    call TX_EMP
+ 206:				
+ 207:				    ;APPEND CHAR TO BUFFER
+ 208: 3750+11	01F7  C5      	    PUSH BC
+ 209: 3761+10	01F8  210540  	    LD HL,MEM_PROMPT_START
+ 210: 3771+7	01FB  0600    	    LD B,0
+ 211: 3778+13	01FD  3A0340  	    LD A,(MEM_PROMPT_SIZE)
+ 212: 3791+4	0200  3D      	    DEC A
+ 213: 3795+4	0201  4F      	    LD C,A
+ 214: 3799+15	0202  ED4A    	    ADC HL, BC
+ 215: 3814+13	0204  3A0140  	    LD A, (MEM_LAST_CHAR)
+ 216: 3827+7	0207  77      	    LD (HL), A
+ 217: 3834+10	0208  C1      	    POP BC
+ 218:				    
+ 219:				
+ 220:				
+ 221:     -	0209          	CONSOLE_PROMPT_LOOP_2:
+ 222:				    ; Print Cursor
+ 223: 3844+15	0209  DD09    	    ADD IX,BC
+ 224: 3859+7+5	020B  308C    	    JR NC, CONSOLE_PROMPT_LOOP
+ 225:				    ; Toggle cycle
+ 226: 3866+13	020D  3A0040  	    LD A,(MEM_CURSOR_STATE)
+ 227: 3879+7	0210  EE01    	    XOR 1
+ 228: 3886+7+5	0212  2818    	    JR Z,CONSOLE_PROMPT_LOOP_3
+ 229: 3893+13	0214  320040  	    LD (MEM_CURSOR_STATE),A
+ 230:				
+ 231: 3906+7	0217  3E7F    	    LD A, 0x7F
+ 232: 3913+11	0219  D311    	    out (IO_SIO0B_D),A
+ 233: 3924+17	021B  CDB803  	    call TX_EMP
+ 234: 3941+7	021E  3E5F    	    LD A,'_'
+ 235: 3948+11	0220  D311    	    out (IO_SIO0B_D),A
+ 236: 3959+17	0222  CDB803  	    call TX_EMP
+ 237: 3976+14	0225  DD2100E0	    LD IX,CMD_CRS_SPEED
+ 238: 3990+10	0229  C39901  	    JP CONSOLE_PROMPT_LOOP
+ 239:				
+ 240:     -	022C          	CONSOLE_PROMPT_LOOP_3:
+ 241: 4000+13	022C  320040  	    LD (MEM_CURSOR_STATE),A
+ 242: 4013+7	022F  3E7F    	    LD A, 0x7F
+ 243: 4020+11	0231  D311    	    out (IO_SIO0B_D),A
+ 244: 4031+17	0233  CDB803  	    call TX_EMP
+ 245: 4048+7	0236  3E20    	    LD A,' '
+ 246: 4055+11	0238  D311    	    out (IO_SIO0B_D),A
+ 247: 4066+17	023A  CDB803  	    call TX_EMP
+ 248: 4083+14	023D  DD2100E0	    LD IX,CMD_CRS_SPEED
+ 249: 4097+10	0241  C39901  	    JP CONSOLE_PROMPT_LOOP
+ 250:				
+ 251:				; A Contains Byte
+ 252:     -	0244          	PRINT_A_HEX:
+ 253: 4107+11	0244  C5      	    PUSH BC
+ 254: 4118+11	0245  D5      	    PUSH DE
+ 255: 4129+17	0246  CD8003  	    CALL STRCONV_BYTES_TO_HEX   ; New Kernel Call
+ 256: 4146+4	0249  78      	    LD A,B
+ 257: 4150+11	024A  D311    	    out (IO_SIO0B_D),A
+ 258: 4161+17	024C  CDB803  	    call TX_EMP
+ 259: 4178+4	024F  79      	    LD A,C
+ 260: 4182+11	0250  D311    	    out (IO_SIO0B_D),A
+ 261: 4193+17	0252  CDB803  	    call TX_EMP
+ 262: 4210+10	0255  D1      	    POP DE
+ 263: 4220+10	0256  C1      	    POP BC
+ 264: 4230+10	0257  C9      	    RET
+ 265:				
+ 266:     -	0258          	MSG_HEXDUMP_HEADER:
+ 267:     -	0258  0D0A4241	    db 13,10,'BASE   0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F',0
 	              53452020
 	              20302020
 	              31202032
@@ -639,693 +967,145 @@
 	              20432020
 	              44202045
 	              20204600
-  52:				
-  53:     -	07BF          	MSG_CLEAR:
-  54:     -	07BF  1B5B324A	    db 27, '[2J', 27, '[H',0
-	              1B5B4800
-  55:				
-  56:     -	07C7  68642024	CMD_PS_HD   db 'hd $',0
-	              00
-  57:     -	07CC  70742024	CMD_PS_PT   db 'pt $',0
-	              00
-  58:				
-  59:     -	07D1  65786563	CMD_PS_EXEC db 'exec $',0
-	              202400
-  60:     -	07D8  63616C6C	CMD_PS_CALL db 'call $',0
-	              202400
-  61:     -	07DF  6D676574	CMD_PS_MGET db 'mget $',0
-	              202400
-  62:     -	07E6  6D736574	CMD_PS_MSET db 'mset $',0
-	              202400
-  63:     -	07ED  3F00    	CMD_PS_HELP db '?',0
-  64:     -	07EF  636C7200	CMD_PS_CLEAR db 'clr',0
-  65:     -	07F3  76657200	CMD_PS_VER db 'ver',0
-  66:				
-  67:     -	07F7  696F6765	CMD_PS_IOGET db 'ioget $',0
-	              74202400
-  68:     -	07FF  696F7365	CMD_PS_IOSET db 'ioset $',0
-	              74202400
-  69:				
-  70:     -	0807          	INT_VEC:
-  71:     -	000C          	    org 0Ch
-  72:     -	000C  4D01    	    DEFW RX_CHA_AVAILABLE
-  73:     -	000E          	    org 0Eh
-  74:     -	000E  6301    	    DEFW SPEC_RX_CONDITON
-  75:				    
-  76:     -	0010          	init:
-  77:     -	0000          	    org 0x0000
-  78: 1653+10	0000  C30001  	    jp PROG_ROM_START
-  79:				
-  80:     -	0003          	init_led:
-  81:     -	0100          	    org PROG_ROM_START
-  82: 1663+7	0100  3E00    	    LD A,0x00
-  83: 1670+11	0102  D320    	    OUT (IO_REG0),A
-  84:				
-  85:     -	0104          	init_console:
-  86: 1681+17	0104  CD6708  	    CALL CONSOLE_INIT
-  87:				
-  88:				;INT_INI:
-  89:				;    ld A,0
-  90:				;    ld I,A  ;load I reg with zero
-  91:				;    im 2    ;set int mode 2
-  92:				;    ei      ;enable interupt
-  93:				
-  94: 1698+7	0107  3E00    	    LD A,0x00
-  95: 1705+11	0109  D311    	    OUT (IO_SIO0B_D),A
-  96: 1716+17	010B  CD5808  	    CALL TX_EMP
-  97:				
-  98: 1733+17	010E  CD4401  	    call A_RTS_ON
-  99:				
- 100:				    ; PRINT BANNER
- 101: 1750+10	0111  010006  	    LD BC, [MSG_SYS_VER]
- 102: 1760+17	0114  CD3A08  	    CALL CONSOLE_PRINTSTR
- 103:				
- 104: 1777+10	0117  31FF7F  	    LD SP,07FFFh
- 105:				    ; Print SP Location
- 106: 1787+20	011A  ED730040	    LD (0x4000),SP
- 107: 1807+13	011E  3A0140  	    LD A,(0x4001)
- 108: 1820+17	0121  CD5702  	    CALL PRINT_A_HEX
- 109: 1837+13	0124  3A0040  	    LD A,(0x4000)
- 110: 1850+17	0127  CD5702  	    CALL PRINT_A_HEX
- 111:				
- 112: 1867+7	012A  3E0D    	    LD A,13
- 113: 1874+11	012C  D311    	    out (IO_SIO0B_D),A
- 114: 1885+17	012E  CD5808  	    call TX_EMP
- 115: 1902+7	0131  3E0A    	    LD A,10
- 116: 1909+11	0133  D311    	    out (IO_SIO0B_D),A
- 117: 1920+17	0135  CD5808  	    call TX_EMP
- 118:				
- 119: 1937+10	0138  C37801  	    JP CONSOLE_PROMPT
- 120:				
- 121:				
- 122:				; Serial Util Functions
- 123:     -	013B          	A_RTS_OFF:
- 124: 1947+7	013B  3E05    	    ld a,005h ;write into WR0: select WR5
- 125: 1954+11	013D  D313    	    out (IO_SIO0B_C),A
- 126: 1965+7	013F  3EE8    	    ld a,0E8h ;DTR active, TX 8bit, BREAK off, TX on, RTS inactive
- 127: 1972+11	0141  D313    	    out (IO_SIO0B_C),A
- 128: 1983+10	0143  C9      	    ret
- 129:     -	0144          	A_RTS_ON:
- 130: 1993+7	0144  3E05    	    ld a,005h ;write into WR0: select WR5
- 131: 2000+11	0146  D313    	    out (IO_SIO0B_C),A
- 132: 2011+7	0148  3EEA    	    ld a,0EAh ;DTR active, TX 8bit, BREAK off, TX on, RTS active
- 133: 2018+11	014A  D313    	    out (IO_SIO0B_C),A
- 134: 2029+10	014C  C9      	    ret
- 135:				
- 136:     -	014D          	RX_CHA_AVAILABLE:
- 137: 2039+11	014D  F5      	    push AF ;backup AF
- 138:				
- 139: 2050+7	014E  3EFF    	    LD A,0xFF
- 140: 2057+11	0150  D320    	    OUT (IO_REG0),A
- 141:				
- 142: 2068+17	0152  CD3B01  	    call A_RTS_OFF
- 143: 2085+11	0155  DB11    	    in A,(IO_SIO0B_D) ;read RX character into A
- 144:				    ; A holds received character
- 145:				    ;do something with the received character
- 146:				    ;echo character to host
- 147: 2096+11	0157  D311    	    out (IO_SIO0B_D),A
- 148: 2107+17	0159  CD5808  	    call TX_EMP
- 149: 2124+4	015C  FB      	    ei ;see comments below
- 150: 2128+17	015D  CD4401  	    call A_RTS_ON ;see comments below
- 151:				
- 152:				    ;LD A,0x00
- 153:				    ;OUT (IO_REG0),A
- 154:				
- 155: 2145+10	0160  F1      	    pop AF ;restore AF
- 156: 2155+14	0161  ED4D    	    Reti
- 157:				
- 158:     -	0163          	SPEC_RX_CONDITON:
- 159:				    
- 160: 2169+10	0163  C30000  	    jp 0000h
- 161:				
- 162:				
- 163:     -	0166          	DELAY:
- 164: 2179+15	0166  DDE5    	    PUSH IX
- 165: 2194+11	0168  C5      	    PUSH BC
- 166: 2205+14	0169  DD210040	    LD IX,0x4000
- 167: 2219+10	016D  010100  	    LD BC,1
- 168:     -	0170          	DELAY_LOOP:
- 169: 2229+15	0170  DD09    	    ADD IX,BC
- 170: 2244+7+5	0172  30FC    	    JR NC, DELAY_LOOP
- 171: 2251+10	0174  C1      	    POP BC
- 172: 2261+14	0175  DDE1    	    POP IX
- 173: 2275+10	0177  C9      	    RET
- 174:				
- 175:				; Console Functions
- 176:				
- 177:				
- 178:     -	0178          	CONSOLE_PROMPT:
- 179:				    ;Console Prompt
- 180: 2285+7	0178  3E0A    	    LD A, 10
- 181: 2292+11	017A  D311    	    out (IO_SIO0B_D),A
- 182: 2303+17	017C  CD5808  	    call TX_EMP
- 183: 2320+7	017F  3E3F    	    LD A,'?'
- 184: 2327+11	0181  D311    	    out (IO_SIO0B_D),A
- 185: 2338+17	0183  CD5808  	    call TX_EMP
- 186: 2355+7	0186  3E3E    	    LD A,'>'
- 187: 2362+11	0188  D311    	    out (IO_SIO0B_D),A
- 188: 2373+17	018A  CD5808  	    call TX_EMP
- 189: 2390+7	018D  3E20    	    LD A,' '
- 190: 2397+11	018F  D311    	    out (IO_SIO0B_D),A
- 191: 2408+17	0191  CD5808  	    call TX_EMP
- 192: 2425+7	0194  3E5F    	    LD A,"_"
- 193: 2432+11	0196  D311    	    out (IO_SIO0B_D),A 
- 194: 2443+17	0198  CD5808  	    call TX_EMP
- 195:				
- 196:				    ; Blinking Cursor
- 197: 2460+14	019B  DD2100E0	    LD IX,CMD_CRS_SPEED
- 198: 2474+10	019F  010100  	    LD BC,1
- 199: 2484+7	01A2  3E00    	    LD A,0
- 200: 2491+13	01A4  320040  	    LD (MEM_CURSOR_STATE),A
- 201:				    ; SET PROMPT LENGTH TO 0
- 202: 2504+7	01A7  3E00    	    LD A,0
- 203: 2511+13	01A9  320340  	    LD (MEM_PROMPT_SIZE),A
- 204:				
- 205:     -	01AC          	CONSOLE_PROMPT_LOOP:
- 206:				    ; READ INPUT
- 207:				    ; Delete Cursor if input Avail
- 208:				    ;JP CONSOLE_PROMPT_LOOP_2
- 209: 2524+17	01AC  CD4D08  	    CALL CONSOLE_READ_CHAR
- 210: 2541+4	01AF  A7      	    AND A
- 211: 2545+13	01B0  320140  	    LD (MEM_LAST_CHAR),A
- 212:				
- 213: 2558+10	01B3  CA1C02  	    JP Z, CONSOLE_PROMPT_LOOP_2
- 214:				    ; if newline
- 215: 2568+7	01B6  160D    	    LD D, 13
- 216: 2575+4	01B8  BA      	    CP D
- 217: 2579+7+5	01B9  2006    	    JR NZ, CONSOLE_PROMPT_LOOP_1
- 218:				
- 219: 2586+17	01BB  CDCF02  	    CALL CONSOLE_PARSE_LINE
- 220:				
- 221: 2603+10	01BE  C37801  	    JP CONSOLE_PROMPT
- 222:				
- 223:     -	01C1          	CONSOLE_PROMPT_LOOP_1: ; Not new line
- 224:				   
- 225: 2613+13	01C1  3A0140  	    LD A,(MEM_LAST_CHAR)
- 226: 2626+7	01C4  167F    	    LD D, 0x7F
- 227: 2633+4	01C6  BA      	    CP D
- 228: 2637+7+5	01C7  2024    	    JR NZ, CONSOLE_PROMPT_LOOP_1B
- 229:				
- 230:				    ; if Backspace
- 231: 2644+13	01C9  3A0340  	    LD A,(MEM_PROMPT_SIZE); test if 0
- 232: 2657+4	01CC  A7      	    AND A
- 233: 2661+10	01CD  CA1C02  	    JP Z,CONSOLE_PROMPT_LOOP_2; no action if buffer empty
- 234:				
- 235:				    ;EXEC this if backspace (08d)
- 236: 2671+4	01D0  3D      	    DEC A
- 237: 2675+13	01D1  320340  	    LD (MEM_PROMPT_SIZE),A  ; store size to mem
- 238:				
- 239: 2688+7	01D4  3E7F    	    LD A, 0x7F
- 240: 2695+11	01D6  D311    	    out (IO_SIO0B_D),A
- 241: 2706+17	01D8  CD5808  	    call TX_EMP
- 242:				
- 243: 2723+13	01DB  3A0140  	    LD A,(MEM_LAST_CHAR)
- 244: 2736+11	01DE  D311    	    out (IO_SIO0B_D),A
- 245: 2747+17	01E0  CD5808  	    call TX_EMP
- 246:				
- 247: 2764+7	01E3  3E20    	    LD A," "
- 248: 2771+11	01E5  D311    	    out (IO_SIO0B_D),A 
- 249: 2782+17	01E7  CD5808  	    call TX_EMP
- 250:				
- 251: 2799+10	01EA  C31C02  	    JP CONSOLE_PROMPT_LOOP_2
- 252:				
- 253:     -	01ED          	CONSOLE_PROMPT_LOOP_1B: ;IF not Backspace 
- 254:				
- 255:				
- 256:				    ; CHECK if Controll Sequence
- 257:				    
- 258:				
- 259:				    ; Continue
- 260:				
- 261: 2809+13	01ED  3A0340  	    LD A,(MEM_PROMPT_SIZE)
- 262: 2822+4	01F0  3C      	    INC A
- 263: 2826+13	01F1  320340  	    LD (MEM_PROMPT_SIZE),A  ; store size to mem
- 264:				
- 265: 2839+7	01F4  3E7F    	    LD A, 0x7F
- 266: 2846+11	01F6  D311    	    out (IO_SIO0B_D),A
- 267: 2857+17	01F8  CD5808  	    call TX_EMP
  268:				
- 269: 2874+13	01FB  3A0140  	    LD A,(MEM_LAST_CHAR)
- 270: 2887+11	01FE  D311    	    out (IO_SIO0B_D),A
- 271: 2898+17	0200  CD5808  	    call TX_EMP
- 272:				
- 273: 2915+7	0203  3E20    	    LD A," "
- 274: 2922+11	0205  D311    	    out (IO_SIO0B_D),A 
- 275: 2933+17	0207  CD5808  	    call TX_EMP
- 276:				
- 277:				    ;APPEND CHAR TO BUFFER
- 278: 2950+11	020A  C5      	    PUSH BC
- 279: 2961+10	020B  210540  	    LD HL,MEM_PROMPT_START
- 280: 2971+7	020E  0600    	    LD B,0
- 281: 2978+13	0210  3A0340  	    LD A,(MEM_PROMPT_SIZE)
- 282: 2991+4	0213  3D      	    DEC A
- 283: 2995+4	0214  4F      	    LD C,A
- 284: 2999+15	0215  ED4A    	    ADC HL, BC
- 285: 3014+13	0217  3A0140  	    LD A, (MEM_LAST_CHAR)
- 286: 3027+7	021A  77      	    LD (HL), A
- 287: 3034+10	021B  C1      	    POP BC
- 288:				    
- 289:				
- 290:				
- 291:     -	021C          	CONSOLE_PROMPT_LOOP_2:
- 292:				    ; Print Cursor
- 293: 3044+15	021C  DD09    	    ADD IX,BC
- 294: 3059+7+5	021E  308C    	    JR NC, CONSOLE_PROMPT_LOOP
- 295:				    ; Toggle cycle
- 296: 3066+13	0220  3A0040  	    LD A,(MEM_CURSOR_STATE)
- 297: 3079+7	0223  EE01    	    XOR 1
- 298: 3086+7+5	0225  2818    	    JR Z,CONSOLE_PROMPT_LOOP_3
- 299: 3093+13	0227  320040  	    LD (MEM_CURSOR_STATE),A
- 300:				
- 301: 3106+7	022A  3E7F    	    LD A, 0x7F
- 302: 3113+11	022C  D311    	    out (IO_SIO0B_D),A
- 303: 3124+17	022E  CD5808  	    call TX_EMP
- 304: 3141+7	0231  3E5F    	    LD A,'_'
- 305: 3148+11	0233  D311    	    out (IO_SIO0B_D),A
- 306: 3159+17	0235  CD5808  	    call TX_EMP
- 307: 3176+14	0238  DD2100E0	    LD IX,CMD_CRS_SPEED
- 308: 3190+10	023C  C3AC01  	    JP CONSOLE_PROMPT_LOOP
+ 269:				; HL contains Start ADDR
+ 270:     -	0290          	PRINT_HEXDUMP:
+ 271: 4240+11	0290  F5      	    PUSH AF
+ 272: 4251+11	0291  C5      	    PUSH BC
+ 273: 4262+11	0292  E5      	    PUSH HL
+ 274:				    ; PRINT Header
+ 275: 4273+10	0293  015802  	    LD BC, [MSG_HEXDUMP_HEADER]
+ 276: 4283+17	0296  CD9A03  	    CALL CONSOLE_PRINTSTR
+ 277: 4300+7	0299  0E00    	    LD C,0  ; Line Counter
+ 278:				
+ 279:     -	029B          	PRINT_HEXDUMP_SOL: ; Start of Line
+ 280: 4307+7	029B  3E0D    	    LD A,13
+ 281: 4314+11	029D  D311    	    out (IO_SIO0B_D),A
+ 282: 4325+17	029F  CDB803  	    call TX_EMP
+ 283: 4342+7	02A2  3E0A    	    LD A,10
+ 284: 4349+11	02A4  D311    	    out (IO_SIO0B_D),A
+ 285: 4360+17	02A6  CDB803  	    call TX_EMP
+ 286:				
+ 287: 4377+4	02A9  7C      	    LD A,H
+ 288: 4381+17	02AA  CD4402  	    CALL PRINT_A_HEX
+ 289: 4398+4	02AD  7D      	    LD A,L
+ 290: 4402+17	02AE  CD4402  	    CALL PRINT_A_HEX
+ 291:				
+ 292: 4419+7	02B1  3E68    	    LD A, 'h'
+ 293: 4426+11	02B3  D311    	    out (IO_SIO0B_D),A
+ 294: 4437+17	02B5  CDB803  	    call TX_EMP
+ 295: 4454+7	02B8  3E3A    	    LD A, ':'
+ 296: 4461+11	02BA  D311    	    out (IO_SIO0B_D),A
+ 297: 4472+17	02BC  CDB803  	    call TX_EMP
+ 298: 4489+7	02BF  3E20    	    LD A, ' '
+ 299: 4496+11	02C1  D311    	    out (IO_SIO0B_D),A
+ 300: 4507+17	02C3  CDB803  	    call TX_EMP
+ 301:				
+ 302: 4524+7	02C6  0600    	    LD B,0  ; Column Counter
+ 303:     -	02C8          	PRINT_HEXDUMP_LOOP1:
+ 304: 4531+7	02C8  7E      	    LD A,(HL)
+ 305: 4538+17	02C9  CD4402  	    CALL PRINT_A_HEX
+ 306: 4555+7	02CC  3E20    	    LD A, ' '
+ 307: 4562+11	02CE  D311    	    out (IO_SIO0B_D),A
+ 308: 4573+17	02D0  CDB803  	    call TX_EMP
  309:				
- 310:     -	023F          	CONSOLE_PROMPT_LOOP_3:
- 311: 3200+13	023F  320040  	    LD (MEM_CURSOR_STATE),A
- 312: 3213+7	0242  3E7F    	    LD A, 0x7F
- 313: 3220+11	0244  D311    	    out (IO_SIO0B_D),A
- 314: 3231+17	0246  CD5808  	    call TX_EMP
- 315: 3248+7	0249  3E20    	    LD A,' '
- 316: 3255+11	024B  D311    	    out (IO_SIO0B_D),A
- 317: 3266+17	024D  CD5808  	    call TX_EMP
- 318: 3283+14	0250  DD2100E0	    LD IX,CMD_CRS_SPEED
- 319: 3297+10	0254  C3AC01  	    JP CONSOLE_PROMPT_LOOP
+ 310: 4590+4	02D3  04      	    INC B
+ 311: 4594+6	02D4  23      	    INC HL
+ 312:				    ; Check If 16 columns
+ 313: 4600+4	02D5  78      	    LD A,B
+ 314: 4604+7	02D6  E610    	    AND 0x10
+ 315: 4611+10	02D8  CAC802  	    JP Z, PRINT_HEXDUMP_LOOP1; IF less than 8
+ 316:				
+ 317: 4621+4	02DB  0C      	    INC C
+ 318: 4625+4	02DC  79      	    LD A,C
+ 319: 4629+7	02DD  E610    	    AND 0x10
  320:				
- 321:				; A Contains Byte
- 322:     -	0257          	PRINT_A_HEX:
- 323: 3307+11	0257  C5      	    PUSH BC
- 324: 3318+11	0258  D5      	    PUSH DE
- 325: 3329+17	0259  CD2008  	    CALL STRCONV_BYTES_TO_HEX   ; New Kernel Call
- 326: 3346+4	025C  78      	    LD A,B
- 327: 3350+11	025D  D311    	    out (IO_SIO0B_D),A
- 328: 3361+17	025F  CD5808  	    call TX_EMP
- 329: 3378+4	0262  79      	    LD A,C
- 330: 3382+11	0263  D311    	    out (IO_SIO0B_D),A
- 331: 3393+17	0265  CD5808  	    call TX_EMP
- 332: 3410+10	0268  D1      	    POP DE
- 333: 3420+10	0269  C1      	    POP BC
- 334: 3430+10	026A  C9      	    RET
+ 321: 4636+10	02DF  CA9B02  	    JP Z, PRINT_HEXDUMP_SOL; IF less than 8
+ 322:				
+ 323: 4646+7	02E2  3E0D    	    LD A,13
+ 324: 4653+11	02E4  D311    	    out (IO_SIO0B_D),A
+ 325: 4664+17	02E6  CDB803  	    call TX_EMP
+ 326: 4681+7	02E9  3E0A    	    LD A,10
+ 327: 4688+11	02EB  D311    	    out (IO_SIO0B_D),A
+ 328: 4699+17	02ED  CDB803  	    call TX_EMP
+ 329:				
+ 330: 4716+10	02F0  E1      	    POP HL
+ 331: 4726+10	02F1  C1      	    POP BC
+ 332: 4736+10	02F2  F1      	    POP AF
+ 333: 4746+10	02F3  C9      	    RET
+ 334:				
  335:				
- 336:				
- 337:				; HL contains Start ADDR
- 338:     -	026B          	PRINT_HEXDUMP:
- 339: 3440+11	026B  F5      	    PUSH AF
- 340: 3451+11	026C  C5      	    PUSH BC
- 341: 3462+11	026D  E5      	    PUSH HL
- 342:				    ; PRINT Header
- 343: 3473+10	026E  018707  	    LD BC, [MSG_HEXDUMP_HEADER]
- 344: 3483+17	0271  CD3A08  	    CALL CONSOLE_PRINTSTR
- 345: 3500+7	0274  0E00    	    LD C,0  ; Line Counter
- 346:				
- 347:     -	0276          	PRINT_HEXDUMP_SOL: ; Start of Line
- 348: 3507+7	0276  3E0D    	    LD A,13
- 349: 3514+11	0278  D311    	    out (IO_SIO0B_D),A
- 350: 3525+17	027A  CD5808  	    call TX_EMP
- 351: 3542+7	027D  3E0A    	    LD A,10
- 352: 3549+11	027F  D311    	    out (IO_SIO0B_D),A
- 353: 3560+17	0281  CD5808  	    call TX_EMP
- 354:				
- 355: 3577+4	0284  7C      	    LD A,H
- 356: 3581+17	0285  CD5702  	    CALL PRINT_A_HEX
- 357: 3598+4	0288  7D      	    LD A,L
- 358: 3602+17	0289  CD5702  	    CALL PRINT_A_HEX
- 359:				
- 360: 3619+7	028C  3E68    	    LD A, 'h'
- 361: 3626+11	028E  D311    	    out (IO_SIO0B_D),A
- 362: 3637+17	0290  CD5808  	    call TX_EMP
- 363: 3654+7	0293  3E3A    	    LD A, ':'
- 364: 3661+11	0295  D311    	    out (IO_SIO0B_D),A
- 365: 3672+17	0297  CD5808  	    call TX_EMP
- 366: 3689+7	029A  3E20    	    LD A, ' '
- 367: 3696+11	029C  D311    	    out (IO_SIO0B_D),A
- 368: 3707+17	029E  CD5808  	    call TX_EMP
- 369:				
- 370: 3724+7	02A1  0600    	    LD B,0  ; Column Counter
- 371:     -	02A3          	PRINT_HEXDUMP_LOOP1:
- 372: 3731+7	02A3  7E      	    LD A,(HL)
- 373: 3738+17	02A4  CD5702  	    CALL PRINT_A_HEX
- 374: 3755+7	02A7  3E20    	    LD A, ' '
- 375: 3762+11	02A9  D311    	    out (IO_SIO0B_D),A
- 376: 3773+17	02AB  CD5808  	    call TX_EMP
- 377:				
- 378: 3790+4	02AE  04      	    INC B
- 379: 3794+6	02AF  23      	    INC HL
- 380:				    ; Check If 16 columns
- 381: 3800+4	02B0  78      	    LD A,B
- 382: 3804+7	02B1  E610    	    AND 0x10
- 383: 3811+10	02B3  CAA302  	    JP Z, PRINT_HEXDUMP_LOOP1; IF less than 8
- 384:				
- 385: 3821+4	02B6  0C      	    INC C
- 386: 3825+4	02B7  79      	    LD A,C
- 387: 3829+7	02B8  E610    	    AND 0x10
- 388:				
- 389: 3836+10	02BA  CA7602  	    JP Z, PRINT_HEXDUMP_SOL; IF less than 8
- 390:				
- 391: 3846+7	02BD  3E0D    	    LD A,13
- 392: 3853+11	02BF  D311    	    out (IO_SIO0B_D),A
- 393: 3864+17	02C1  CD5808  	    call TX_EMP
- 394: 3881+7	02C4  3E0A    	    LD A,10
- 395: 3888+11	02C6  D311    	    out (IO_SIO0B_D),A
- 396: 3899+17	02C8  CD5808  	    call TX_EMP
- 397:				
- 398: 3916+10	02CB  E1      	    POP HL
- 399: 3926+10	02CC  C1      	    POP BC
- 400: 3936+10	02CD  F1      	    POP AF
- 401: 3946+10	02CE  C9      	    RET
- 402:				
- 403:				
- 404:     -	02CF          	CONSOLE_PARSE_LINE:
- 405:				    ;CLEAR Cursor
- 406: 3956+7	02CF  3E7F    	    LD A, 0x7F
- 407: 3963+11	02D1  D311    	    out (IO_SIO0B_D),A
- 408: 3974+17	02D3  CD5808  	    call TX_EMP
- 409:				
- 410:				    ;ADD NULL TERMINATION TO STR
- 411: 3991+10	02D6  210540  	    LD HL,MEM_PROMPT_START
- 412: 4001+7	02D9  0600    	    LD B,0
- 413: 4008+13	02DB  3A0340  	    LD A,(MEM_PROMPT_SIZE)
- 414: 4021+4	02DE  4F      	    LD C,A
- 415: 4025+15	02DF  ED4A    	    ADC HL, BC
- 416: 4040+4	02E1  AF      	    XOR A ; SET A 0
- 417: 4044+7	02E2  77      	    LD (HL), A
- 418:				
- 419:				    ; Echo Str
- 420:				    ;LD BC, MEM_PROMPT_START
- 421:				    ;CALL CONSOLE_PRINTSTR
- 422:				
- 423:				    ; HX DUMP
- 424:				    ;
- 425:				    ;LD A,(MEM_PROMPT_SIZE)
- 426:				    ;CALL PRINT_A_HEX
- 427:				
- 428:				    ; Parse Hexdump CMD
- 429:				    ; hd $xxxx
- 430:     -	02E3          	CONSOLE_PARSE_LINE_HD:
- 431: 4051+10	02E3  11C707  	    LD DE,[CMD_PS_HD]
- 432: 4061+10	02E6  210540  	    LD HL,MEM_PROMPT_START
- 433: 4071+17	02E9  CD7104  	    CALL CMP_STRING_START
- 434: 4088+10	02EC  C20303  	    JP NZ,CONSOLE_PARSE_LINE_EXEC
- 435:				    ; if match
- 436:				    
- 437: 4098+10	02EF  010940  	    LD BC,MEM_PROMPT_START + 4
- 438: 4108+17	02F2  CD9804  	    CALL DHEX_TO_BYTE
- 439: 4125+4	02F5  67      	    LD H,A
- 440:				
- 441: 4129+10	02F6  010B40  	    LD BC,MEM_PROMPT_START + 6
- 442: 4139+17	02F9  CD9804  	    CALL DHEX_TO_BYTE
- 443: 4156+7	02FC  E6F0    	    AND 0xF0
- 444: 4163+4	02FE  6F      	    LD L,A
- 445:				
- 446:				    ;LD HL,0x4000
- 447: 4167+17	02FF  CD6B02  	    CALL PRINT_HEXDUMP
- 448: 4184+10	0302  C9      	    RET
- 449:				
- 450:     -	0303          	CONSOLE_PARSE_LINE_EXEC:
- 451: 4194+10	0303  11D107  	    LD DE,[CMD_PS_EXEC]
- 452: 4204+10	0306  210540  	    LD HL,MEM_PROMPT_START
- 453: 4214+17	0309  CD7104  	    CALL CMP_STRING_START
- 454: 4231+10	030C  C22103  	    JP NZ,CONSOLE_PARSE_LINE_MGET
- 455:				    ; if match
- 456:				    
- 457: 4241+10	030F  010B40  	    LD BC,MEM_PROMPT_START + 6
- 458: 4251+17	0312  CD9804  	    CALL DHEX_TO_BYTE
- 459: 4268+4	0315  67      	    LD H,A
- 460:				
- 461: 4272+10	0316  010D40  	    LD BC,MEM_PROMPT_START + 8
- 462: 4282+17	0319  CD9804  	    CALL DHEX_TO_BYTE
- 463: 4299+4	031C  6F      	    LD L,A
- 464:				
- 465: 4303+10	031D  31FF7F  	    LD SP,0x7FFF
- 466: 4313+4	0320  E9      	    JP HL
- 467:				
- 468:				
- 469:     -	0321          	CONSOLE_PARSE_LINE_MGET:
- 470: 4317+10	0321  11DF07  	    LD DE,[CMD_PS_MGET]
- 471: 4327+10	0324  210540  	    LD HL,MEM_PROMPT_START
- 472: 4337+17	0327  CD7104  	    CALL CMP_STRING_START
- 473: 4354+10	032A  C26303  	    JP NZ,CONSOLE_PARSE_LINE_MSET
- 474:				    ; if match
- 475:				    
- 476: 4364+10	032D  010B40  	    LD BC,MEM_PROMPT_START + 6
- 477: 4374+17	0330  CD9804  	    CALL DHEX_TO_BYTE
- 478: 4391+4	0333  67      	    LD H,A
- 479:				
- 480: 4395+10	0334  010D40  	    LD BC,MEM_PROMPT_START + 8
- 481: 4405+17	0337  CD9804  	    CALL DHEX_TO_BYTE
- 482: 4422+4	033A  6F      	    LD L,A
- 483:				
- 484: 4426+7	033B  3E0D    	    LD A,13
- 485: 4433+11	033D  D311    	    out (IO_SIO0B_D),A
- 486: 4444+17	033F  CD5808  	    call TX_EMP
- 487: 4461+7	0342  3E0A    	    LD A,10
- 488: 4468+11	0344  D311    	    out (IO_SIO0B_D),A
- 489: 4479+17	0346  CD5808  	    call TX_EMP
- 490: 4496+7	0349  7E      	    LD A,(HL)
- 491: 4503+17	034A  CD5702  	    CALL PRINT_A_HEX
- 492: 4520+7	034D  3E68    	    LD A,'h'
- 493: 4527+11	034F  D311    	    out (IO_SIO0B_D),A
- 494: 4538+17	0351  CD5808  	    call TX_EMP
- 495: 4555+7	0354  3E0D    	    LD A,13
- 496: 4562+11	0356  D311    	    out (IO_SIO0B_D),A
- 497: 4573+17	0358  CD5808  	    call TX_EMP
- 498: 4590+7	035B  3E0A    	    LD A,10
- 499: 4597+11	035D  D311    	    out (IO_SIO0B_D),A
- 500: 4608+17	035F  CD5808  	    call TX_EMP
- 501: 4625+10	0362  C9      	    RET
- 502:				
- 503:     -	0363          	CONSOLE_PARSE_LINE_MSET:
- 504: 4635+10	0363  11E607  	    LD DE,[CMD_PS_MSET]
- 505: 4645+10	0366  210540  	    LD HL,MEM_PROMPT_START
- 506: 4655+17	0369  CD7104  	    CALL CMP_STRING_START
- 507: 4672+10	036C  C29303  	    JP NZ,CONSOLE_PARSE_LINE_IOGET
- 508:				    ; if match
- 509:				    
- 510: 4682+10	036F  010B40  	    LD BC,MEM_PROMPT_START + 6
- 511: 4692+17	0372  CD9804  	    CALL DHEX_TO_BYTE
- 512: 4709+4	0375  67      	    LD H,A
- 513:				
- 514: 4713+10	0376  010D40  	    LD BC,MEM_PROMPT_START + 8
- 515: 4723+17	0379  CD9804  	    CALL DHEX_TO_BYTE
- 516: 4740+4	037C  6F      	    LD L,A
- 517:				
- 518:				    
- 519: 4744+10	037D  011040  	    LD BC,MEM_PROMPT_START + 11
- 520: 4754+17	0380  CD9804  	    CALL DHEX_TO_BYTE
- 521:				    
- 522: 4771+7	0383  77      	    LD (HL),A
- 523:				
- 524: 4778+7	0384  3E0D    	    LD A,13
- 525: 4785+11	0386  D311    	    out (IO_SIO0B_D),A
- 526: 4796+17	0388  CD5808  	    call TX_EMP
- 527: 4813+7	038B  3E0A    	    LD A,10
- 528: 4820+11	038D  D311    	    out (IO_SIO0B_D),A
- 529: 4831+17	038F  CD5808  	    call TX_EMP
- 530: 4848+10	0392  C9      	    RET
- 531:     -	0393          	CONSOLE_PARSE_LINE_IOGET:
- 532: 4858+10	0393  11F707  	    LD DE,[CMD_PS_IOGET]
- 533: 4868+10	0396  210540  	    LD HL,MEM_PROMPT_START
- 534: 4878+17	0399  CD7104  	    CALL CMP_STRING_START
- 535: 4895+10	039C  C2CF03  	    JP NZ,CONSOLE_PARSE_LINE_IOSET
- 536:				    ; if match
- 537:				    
- 538: 4905+10	039F  010C40  	    LD BC,MEM_PROMPT_START + 7
- 539: 4915+17	03A2  CD9804  	    CALL DHEX_TO_BYTE
- 540: 4932+4	03A5  4F      	    LD C, A
- 541:				
- 542: 4936+7	03A6  3E0D    	    LD A,13
- 543: 4943+11	03A8  D311    	    out (IO_SIO0B_D),A
- 544: 4954+17	03AA  CD5808  	    call TX_EMP
- 545: 4971+7	03AD  3E0A    	    LD A,10
- 546: 4978+11	03AF  D311    	    out (IO_SIO0B_D),A
- 547: 4989+17	03B1  CD5808  	    call TX_EMP
- 548:				
- 549: 5006+12	03B4  ED78    	    IN A,(C)
- 550: 5018+17	03B6  CD5702  	    CALL PRINT_A_HEX
- 551: 5035+7	03B9  3E68    	    LD A,'h'
- 552:				
- 553: 5042+11	03BB  D311    	    out (IO_SIO0B_D),A
- 554: 5053+17	03BD  CD5808  	    call TX_EMP
- 555: 5070+7	03C0  3E0D    	    LD A,13
- 556: 5077+11	03C2  D311    	    out (IO_SIO0B_D),A
- 557: 5088+17	03C4  CD5808  	    call TX_EMP
- 558: 5105+7	03C7  3E0A    	    LD A,10
- 559: 5112+11	03C9  D311    	    out (IO_SIO0B_D),A
- 560: 5123+17	03CB  CD5808  	    call TX_EMP
- 561: 5140+10	03CE  C9      	    RET
- 562:				
- 563:     -	03CF          	CONSOLE_PARSE_LINE_IOSET:
- 564: 5150+10	03CF  11FF07  	    LD DE,[CMD_PS_IOSET]
- 565: 5160+10	03D2  210540  	    LD HL,MEM_PROMPT_START
- 566: 5170+17	03D5  CD7104  	    CALL CMP_STRING_START
- 567: 5187+10	03D8  C20704  	    JP NZ,CONSOLE_PARSE_LINE_HELP
- 568:				    ; if match
- 569:				    
- 570: 5197+10	03DB  010C40  	    LD BC,MEM_PROMPT_START + 7
- 571: 5207+17	03DE  CD9804  	    CALL DHEX_TO_BYTE
- 572: 5224+4	03E1  67      	    LD H,A
- 573:				
- 574: 5228+10	03E2  010F40  	    LD BC,MEM_PROMPT_START + 10
- 575: 5238+17	03E5  CD9804  	    CALL DHEX_TO_BYTE
- 576:				
- 577:				    ;; DEBUG START
- 578: 5255+11	03E8  F5      	    PUSH AF
- 579:				
- 580: 5266+7	03E9  3E20    	    LD A,' '
- 581: 5273+11	03EB  D311    	    out (IO_SIO0B_D),A
- 582: 5284+17	03ED  CD5808  	    call TX_EMP
- 583:				
- 584: 5301+4	03F0  7C      	    LD A,H
- 585: 5305+17	03F1  CD5702  	    CALL PRINT_A_HEX
- 586:				
- 587: 5322+10	03F4  F1      	    POP AF
- 588:				    ;; DEBUG END
- 589:				
- 590: 5332+4	03F5  4C      	    LD C,H
- 591: 5336+12	03F6  ED79    	    OUT (C),A
- 592:				
- 593: 5348+7	03F8  3E0D    	    LD A,13
- 594: 5355+11	03FA  D311    	    out (IO_SIO0B_D),A
- 595: 5366+17	03FC  CD5808  	    call TX_EMP
- 596: 5383+7	03FF  3E0A    	    LD A,10
- 597: 5390+11	0401  D311    	    out (IO_SIO0B_D),A
- 598: 5401+17	0403  CD5808  	    call TX_EMP
- 599: 5418+10	0406  C9      	    RET
- 600:				
- 601:     -	0407          	CONSOLE_PARSE_LINE_HELP:
- 602: 5428+10	0407  11ED07  	    LD DE,[CMD_PS_HELP]
- 603: 5438+10	040A  210540  	    LD HL,MEM_PROMPT_START
- 604: 5448+17	040D  CD7104  	    CALL CMP_STRING_START
- 605: 5465+10	0410  C22804  	    JP NZ,CONSOLE_PARSE_LINE_VERSION
- 606:				    ; if match
- 607:				    
- 608: 5475+10	0413  017A06  	    LD BC,[MSG_CMD_HELP]
- 609: 5485+17	0416  CD3A08  	    CALL CONSOLE_PRINTSTR
- 610:				
- 611: 5502+7	0419  3E0D    	    LD A,13
- 612: 5509+11	041B  D311    	    out (IO_SIO0B_D),A
- 613: 5520+17	041D  CD5808  	    call TX_EMP
- 614: 5537+7	0420  3E0A    	    LD A,10
- 615: 5544+11	0422  D311    	    out (IO_SIO0B_D),A
- 616: 5555+17	0424  CD5808  	    call TX_EMP
- 617: 5572+10	0427  C9      	    RET
- 618:				
- 619:     -	0428          	CONSOLE_PARSE_LINE_VERSION:
- 620: 5582+10	0428  11F307  	    LD DE,[CMD_PS_VER]
- 621: 5592+10	042B  210540  	    LD HL,MEM_PROMPT_START
- 622: 5602+17	042E  CD7104  	    CALL CMP_STRING_START
- 623: 5619+10	0431  C24904  	    JP NZ,CONSOLE_PARSE_LINE_CLEAR
- 624:				    ; if match
- 625:				    
- 626: 5629+10	0434  01E806  	    LD BC,[MSG_CMD_VER]
- 627: 5639+17	0437  CD3A08  	    CALL CONSOLE_PRINTSTR
- 628:				
- 629: 5656+7	043A  3E0D    	    LD A,13
- 630: 5663+11	043C  D311    	    out (IO_SIO0B_D),A
- 631: 5674+17	043E  CD5808  	    call TX_EMP
- 632: 5691+7	0441  3E0A    	    LD A,10
- 633: 5698+11	0443  D311    	    out (IO_SIO0B_D),A
- 634: 5709+17	0445  CD5808  	    call TX_EMP
- 635: 5726+10	0448  C9      	    RET
- 636:				
- 637:     -	0449          	CONSOLE_PARSE_LINE_CLEAR:
- 638: 5736+10	0449  11EF07  	    LD DE,[CMD_PS_CLEAR]
- 639: 5746+10	044C  210540  	    LD HL,MEM_PROMPT_START
- 640: 5756+17	044F  CD7104  	    CALL CMP_STRING_START
- 641: 5773+10	0452  C25C04  	    JP NZ,CONSOLE_PARSE_LINE_ELSE
- 642:				    ; if match
- 643:				    
- 644: 5783+10	0455  01BF07  	    LD BC,[MSG_CLEAR]
- 645: 5793+17	0458  CD3A08  	    CALL CONSOLE_PRINTSTR
- 646:				
- 647: 5810+10	045B  C9      	    RET
- 648:				
- 649:				
- 650:				
- 651:     -	045C          	CONSOLE_PARSE_LINE_ELSE:
- 652:				    ; Error Message
- 653: 5820+10	045C  017207  	    LD BC, [MSG_CMD_UNKNOWN]
- 654: 5830+17	045F  CD3A08  	    CALL CONSOLE_PRINTSTR
- 655: 5847+7	0462  3E0D    	    LD A,13
- 656: 5854+11	0464  D311    	    out (IO_SIO0B_D),A
- 657: 5865+17	0466  CD5808  	    call TX_EMP
- 658: 5882+7	0469  3E0A    	    LD A,10
- 659: 5889+11	046B  D311    	    out (IO_SIO0B_D),A
- 660: 5900+17	046D  CD5808  	    call TX_EMP
- 661: 5917+10	0470  C9      	    RET
- 662:				
- 663:				
- 664:				; HL = String to compare
- 665:				; DE = String Pattern
- 666:     -	0471          	CMP_STRING_START:
- 667: 5927+7	0471  1A      	    LD A,(DE)
- 668: 5934+4	0472  A7      	    AND A
- 669: 5938+5+6	0473  C8      	    RET Z; RETURN Z=1 if reached END wizhout mismatch
- 670: 5943+7	0474  BE      	    CP (HL)
- 671: 5950+5+6	0475  C0      	    RET NZ; If not Match (z=0) exit
- 672:     -	0476          	CMP_STRING_START_MATCHED:
- 673: 5955+7	0476  7E      	    LD A,(HL)
- 674: 5962+4	0477  A7      	    AND A; String to compare reached end
- 675: 5966+5+6	0478  C8      	    RET Z
- 676:     -	0479          	CMP_STRING_START_CONTINUE:
- 677: 5971+6	0479  23      	    INC HL
- 678: 5977+6	047A  13      	    INC DE
- 679: 5983+10	047B  C37104  	    JP CMP_STRING_START
- 680:				    
- 681:				; REG A Contains CHAR-Low
- 682:				; If failed, Carry is set
- 683:     -	047E          	HEX_TO_BIN:
- 684: 5993+7	047E  D630    	    SUB 48 ; 0 is 0
- 685: 6000+10	0480  EA9304  	    JP PE, HEX_TO_INVALID_2; to low (SUB overflow)
- 686: 6010+7	0483  FE0A    	    CP 10 ; Value is between 0 and 9
- 687: 6017+7+5	0485  3805    	    JR C, HEX_TO_BIN_2
- 688: 6024+7	0487  D607    	    SUB 7
- 689: 6031+10	0489  EA9304  	    JP PE, HEX_TO_INVALID_2; to low (SUB overflow)
- 690:     -	048C          	HEX_TO_BIN_2:
- 691: 6041+7	048C  FE10    	    CP 16
- 692: 6048+7+5	048E  3003    	    JR NC, HEX_TO_INVALID_2; if bigger than 15-> fail
- 693: 6055+7	0490  E60F    	    AND 0x0F
- 694: 6062+10	0492  C9      	    RET
- 695:     -	0493          	HEX_TO_INVALID_2:
- 696: 6072+7	0493  3E01    	    LD A,1
- 697: 6079+7	0495  C6FF    	    ADD 255
- 698: 6086+10	0497  C9      	    RET
- 699:				
- 700:				; BC Contains Address to string
- 701:				; E is 0xFF if error
- 702:				; E is 0x00 if okay
- 703:     -	0498          	DHEX_TO_BYTE:
- 704: 6096+11	0498  C5      	    PUSH BC
- 705:				    ; Load First Byte
- 706: 6107+7	0499  0A      	    LD A,(BC)
- 707: 6114+17	049A  CD7E04  	    CALL HEX_TO_BIN
- 708:				    ;JP C,DHEX_TO_BYTE_FAILED
- 709: 6131+8	049D  CB27    	    SLA A
- 710: 6139+8	049F  CB27    	    SLA A
- 711: 6147+8	04A1  CB27    	    SLA A
- 712: 6155+8	04A3  CB27    	    SLA A
- 713: 6163+4	04A5  57      	    LD D,A
- 714:				
- 715: 6167+6	04A6  03      	    INC BC
- 716: 6173+7	04A7  0A      	    LD A,(BC)
- 717: 6180+17	04A8  CD7E04  	    CALL HEX_TO_BIN
- 718:				    ;JP C,DHEX_TO_BYTE_FAILED
- 719: 6197+4	04AB  B2      	    OR D ; Merge
- 720:				    
- 721: 6201+10	04AC  C1      	    POP BC
- 722: 6211+7	04AD  1E00    	    LD E,0x00
- 723: 6218+10	04AF  C9      	    RET
- 724:     -	04B0          	DHEX_TO_BYTE_FAILED:
- 725: 6228+7	04B0  1EFF    	    LD E,0xFF
- 726:				    ;LD A,0x00
- 727: 6235+10	04B2  C1      	    POP BC
+ 336:				; HL = String to compare
+ 337:				; DE = String Pattern
+ 338:     -	02F4          	CMP_STRING_START:
+ 339: 4756+7	02F4  1A      	    LD A,(DE)
+ 340: 4763+4	02F5  A7      	    AND A
+ 341: 4767+5+6	02F6  C8      	    RET Z; RETURN Z=1 if reached END wizhout mismatch
+ 342: 4772+7	02F7  BE      	    CP (HL)
+ 343: 4779+5+6	02F8  C0      	    RET NZ; If not Match (z=0) exit
+ 344:     -	02F9          	CMP_STRING_START_MATCHED:
+ 345: 4784+7	02F9  7E      	    LD A,(HL)
+ 346: 4791+4	02FA  A7      	    AND A; String to compare reached end
+ 347: 4795+5+6	02FB  C8      	    RET Z
+ 348:     -	02FC          	CMP_STRING_START_CONTINUE:
+ 349: 4800+6	02FC  23      	    INC HL
+ 350: 4806+6	02FD  13      	    INC DE
+ 351: 4812+10	02FE  C3F402  	    JP CMP_STRING_START
+ 352:				    
+ 353:				; REG A Contains CHAR-Low
+ 354:				; If failed, Carry is set
+ 355:     -	0301          	HEX_TO_BIN:
+ 356: 4822+7	0301  D630    	    SUB 48 ; 0 is 0
+ 357: 4829+10	0303  EA1603  	    JP PE, HEX_TO_INVALID_2; to low (SUB overflow)
+ 358: 4839+7	0306  FE0A    	    CP 10 ; Value is between 0 and 9
+ 359: 4846+7+5	0308  3805    	    JR C, HEX_TO_BIN_2
+ 360: 4853+7	030A  D607    	    SUB 7
+ 361: 4860+10	030C  EA1603  	    JP PE, HEX_TO_INVALID_2; to low (SUB overflow)
+ 362:     -	030F          	HEX_TO_BIN_2:
+ 363: 4870+7	030F  FE10    	    CP 16
+ 364: 4877+7+5	0311  3003    	    JR NC, HEX_TO_INVALID_2; if bigger than 15-> fail
+ 365: 4884+7	0313  E60F    	    AND 0x0F
+ 366: 4891+10	0315  C9      	    RET
+ 367:     -	0316          	HEX_TO_INVALID_2:
+ 368: 4901+7	0316  3E01    	    LD A,1
+ 369: 4908+7	0318  C6FF    	    ADD 255
+ 370: 4915+10	031A  C9      	    RET
+ 371:				
+ 372:				; BC Contains Address to string
+ 373:				; E is 0xFF if error
+ 374:				; E is 0x00 if okay
+ 375:     -	031B          	DHEX_TO_BYTE:
+ 376: 4925+11	031B  C5      	    PUSH BC
+ 377:				    ; Load First Byte
+ 378: 4936+7	031C  0A      	    LD A,(BC)
+ 379: 4943+17	031D  CD0103  	    CALL HEX_TO_BIN
+ 380:				    ;JP C,DHEX_TO_BYTE_FAILED
+ 381: 4960+8	0320  CB27    	    SLA A
+ 382: 4968+8	0322  CB27    	    SLA A
+ 383: 4976+8	0324  CB27    	    SLA A
+ 384: 4984+8	0326  CB27    	    SLA A
+ 385: 4992+4	0328  57      	    LD D,A
+ 386:				
+ 387: 4996+6	0329  03      	    INC BC
+ 388: 5002+7	032A  0A      	    LD A,(BC)
+ 389: 5009+17	032B  CD0103  	    CALL HEX_TO_BIN
+ 390:				    ;JP C,DHEX_TO_BYTE_FAILED
+ 391: 5026+4	032E  B2      	    OR D ; Merge
+ 392:				    
+ 393: 5030+10	032F  C1      	    POP BC
+ 394: 5040+7	0330  1E00    	    LD E,0x00
+ 395: 5047+10	0332  C9      	    RET
+ 396:     -	0333          	DHEX_TO_BYTE_FAILED:
+ 397: 5057+7	0333  1EFF    	    LD E,0xFF
+ 398:				    ;LD A,0x00
+ 399: 5064+10	0335  C1      	    POP BC
+ 400: 5074+10	0336  C9      	    RET
+ 401:				
+ 402:				;Strings
+ 403:     -	0337          	MSG_CLEAR:
 **** main.asm ****
- 728: 6245+10	04B3  C9      	    RET
+ 404:     -	0337  1B5B324A	    db 27, '[2J', 27, '[H',0
+	              1B5B4800
 
 
 
@@ -1333,63 +1113,50 @@ Statistics:
 
      4	passes
      0	jr promotions
-   129	symbols
-  1923	bytes
+   103	symbols
+  1563	bytes
 
 
 
 Symbol Table:
 
-AY0_WRITE_REG    ADE      2782
-A_RTS_OFF        13B      315
-A_RTS_ON         144      324
+ARR_COMMANDS     437      1079
+AY0_WRITE_REG    407      1031
+A_RTS_OFF        40F      1039
+A_RTS_ON         418      1048
+CMD_CLEAR        502      1282
 CMD_CRS_SPEED  =E000      57344
-CMD_PS_CALL      7D8      2008
-CMD_PS_CLEAR     7EF      2031
-CMD_PS_EXEC      7D1      2001
-CMD_PS_HD        7C7      1991
-CMD_PS_HELP      7ED      2029
-CMD_PS_IOGET     7F7      2039
-CMD_PS_IOSET     7FF      2047
-CMD_PS_MGET      7DF      2015
-CMD_PS_MSET      7E6      2022
-CMD_PS_PT        7CC      1996
-CMD_PS_VER       7F3      2035
-CMP_STRING_START  471      1137
-CMP_STRING_START_CONTINUE  479      1145
-CMP_STRING_START_MATCHED  476      1142
-CONSOLE_INIT     867      2151
-CONSOLE_PARSE_LINE  2CF      719
-CONSOLE_PARSE_LINE_CLEAR  449      1097
-CONSOLE_PARSE_LINE_ELSE  45C      1116
-CONSOLE_PARSE_LINE_EXEC  303      771
-CONSOLE_PARSE_LINE_HD  2E3      739
-CONSOLE_PARSE_LINE_HELP  407      1031
-CONSOLE_PARSE_LINE_IOGET  393      915
-CONSOLE_PARSE_LINE_IOSET  3CF      975
-CONSOLE_PARSE_LINE_MGET  321      801
-CONSOLE_PARSE_LINE_MSET  363      867
-CONSOLE_PARSE_LINE_VERSION  428      1064
-CONSOLE_PRINTSTR  83A      2106
-CONSOLE_PRINTSTR_EXIT  84A      2122
-CONSOLE_PRINTSTR_LOOP  83C      2108
-CONSOLE_PROMPT   178      376
-CONSOLE_PROMPT_LOOP  1AC      428
-CONSOLE_PROMPT_LOOP_1  1C1      449
-CONSOLE_PROMPT_LOOP_1B  1ED      493
-CONSOLE_PROMPT_LOOP_2  21C      540
-CONSOLE_PROMPT_LOOP_3  23F      575
-CONSOLE_READ_CHAR  84D      2125
-CONSOLE_TX_WAIT  85B      2139
-DELAY            166      358
-DELAY_LOOP       170      368
-DHEX_TO_BYTE     498      1176
-DHEX_TO_BYTE_FAILED  4B0      1200
-HEX_TO_BIN       47E      1150
-HEX_TO_BIN_2     48C      1164
-HEX_TO_INVALID_2  493      1171
-INT_VEC          807      2055
-INT_VEC_SND      B43      2883
+CMD_EXEC         51D      1309
+CMD_HELP         4D8      1240
+CMD_HEXDUMP      509      1289
+CMD_IOGET        52F      1327
+CMD_IOSET        55F      1375
+CMD_MGET         5AF      1455
+CMD_MSET         58B      1419
+CMD_VERSION      4ED      1261
+CMP_STRING_START  2F4      756
+CMP_STRING_START_CONTINUE  2FC      764
+CMP_STRING_START_MATCHED  2F9      761
+CONSOLE_INIT     3C7      967
+CONSOLE_PRINTSTR  39A      922
+CONSOLE_PRINTSTR_EXIT  3AA      938
+CONSOLE_PRINTSTR_LOOP  39C      924
+CONSOLE_PROMPT   165      357
+CONSOLE_PROMPT_LOOP  199      409
+CONSOLE_PROMPT_LOOP_1  1AE      430
+CONSOLE_PROMPT_LOOP_1B  1DA      474
+CONSOLE_PROMPT_LOOP_2  209      521
+CONSOLE_PROMPT_LOOP_3  22C      556
+CONSOLE_READ_CHAR  3AD      941
+CONSOLE_TX_WAIT  3BB      955
+DELAY            153      339
+DELAY_LOOP       15D      349
+DHEX_TO_BYTE     31B      795
+DHEX_TO_BYTE_FAILED  333      819
+HEX_TO_BIN       301      769
+HEX_TO_BIN_2     30F      783
+HEX_TO_INVALID_2  316      790
+INT_VEC          755      1877
 IO_AY0_ADDR    =40        64
 IO_AY0_DATA    =41        65
 IO_AY1_ADDR    =42        66
@@ -1421,51 +1188,38 @@ IO_SIO0B_C     =13        19
 IO_SIO0B_D     =11        17
 MEM_CURSOR_STATE=4000      16384
 MEM_LAST_CHAR  =4001      16385
-MEM_MUSIC_DELAY=40F2      16626
-MEM_MUSIC_POINTER=40F0      16624
-MEM_MUSIC_STATE=40F3      16627
 MEM_PROMPT_SIZE=4003      16387
 MEM_PROMPT_START=4005      16389
-MSG_CLEAR        7BF      1983
-MSG_CMD_HELP     67A      1658
-MSG_CMD_UNKNOWN  772      1906
-MSG_CMD_VER      6E8      1768
-MSG_HEXDUMP_HEADER  787      1927
-MSG_SYS_VER      600      1536
-PLAY_DELAY       A51      2641
-PLAY_DELAY_LOOP  A53      2643
-PLAY_DELAY_LOOP_1  A56      2646
-PRINT_A_HEX      257      599
-PRINT_HEXDUMP    26B      619
-PRINT_HEXDUMP_LOOP1  2A3      675
-PRINT_HEXDUMP_SOL  276      630
+MOD_COMMANDS     437      1079
+MSG_CLEAR        337      823
+MSG_CMD_HELP     65F      1631
+MSG_CMD_VER      6CD      1741
+MSG_HEXDUMP_HEADER  258      600
+MSG_SYS_VER      5E5      1509
+PARSE_CMD        49A      1178
+PARSE_CMD_CMP_STRING_START  4CB      1227
+PARSE_CMD_CMP_STRING_START_CONTINUE  4D3      1235
+PARSE_CMD_CMP_STRING_START_MATCHED  4D0      1232
+PARSE_CMD_NO_MATCH  4C4      1220
+PARSE_CMD_START  49D      1181
+PARSE_CMD_START_EXEC  4C1      1217
+PARSE_CMD_START_FOUND  4BD      1213
+PARSE_CMD_START_NOT_FOUND  4B4      1204
+PRINT_A_HEX      244      580
+PRINT_HEXDUMP    290      656
+PRINT_HEXDUMP_LOOP1  2C8      712
+PRINT_HEXDUMP_SOL  29B      667
 PROG_MEM_START =4000      16384
 PROG_ROM_START = 100      256
-RX_CHA_AVAILABLE  14D      333
-SPEC_RX_CONDITON  163      355
+RX_CHA_AVAILABLE  421      1057
+SPEC_RX_CONDITON  150      336
 START_ROM      =00        0
-STRCONV_BYTES_TO_HEX  820      2080
-STRCONV_BYTES_TO_HEX_1  82F      2095
-STRCONV_BYTES_TO_HEX_2  839      2105
-STRINGS         16        22
-STR_PLAYBACK_DONE  AFB      2811
-STR_SOUNDCHECK_DONE  AE6      2790
-SUB_PLAY         A25      2597
-SUB_PLAY_CTC     A67      2663
-SUB_PLAY_CTC_END  A92      2706
-SUB_PLAY_CTC_ISR  AA0      2720
-SUB_PLAY_CTC_ISR_CONT  AAF      2735
-SUB_PLAY_CTC_ISR_CONT_LOOP  AB3      2739
-SUB_PLAY_CTC_ISR_END  AC6      2758
-SUB_PLAY_CTC_ISR_EXIT_RTE  AD7      2775
-SUB_PLAY_CTC_ISR_INIT_DELAY  ACB      2763
-SUB_PLAY_CTC_LOOP  A8B      2699
-SUB_PLAY_EXIT    A48      2632
-SUB_PLAY_LOOP    A33      2611
-SUB_SOUNDCHECK   8A7      2215
-TX_EMP           858      2136
+STRCONV_BYTES_TO_HEX  380      896
+STRCONV_BYTES_TO_HEX_1  38F      911
+STRCONV_BYTES_TO_HEX_2  399      921
+STR_NOTFOUND     47F      1151
+TX_EMP           3B8      952
 VAR_CONSOLE_BAUD=10        16
 init            10        16
 init_console     104      260
 init_led        03        3
-tune_test1       B0E      2830

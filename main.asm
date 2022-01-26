@@ -5,65 +5,17 @@ MEM_LAST_CHAR equ 0x4001  ; 1 byte var
 MEM_PROMPT_SIZE equ 0x4003
 MEM_PROMPT_START equ 0x4005
 
-
 CMD_CRS_SPEED equ 0xE000
 
-
-; Include Kernel Libs at 0x0800
-    org 0x0820
+; Include Kernel Libs at 0x0380
+    org 0x0380
 .include "conversions.s"
 .include "console.s"
+.include "io.s"
+.include "commands.s"
 
 ; include subroutines
-.include "sub_soundtest.s"
-
-;Strings
-STRINGS:
-    org 0x0600
-MSG_SYS_VER:
-    db 27, '[2J', 27, '[H'
-    db 'Z8C Mk IV - A Z80 Homebrew Computer',13,10
-    db 'Monitor ROM Ver. 1.0 by Dennis Gunia (2022)',13,10
-    db '48k RAM - 4MHz Z80 CPU - Stack $',0
-
-MSG_CMD_HELP:
-    db 13,10
-    db "hd $<addr>  mget $<addr>  mset $<addr> <val>",13,10
-    db "ioget $<addr>  ioset $<addr> <val>",13,10
-    db "?  exec $<addr>  clr  ver"
-    db 0
-
-MSG_CMD_VER:
-    db 13,10
-    db "Z8C Monitor Programm",13,10
-    db "ROM Version 1.0 - Written by Dennis Gunia, 2022",13,10
-    db "3.686411MHz CPU, 48K RAM System, John 3,16",13,10
-    db "www.dennisgunia.de",13,10
-    db 0
-
-
-MSG_CMD_UNKNOWN:
-    db 13,10,'Invalid operation',0,13
-
-MSG_HEXDUMP_HEADER:
-    db 13,10,'BASE   0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F',0
-
-MSG_CLEAR:
-    db 27, '[2J', 27, '[H',0
-
-CMD_PS_HD   db 'hd $',0
-CMD_PS_PT   db 'pt $',0
-
-CMD_PS_EXEC db 'exec $',0
-CMD_PS_CALL db 'call $',0
-CMD_PS_MGET db 'mget $',0
-CMD_PS_MSET db 'mset $',0
-CMD_PS_HELP db '?',0
-CMD_PS_CLEAR db 'clr',0
-CMD_PS_VER db 'ver',0
-
-CMD_PS_IOGET db 'ioget $',0
-CMD_PS_IOSET db 'ioset $',0
+;.include "sub_soundtest.s"
 
 INT_VEC:
     org 0Ch
@@ -82,6 +34,17 @@ init_led:
 
 init_console:
     CALL CONSOLE_INIT
+
+    LD	  D,0x08	; Select register #8
+    LD	  A,0x00	; Volume channel A 0
+    CALL AY0_WRITE_REG
+    LD	  D,0x09	; Select register #9
+    LD	  A,0x00	; Volume channel B 0
+    CALL AY0_WRITE_REG
+    LD	  D,0x0A	; Select register #10
+    LD	  A,0x00	; Volume channel C 0
+    CALL AY0_WRITE_REG
+    
 
 ;INT_INI:
 ;    ld A,0
@@ -117,41 +80,7 @@ init_console:
     JP CONSOLE_PROMPT
 
 
-; Serial Util Functions
-A_RTS_OFF:
-    ld a,005h ;write into WR0: select WR5
-    out (IO_SIO0B_C),A
-    ld a,0E8h ;DTR active, TX 8bit, BREAK off, TX on, RTS inactive
-    out (IO_SIO0B_C),A
-    ret
-A_RTS_ON:
-    ld a,005h ;write into WR0: select WR5
-    out (IO_SIO0B_C),A
-    ld a,0EAh ;DTR active, TX 8bit, BREAK off, TX on, RTS active
-    out (IO_SIO0B_C),A
-    ret
 
-RX_CHA_AVAILABLE:
-    push AF ;backup AF
-
-    LD A,0xFF
-    OUT (IO_REG0),A
-
-    call A_RTS_OFF
-    in A,(IO_SIO0B_D) ;read RX character into A
-    ; A holds received character
-    ;do something with the received character
-    ;echo character to host
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    ei ;see comments below
-    call A_RTS_ON ;see comments below
-
-    ;LD A,0x00
-    ;OUT (IO_REG0),A
-
-    pop AF ;restore AF
-    Reti
 
 SPEC_RX_CONDITON:
     
@@ -214,7 +143,7 @@ CONSOLE_PROMPT_LOOP:
     CP D
     JR NZ, CONSOLE_PROMPT_LOOP_1
 
-    CALL CONSOLE_PARSE_LINE
+    CALL PARSE_CMD
 
     JP CONSOLE_PROMPT
 
@@ -331,6 +260,8 @@ PRINT_A_HEX:
     POP BC
     RET
 
+MSG_HEXDUMP_HEADER:
+    db 13,10,'BASE   0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F',0
 
 ; HL contains Start ADDR
 PRINT_HEXDUMP:
@@ -399,266 +330,6 @@ PRINT_HEXDUMP_LOOP1:
     RET
 
 
-CONSOLE_PARSE_LINE:
-    ;CLEAR Cursor
-    LD A, 0x7F
-    out (IO_SIO0B_D),A
-    call TX_EMP
-
-    ;ADD NULL TERMINATION TO STR
-    LD HL,MEM_PROMPT_START
-    LD B,0
-    LD A,(MEM_PROMPT_SIZE)
-    LD C,A
-    ADC HL, BC
-    XOR A ; SET A 0
-    LD (HL), A
-
-    ; Echo Str
-    ;LD BC, MEM_PROMPT_START
-    ;CALL CONSOLE_PRINTSTR
-
-    ; HX DUMP
-    ;
-    ;LD A,(MEM_PROMPT_SIZE)
-    ;CALL PRINT_A_HEX
-
-    ; Parse Hexdump CMD
-    ; hd $xxxx
-CONSOLE_PARSE_LINE_HD:
-    LD DE,[CMD_PS_HD]
-    LD HL,MEM_PROMPT_START
-    CALL CMP_STRING_START
-    JP NZ,CONSOLE_PARSE_LINE_EXEC
-    ; if match
-    
-    LD BC,MEM_PROMPT_START + 4
-    CALL DHEX_TO_BYTE
-    LD H,A
-
-    LD BC,MEM_PROMPT_START + 6
-    CALL DHEX_TO_BYTE
-    AND 0xF0
-    LD L,A
-
-    ;LD HL,0x4000
-    CALL PRINT_HEXDUMP
-    RET
-
-CONSOLE_PARSE_LINE_EXEC:
-    LD DE,[CMD_PS_EXEC]
-    LD HL,MEM_PROMPT_START
-    CALL CMP_STRING_START
-    JP NZ,CONSOLE_PARSE_LINE_MGET
-    ; if match
-    
-    LD BC,MEM_PROMPT_START + 6
-    CALL DHEX_TO_BYTE
-    LD H,A
-
-    LD BC,MEM_PROMPT_START + 8
-    CALL DHEX_TO_BYTE
-    LD L,A
-
-    LD SP,0x7FFF
-    JP HL
-
-
-CONSOLE_PARSE_LINE_MGET:
-    LD DE,[CMD_PS_MGET]
-    LD HL,MEM_PROMPT_START
-    CALL CMP_STRING_START
-    JP NZ,CONSOLE_PARSE_LINE_MSET
-    ; if match
-    
-    LD BC,MEM_PROMPT_START + 6
-    CALL DHEX_TO_BYTE
-    LD H,A
-
-    LD BC,MEM_PROMPT_START + 8
-    CALL DHEX_TO_BYTE
-    LD L,A
-
-    LD A,13
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    LD A,10
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    LD A,(HL)
-    CALL PRINT_A_HEX
-    LD A,'h'
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    LD A,13
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    LD A,10
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    RET
-
-CONSOLE_PARSE_LINE_MSET:
-    LD DE,[CMD_PS_MSET]
-    LD HL,MEM_PROMPT_START
-    CALL CMP_STRING_START
-    JP NZ,CONSOLE_PARSE_LINE_IOGET
-    ; if match
-    
-    LD BC,MEM_PROMPT_START + 6
-    CALL DHEX_TO_BYTE
-    LD H,A
-
-    LD BC,MEM_PROMPT_START + 8
-    CALL DHEX_TO_BYTE
-    LD L,A
-
-    
-    LD BC,MEM_PROMPT_START + 11
-    CALL DHEX_TO_BYTE
-    
-    LD (HL),A
-
-    LD A,13
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    LD A,10
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    RET
-CONSOLE_PARSE_LINE_IOGET:
-    LD DE,[CMD_PS_IOGET]
-    LD HL,MEM_PROMPT_START
-    CALL CMP_STRING_START
-    JP NZ,CONSOLE_PARSE_LINE_IOSET
-    ; if match
-    
-    LD BC,MEM_PROMPT_START + 7
-    CALL DHEX_TO_BYTE
-    LD C, A
-
-    LD A,13
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    LD A,10
-    out (IO_SIO0B_D),A
-    call TX_EMP
-
-    IN A,(C)
-    CALL PRINT_A_HEX
-    LD A,'h'
-
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    LD A,13
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    LD A,10
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    RET
-
-CONSOLE_PARSE_LINE_IOSET:
-    LD DE,[CMD_PS_IOSET]
-    LD HL,MEM_PROMPT_START
-    CALL CMP_STRING_START
-    JP NZ,CONSOLE_PARSE_LINE_HELP
-    ; if match
-    
-    LD BC,MEM_PROMPT_START + 7
-    CALL DHEX_TO_BYTE
-    LD H,A
-
-    LD BC,MEM_PROMPT_START + 10
-    CALL DHEX_TO_BYTE
-
-    ;; DEBUG START
-    PUSH AF
-
-    LD A,' '
-    out (IO_SIO0B_D),A
-    call TX_EMP
-
-    LD A,H
-    CALL PRINT_A_HEX
-
-    POP AF
-    ;; DEBUG END
-
-    LD C,H
-    OUT (C),A
-
-    LD A,13
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    LD A,10
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    RET
-
-CONSOLE_PARSE_LINE_HELP:
-    LD DE,[CMD_PS_HELP]
-    LD HL,MEM_PROMPT_START
-    CALL CMP_STRING_START
-    JP NZ,CONSOLE_PARSE_LINE_VERSION
-    ; if match
-    
-    LD BC,[MSG_CMD_HELP]
-    CALL CONSOLE_PRINTSTR
-
-    LD A,13
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    LD A,10
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    RET
-
-CONSOLE_PARSE_LINE_VERSION:
-    LD DE,[CMD_PS_VER]
-    LD HL,MEM_PROMPT_START
-    CALL CMP_STRING_START
-    JP NZ,CONSOLE_PARSE_LINE_CLEAR
-    ; if match
-    
-    LD BC,[MSG_CMD_VER]
-    CALL CONSOLE_PRINTSTR
-
-    LD A,13
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    LD A,10
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    RET
-
-CONSOLE_PARSE_LINE_CLEAR:
-    LD DE,[CMD_PS_CLEAR]
-    LD HL,MEM_PROMPT_START
-    CALL CMP_STRING_START
-    JP NZ,CONSOLE_PARSE_LINE_ELSE
-    ; if match
-    
-    LD BC,[MSG_CLEAR]
-    CALL CONSOLE_PRINTSTR
-
-    RET
-
-
-
-CONSOLE_PARSE_LINE_ELSE:
-    ; Error Message
-    LD BC, [MSG_CMD_UNKNOWN]
-    CALL CONSOLE_PRINTSTR
-    LD A,13
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    LD A,10
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    RET
-
-
 ; HL = String to compare
 ; DE = String Pattern
 CMP_STRING_START:
@@ -724,3 +395,7 @@ DHEX_TO_BYTE_FAILED:
     ;LD A,0x00
     POP BC
     RET
+
+;Strings
+MSG_CLEAR:
+    db 27, '[2J', 27, '[H',0

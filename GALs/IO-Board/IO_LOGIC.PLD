@@ -1,0 +1,30 @@
+Name       XXXXX;
+Partno     XXXXX;
+Date       XX/XX/XX;
+Revision   XX;
+Designer   XXXXX;
+Company    XXXXX;
+Assembly   XXXXX;
+Location   XXXXX;
+DEVICE g16v8a;
+
+Pin 1 = A2;
+Pin 2 = A3;
+Pin 3 = A4;
+Pin 4 = A5;
+Pin 5 = A6;
+Pin 6 = A7;
+
+
+Pin 9 = IOREQ;
+
+
+
+Pin 16 = RTC_CS0;
+Pin 18 = CS_PIO1;
+Pin 19 = CS_PIO0;
+
+CS_PIO0 = !(!IOREQ & !A7 & A6 & A5 & !A4 & !A3 & !A2);
+CS_PIO1 = !(!IOREQ & !A7 & A6 & A5 & !A4 & !A3 & A2);
+RTC_CS0 = !(!IOREQ & !A7 & A6 & A5 & A4);
+

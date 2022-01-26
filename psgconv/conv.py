@@ -1,8 +1,9 @@
 inFile = "C:\\Users\\dg\\Desktop\\Z80\\psgconv\\Illusion.psg_.PSG"
+#inFile = "C:\\Users\\dg\\Desktop\\Z80\\psgconv\\n1k-o, TmK - lost madness (2018) (DiHalt Lite 2018, 2).PSG"
 outFile = "C:\\Users\\dg\\Desktop\\Z80\\psgconv\\song.s"
 
 byteCounter = 0
-maxBytes=4096
+maxBytes=4096*3
 colCounter = 0
 outFileS = open(outFile, 'w')
 
@@ -20,7 +21,7 @@ with open(inFile, 'rb') as f:
             break
         byte = byte_s[0]
 
-        lineArray.append(hex(byte))
+        lineArray.append("0x{:02x}".format(byte))
         byteCounter+= 1
         colCounter+=1
         if colCounter == 16:
