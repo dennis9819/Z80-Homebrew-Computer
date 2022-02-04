@@ -15,7 +15,7 @@ CMD_CRS_SPEED equ 0xE000
 .include "commands.s"
 
 ; include subroutines
-;.include "sub_soundtest.s"
+.include "sub_soundtest.s"
 
 INT_VEC:
     org 0Ch
@@ -116,15 +116,15 @@ CONSOLE_PROMPT:
     LD A,' '
     out (IO_SIO0B_D),A
     call TX_EMP
-    LD A,"_"
-    out (IO_SIO0B_D),A 
-    call TX_EMP
+    ;LD A,"_"
+    ;out (IO_SIO0B_D),A 
+    ;call TX_EMP
 
     ; Blinking Cursor
-    LD IX,CMD_CRS_SPEED
-    LD BC,1
-    LD A,0
-    LD (MEM_CURSOR_STATE),A
+    ;LD IX,CMD_CRS_SPEED
+    ;LD BC,1
+    ;LD A,0
+    ;LD (MEM_CURSOR_STATE),A
     ; SET PROMPT LENGTH TO 0
     LD A,0
     LD (MEM_PROMPT_SIZE),A
@@ -142,7 +142,7 @@ CONSOLE_PROMPT_LOOP:
     LD D, 13
     CP D
     JR NZ, CONSOLE_PROMPT_LOOP_1
-
+    ; TODO: Add NULL termination
     CALL PARSE_CMD
 
     JP CONSOLE_PROMPT
@@ -163,17 +163,22 @@ CONSOLE_PROMPT_LOOP_1: ; Not new line
     DEC A
     LD (MEM_PROMPT_SIZE),A  ; store size to mem
 
-    LD A, 0x7F
+    ;LD A, 0x7F
+    ;out (IO_SIO0B_D),A
+    ;call TX_EMP
+
+    LD A,0x08
     out (IO_SIO0B_D),A
     call TX_EMP
-
-    LD A,(MEM_LAST_CHAR)
+    LD A,0x20
     out (IO_SIO0B_D),A
     call TX_EMP
-
-    LD A," "
-    out (IO_SIO0B_D),A 
+    LD A,0x08
+    out (IO_SIO0B_D),A
     call TX_EMP
+    ;LD A," "
+    ;out (IO_SIO0B_D),A 
+    ;call TX_EMP
 
     JP CONSOLE_PROMPT_LOOP_2
 
@@ -189,17 +194,17 @@ CONSOLE_PROMPT_LOOP_1B: ;IF not Backspace
     INC A
     LD (MEM_PROMPT_SIZE),A  ; store size to mem
 
-    LD A, 0x7F
-    out (IO_SIO0B_D),A
-    call TX_EMP
+    ;LD A, 0x7F
+    ;out (IO_SIO0B_D),A
+    ;call TX_EMP
 
     LD A,(MEM_LAST_CHAR)
     out (IO_SIO0B_D),A
     call TX_EMP
 
-    LD A," "
-    out (IO_SIO0B_D),A 
-    call TX_EMP
+    ;LD A," "
+    ;out (IO_SIO0B_D),A 
+    ;call TX_EMP
 
     ;APPEND CHAR TO BUFFER
     PUSH BC
@@ -217,32 +222,32 @@ CONSOLE_PROMPT_LOOP_1B: ;IF not Backspace
 
 CONSOLE_PROMPT_LOOP_2:
     ; Print Cursor
-    ADD IX,BC
-    JR NC, CONSOLE_PROMPT_LOOP
+    ;ADD IX,BC
+    ;JR NC, CONSOLE_PROMPT_LOOP
     ; Toggle cycle
-    LD A,(MEM_CURSOR_STATE)
-    XOR 1
-    JR Z,CONSOLE_PROMPT_LOOP_3
-    LD (MEM_CURSOR_STATE),A
+    ;LD A,(MEM_CURSOR_STATE)
+    ;XOR 1
+    ;JR Z,CONSOLE_PROMPT_LOOP_3
+    ;LD (MEM_CURSOR_STATE),A
 
-    LD A, 0x7F
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    LD A,'_'
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    LD IX,CMD_CRS_SPEED
-    JP CONSOLE_PROMPT_LOOP
+    ;LD A, 0x7F
+    ;out (IO_SIO0B_D),A
+    ;call TX_EMP
+    ;LD A,'_'
+    ;out (IO_SIO0B_D),A
+    ;call TX_EMP
+    ;LD IX,CMD_CRS_SPEED
+    ;JP CONSOLE_PROMPT_LOOP
 
 CONSOLE_PROMPT_LOOP_3:
-    LD (MEM_CURSOR_STATE),A
-    LD A, 0x7F
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    LD A,' '
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    LD IX,CMD_CRS_SPEED
+    ;LD (MEM_CURSOR_STATE),A
+    ;LD A, 0x7F
+    ;out (IO_SIO0B_D),A
+    ;call TX_EMP
+    ;LD A,' '
+    ;out (IO_SIO0B_D),A
+    ;call TX_EMP
+    ;LD IX,CMD_CRS_SPEED
     JP CONSOLE_PROMPT_LOOP
 
 ; A Contains Byte
@@ -399,3 +404,4 @@ DHEX_TO_BYTE_FAILED:
 ;Strings
 MSG_CLEAR:
     db 27, '[2J', 27, '[H',0
+
