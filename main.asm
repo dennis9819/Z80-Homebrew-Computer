@@ -15,7 +15,7 @@ CMD_CRS_SPEED equ 0xE000
 .include "commands.s"
 
 ; include subroutines
-.include "sub_soundtest.s"
+;.include "sub_soundtest.s"
 
 INT_VEC:
     org 0Ch
@@ -126,6 +126,11 @@ CONSOLE_PROMPT:
     ;LD A,0
     ;LD (MEM_CURSOR_STATE),A
     ; SET PROMPT LENGTH TO 0
+
+    ;Enable Cursor
+    LD A,1
+    CALL CONSOLE_CURSOR
+
     LD A,0
     LD (MEM_PROMPT_SIZE),A
 
@@ -142,7 +147,20 @@ CONSOLE_PROMPT_LOOP:
     LD D, 13
     CP D
     JR NZ, CONSOLE_PROMPT_LOOP_1
-    ; TODO: Add NULL termination
+    
+    ;Add NULL termination
+    LD HL,MEM_PROMPT_START
+    LD B,0
+    LD A,(MEM_PROMPT_SIZE)
+    LD C,A
+    ADC HL, BC
+    LD A, 0x00
+    LD (HL), A
+
+    ;Disable Cursor
+    LD A,0
+    CALL CONSOLE_CURSOR
+    ; Parse CMD
     CALL PARSE_CMD
 
     JP CONSOLE_PROMPT
@@ -401,6 +419,8 @@ DHEX_TO_BYTE_FAILED:
     POP BC
     RET
 
+.include "ascii.s"
+.include "ide.s"
 ;Strings
 MSG_CLEAR:
     db 27, '[2J', 27, '[H',0

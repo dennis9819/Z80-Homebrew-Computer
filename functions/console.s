@@ -160,36 +160,20 @@ CONSOLE_INIT:
 ;
 ;Destroys: A
 CONSOLE_CURSOR:
-    PUSH DE             ;Backup DE
-    LD D,A              ;Copy Value to A
-
-    LD A,0x9B           ;Print 1st part of controll sequence  0x9B 0x3F 0x32 0x35
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    LD A,0x3F 
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    LD A,0x32 
-    out (IO_SIO0B_D),A
-    call TX_EMP
-    LD A,0x35
-    out (IO_SIO0B_D),A
-    call TX_EMP
-
-    LD A,D              ;Restore A from D
     AND A               ;Check if A == 0
     JP Z,CONSOLE_CURSOR_OFF
 
-    LD A,0x68           ;Complete controll seq (ON)
-    out (IO_SIO0B_D),A
-    call TX_EMP
+    LD BC,[MSG_CRSR_0]
+    CALL CONSOLE_PRINTSTR
 
-    POP DE              ;Restore BC
     RET                 ;Exit Sub
 CONSOLE_CURSOR_OFF:
-    LD A,0x6C           ;Complete controll seq (OFF)
-    out (IO_SIO0B_D),A
-    call TX_EMP
+    LD BC,[MSG_CRSR_1]
+    CALL CONSOLE_PRINTSTR
 
-    POP DE              ;Restore BC
     RET                 ;Exit Sub
+
+MSG_CRSR_0:
+    db 0x1B, "[?25h",0
+MSG_CRSR_1:
+    db 0x1B, "[?25l",0

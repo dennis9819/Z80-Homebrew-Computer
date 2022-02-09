@@ -32,7 +32,44 @@ ARR_COMMANDS:
     ; Exec
     word [CMD_EXEC]
     db "exec $",0
+
+    ; Exec
+    word [CMD_CALL]
+    db "call $",0
     
+    ;File System Functions
+    ; List Files
+    word [CMD_NOT_IMPLEMENTED]
+    db "dlist",0
+
+    ; Go Subdirectory
+    word [CMD_NOT_IMPLEMENTED]
+    db "dgo",0
+
+    ; Load File to Memory
+    word [CMD_NOT_IMPLEMENTED]
+    db "dload ",0
+
+    ; Store File from Memory
+    word [CMD_NOT_IMPLEMENTED]
+    db "dsave ",0
+
+    ; mount FS
+    word [CMD_NOT_IMPLEMENTED]
+    db "dmount ",0
+
+    ; ununt FS
+    word [CMD_NOT_IMPLEMENTED]
+    db "dumount ",0
+
+    ; remove file
+    word [CMD_NOT_IMPLEMENTED]
+    db "drem ",0
+
+    ; disk info
+    word [CMD_NOT_IMPLEMENTED]
+    db "dinfo ",0
+
     word 0x0000 ; END
 
 STR_NOTFOUND:
@@ -170,6 +207,20 @@ CMD_EXEC:
     LD SP,0x7FFF
     JP HL
 
+CMD_CALL:
+    LD BC,MEM_PROMPT_START + 6
+    CALL DHEX_TO_BYTE
+    LD H,A
+
+    LD BC,MEM_PROMPT_START + 8
+    CALL DHEX_TO_BYTE
+    LD L,A
+    CALL CMD_CALL_TRICK
+
+CMD_CALL_TRICK:
+    JP HL
+
+
 CMD_IOGET:
     LD BC,MEM_PROMPT_START + 7
     CALL DHEX_TO_BYTE
@@ -279,7 +330,10 @@ CMD_MGET:
     call TX_EMP
     RET
 
-
+CMD_NOT_IMPLEMENTED:
+    LD BC,[MSG_NOT_IMPLEMENTED]
+    CALL CONSOLE_PRINTSTR
+    RET
 
 ;-------------------------------------------------------------
 ; commands strings
@@ -294,7 +348,10 @@ MSG_CMD_HELP:
     db 13,10
     db "hd $<addr>  mget $<addr>  mset $<addr> <val>",13,10
     db "ioget $<addr>  ioset $<addr> <val>",13,10
-    db "?  exec $<addr>  clr  ver"
+    db "?  exec $<addr>  call $<addr>  clr  ver",13,10
+    db "dlist  dgo <dir>  dload <file> ($<addr>)",13,10
+    db "dsave <file> $<addr> [<len>,$<addr_end>]",13,10
+    db "dmount  dumount  drem <file>  dinfo"
     db 0
 
 MSG_CMD_VER:
@@ -303,4 +360,9 @@ MSG_CMD_VER:
     db "ROM Version 1.0 - Written by Dennis Gunia, 2022",13,10
     db "3.686411MHz CPU, 48K RAM System, John 3,16",13,10
     db "www.dennisgunia.de"
+    db 0
+
+MSG_NOT_IMPLEMENTED:
+    db 13,10
+    db "Not implemented yet",13,10
     db 0
