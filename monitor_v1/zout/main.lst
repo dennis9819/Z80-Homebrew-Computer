@@ -1,0 +1,395 @@
+   1:     -	0080          	MONITOR_START   equ 0x0080
+   2:     -	4000          	SYS_RAM_START   equ 0x4000
+   3:     -	4010          	SYS_BUF_START   equ 0x4010
+   4:     -	4110          	PRG_RAM_START   equ 0x4110
+   5:     -	FF00          	PRG_RAM_TOP     equ 0xFF00
+   6:     -	FFFF          	STACK_RAM_TOP   equ 0xFFFF
+   7:				
+   8:				;VAR_CONSOLE_CONF    equ 0x07  ;CLK/TRG Clock @ 1843220.5/s
+   9:     -	000F          	VAR_CONSOLE_CONF    equ 0x0F  ;CPU/16  Clock @ 230402.5625/s
+  10:				
+  11:     -	000C          	VAR_CONSOLE_BAUD    equ 12  ;BAUD timer constant
+  12:				                            ;CLK/TRG Clock @ 1843220.5/s
+  13:				                            ; -> 0x16 : 14400
+  14:				                            ;CPU/16  Clock @ 230402.5625/s
+  15:				                            ; -> 12 : 19200
+  16:				                            ; -> 24 : 9600
+  17:				
+  18:				; include IO device addresses
+  19:				.include "addresses.s"
+**** include/addresses.s ****
+   1:     -	0000          	IO_CTC0_C0  equ 0x00
+   2:     -	0001          	IO_CTC0_C1  equ 0x01
+   3:     -	0002          	IO_CTC0_C2  equ 0x02
+   4:     -	0003          	IO_CTC0_C3  equ 0x03
+   5:				
+   6:     -	0012          	IO_SIO0A_C  equ 00010010b
+   7:     -	0010          	IO_SIO0A_D  equ 00010000b
+   8:     -	0013          	IO_SIO0B_C  equ 00010011b
+   9:     -	0011          	IO_SIO0B_D  equ 00010001b
+  10:				
+  11:     -	0020          	IO_RTC_SEC0  equ 00100000b
+  12:     -	0021          	IO_RTC_SEC1  equ 00100001b
+  13:     -	0022          	IO_RTC_MIN0  equ 00100010b
+  14:     -	0023          	IO_RTC_MIN1  equ 00100011b
+  15:     -	0024          	IO_RTC_HOUR  equ 00100100b
+  16:     -	0025          	IO_RTC_AMPM  equ 00100101b
+  17:     -	0026          	IO_RTC_DAY0  equ 00100110b
+  18:     -	0027          	IO_RTC_DAY1  equ 00100111b
+  19:     -	0028          	IO_RTC_MON0  equ 00101000b
+  20:     -	0029          	IO_RTC_MON1  equ 00101001b
+  21:     -	002A          	IO_RTC_YERR0 equ 00101010b
+  22:     -	002B          	IO_RTC_YEAR1 equ 00101011b
+  23:     -	002C          	IO_RTC_WEEK  equ 00101100b
+  24:     -	002D          	IO_RTC_CTR_D equ 00101101b
+  25:     -	002E          	IO_RTC_CTR_E equ 00101110b
+  26:     -	002F          	IO_RTC_CTR_F equ 00101111b
+  27:				
+  28:     -	0040          	IO_AY0_ADDR equ 01000000b
+  29:     -	0041          	IO_AY0_DATA equ 01000001b
+  30:     -	0042          	IO_AY1_ADDR equ 01000010b
+  31:     -	0043          	IO_AY1_DATA equ 01000011b
+  32:				
+  33:     -	0000          	START_ROM   equ 0x0000
+  34:     -	0020          	IO_REG0     equ 0x20
+  35:				
+  36:     -	0080          	VDP_REG     equ 0x80
+  37:     -	0081          	VDP_MEM     equ 0x81
+  38:				
+  39:     -	0100          	PROG_ROM_START equ 0x0100
+**** main.asm ****
+  20:     -	4000          	PROG_MEM_START equ 04000h
+  21:				
+  22:				
+  23:     -	0000          	    org 0x0000
+  24:     -	0000          	main:
+  25:    0+10	0000  C38101  	    jp mon_start_init_sound    
+  26:				
+  27:     -	0080          	    org MONITOR_START
+  28:				
+  29:				;memory var template
+  30:     -	0080          	mon_var_template:
+  31:     -	4000          	    phase SYS_RAM_START
+  32:				
+  33:     -	4000          	var_buffer_len:
+  34:     -	4000  00      	    defb 0
+  35:     -	4001          	var_last_char:
+  36:     -	4001  00      	    defb 0
+  37:     -	4002          	var_buffer:
+  38:     -	4002 ..4100 00	    dc 255,0x00
+  39:				
+  40:     -	4101          	mon_var_template_end:
+  41:     -	0181          	    dephase
+  42:				;end memory var template
+  43:				
+  44:     -	0181          	mon_start_init_sound:
+  45:   10+7	0181  1608    	    ld	  D,0x08	; Select register #8
+  46:   17+7	0183  3E00    	    ld	  A,0x00	; Volume channel A 0
+  47:   24+17	0185  CDE701  	    call AY0_WRITE_REG
+  48:   41+7	0188  1609    	    ld	  D,0x09	; Select register #9
+  49:   48+7	018A  3E00    	    ld	  A,0x00	; Volume channel B 0
+  50:   55+17	018C  CDE701  	    call AY0_WRITE_REG
+  51:   72+7	018F  160A    	    ld	  D,0x0A	; Select register #10
+  52:   79+7	0191  3E00    	    ld	  A,0x00	; Volume channel C 0
+  53:   86+17	0193  CDE701  	    call AY0_WRITE_REG
+  54:     -	0196          	mon_start_init_serial:
+  55:  103+7	0196  3E0F    	    ld A,VAR_CONSOLE_CONF   ; Setup CTC
+  56:  110+11	0198  D301    	    out (IO_CTC0_C1),A      ; Controll word, software reset, time constant follows, CLK/TRG starts timer
+  57:  121+7	019A  3E0C    	    ld A,VAR_CONSOLE_BAUD   ; Setup timer const
+  58:  128+11	019C  D301    	    out (IO_CTC0_C1),A      ; Load timer const into CTC (Setup Baud generator)
+  59:				    ;set up TX and RX:W
+  60:  139+7	019E  3E30    	    ld a,00110000b      ;write into WR0: error reset, select WR0
+  61:  146+11	01A0  D313    	    out (IO_SIO0B_C),A
+  62:  157+7	01A2  3E18    	    ld a,018h           ;write into WR0: channel reset
+  63:  164+11	01A4  D313    	    out (IO_SIO0B_C),A
+  64:  175+7	01A6  3E04    	    ld a,004h           ;write into WR0: select WR4
+  65:  182+11	01A8  D313    	    out (IO_SIO0B_C),A
+  66:  193+7	01AA  3E04    	    ld a,04h            ;44h write into WR4: clkx1,1 stop bit, no parity
+  67:  200+11	01AC  D313    	    out (IO_SIO0B_C),A
+  68:  211+7	01AE  3E05    	    ld a,005h           ;write into WR0: select WR5
+  69:  218+11	01B0  D313    	    out (IO_SIO0B_C),A
+  70:  229+7	01B2  3E68    	    ld a,068h           ;DTR active, TX 8bit, BREAK off, TX on, RTS inactive
+  71:  236+11	01B4  D313    	    out (IO_SIO0B_C),A
+  72:  247+7	01B6  3E01    	    ld a,01h            ;write into WR0: select WR1
+  73:  254+11	01B8  D313    	    out (IO_SIO0B_C),A
+  74:  265+7	01BA  3E04    	    ld a,00000100b      ;no interrupt in CH B, special RX condition affects vect
+  75:  272+11	01BC  D313    	    out (IO_SIO0B_C),A
+  76:				    ;enable SIO channel A RX
+  77:  283+7	01BE  3E03    	    ld a,003h ;write into WR0: select WR3
+  78:  290+11	01C0  D313    	    out (IO_SIO0B_C),A
+  79:  301+7	01C2  3EC1    	    ld a,0C1h ;RX 8bit, auto enable off, RX on
+  80:  308+11	01C4  D313    	    out (IO_SIO0B_C),A
+  81:				    ;Channel A RX active
+  82:				
+  83:				
+  84:				
+  85:     -	01C6          	mon_start_ram:
+  86:  319+10	01C6  218000  	    ld hl,mon_var_template
+  87:  329+10	01C9  110141  	    ld de,mon_var_template_end
+  88:  339+10	01CC  010040  	    ld bc,SYS_RAM_START
+  89:     -	01CF          	mon_start_ram_loop:
+  90:  349+7	01CF  7E      	    ld a,(hl)  ;copy values
+  91:  356+7	01D0  02      	    ld (bc),a
+  92:  363+6	01D1  23      	    inc hl      
+  93:  369+6	01D2  03      	    inc bc
+  94:  375+11	01D3  E5      	    push hl    ;check if end is reached
+  95:  386+15	01D4  ED52    	    sbc hl,de
+  96:  401+10	01D6  E1      	    pop hl
+  97:  411+10	01D7  C2CF01  	    jp nz, mon_start_ram_loop
+  98:				    ;template copy done
+  99:				    
+ 100:     -	01DA          	mon_start_complete:
+ 101:  421+17	01DA  CD7302  	    call print_clear
+ 102:  438+10	01DD  21B202  	    ld hl, [STR_Banner_Start]
+ 103:  448+17	01E0  CD6602  	    call print_str
+ 104:  465+17	01E3  CDEF01  	    call PROMPT_BEGIN
+ 105:				    
+ 106:				    ;halt CPU if prompt exits
+ 107:  482+4	01E6  76      	    halt
+ 108:				
+ 109:				
+ 110:				
+ 111:				; Misc Functions
+ 112:     -	01E7          	AY0_WRITE_REG:
+ 113:  486+4	01E7  47      	    LD B,A
+ 114:  490+4	01E8  7A      	    LD A,D
+ 115:  494+11	01E9  D340    	    OUT (IO_AY0_ADDR),A
+ 116:  505+4	01EB  78      	    LD A,B
+ 117:  509+11	01EC  D341    	    OUT (IO_AY0_DATA),A
+ 118:  520+10	01EE  C9      	    RET
+ 119:				
+ 120:     -	01EF          	PROMPT_BEGIN:
+ 121:  530+7	01EF  3E3E    	    ld a,'>'
+ 122:  537+17	01F1  CD6002  	    call print_char
+ 123:  554+7	01F4  3E00    	    ld a,0  ;reset buffer len
+ 124:  561+13	01F6  320040  	    ld (var_buffer_len),a
+ 125:				
+ 126:     -	01F9          	PROMPT_BEGIN_READ_LOOP:
+ 127:  574+17	01F9  CD9102  	    call read_char
+ 128:  591+10	01FC  CAF901  	    jp z, PROMPT_BEGIN_READ_LOOP    ; wait until char avail
+ 129:				    
+ 130:				    ; process special ops
+ 131:  601+7	01FF  FE0D    	    cp 13   ; enter
+ 132:  608+10	0201  CA4A02  	    jp z,PROMPT_BEGIN_READ_PROCESS
+ 133:  618+7	0204  FE08    	    cp 0x08 ; backspace 0x08 VT102 0x7f Putty
+ 134:  625+10	0206  CA2402  	    jp z,PROMPT_BEGIN_READ_BACKSPACE
+ 135:				
+ 136:  635+11	0209  F5      	    push af
+ 137:				    ; a contains latest char
+ 138:  646+10	020A  210240  	    ld hl,[var_buffer]
+ 139:  656+7	020D  1600    	    ld d,0
+ 140:  663+13	020F  3A0040  	    ld a,(var_buffer_len)
+ 141:  676+4	0212  5F      	    ld e,a
+ 142:  680+11	0213  19      	    add hl,de   ;hl now contains pointer to last position in buffer
+ 143:  691+4	0214  3C      	    inc a
+ 144:  695+13	0215  320040  	    ld (var_buffer_len),a ;store incremented buffer length
+ 145:				
+ 146:  708+10	0218  F1      	    pop af
+ 147:  718+7	0219  77      	    ld (hl),a
+ 148:  725+17	021A  CD6002  	    call print_char
+ 149:  742+6	021D  23      	    inc hl
+ 150:  748+7	021E  3E00    	    ld a, 0x00
+ 151:  755+7	0220  77      	    ld (hl),a   ;always add null termination after last char
+ 152:  762+10	0221  C3F901  	    jp PROMPT_BEGIN_READ_LOOP
+ 153:				
+ 154:     -	0224          	PROMPT_BEGIN_READ_BACKSPACE:
+ 155:  772+13	0224  3A0040  	    ld a,(var_buffer_len)
+ 156:  785+4	0227  A7      	    and a
+ 157:  789+10	0228  CAF901  	    jp z, PROMPT_BEGIN_READ_LOOP    ; do not continue if already at char 0
+ 158:  799+4	022B  3D      	    dec a       ;decrement length
+ 159:  803+13	022C  320040  	    ld (var_buffer_len),a   ;and store it
+ 160:  816+4	022F  5F      	    ld e,a      ;load de with decremented value
+ 161:  820+7	0230  1600    	    ld d,0
+ 162:  827+10	0232  210240  	    ld hl,[var_buffer]
+ 163:  837+11	0235  19      	    add hl,de   ;hl now contains pointer to last position in buffer
+ 164:  848+4	0236  AF      	    xor a       ; store null byte to current location
+ 165:  852+7	0237  77      	    ld (hl),a
+ 166:  859+7	0238  3E08    	    ld a, 0x08
+ 167:  866+17	023A  CD6002  	    call print_char
+ 168:  883+7	023D  3E20    	    ld a, 0x20
+ 169:  890+17	023F  CD6002  	    call print_char
+ 170:  907+7	0242  3E08    	    ld a, 0x08
+ 171:  914+17	0244  CD6002  	    call print_char
+ 172:  931+10	0247  C3F901  	    jp PROMPT_BEGIN_READ_LOOP
+ 173:				
+ 174:     -	024A          	PROMPT_BEGIN_READ_PROCESS:
+ 175:  941+17	024A  CD7A02  	    call print_newLine
+ 176:  958+10	024D  210240  	    ld hl,var_buffer
+ 177:  968+17	0250  CD6602  	    call print_str
+ 178:  985+17	0253  CD7A02  	    call print_newLine
+ 179: 1002+10	0256  21DA02  	    ld hl, [STR_SyntaxError]
+ 180: 1012+17	0259  CD6602  	    call print_str
+ 181: 1029+10	025C  C3EF01  	    jp PROMPT_BEGIN
+ 182:				
+ 183: 1039+10	025F  C9      	    ret
+ 184:				
+ 185:				
+ 186:     -	0260          	Includes:
+ 187:				.include "console.s"
+**** include/console.s ****
+   1:				
+   2:				
+   3:				; A contains char
+   4:				; Destroys A
+   5:     -	0260          	print_char:
+   6: 1049+11	0260  D311    	    out (IO_SIO0B_D),a
+   7: 1060+17	0262  CD8502  	    call print_wait_out
+   8: 1077+10	0265  C9      	    ret
+   9:				; HL contains pointer to string
+  10:				; Destroy A, HL
+  11:				
+  12:     -	0266          	print_str:
+  13: 1087+7	0266  7E      	    ld a, (hl)
+  14: 1094+4	0267  B7      	    or a
+  15: 1098+10	0268  CA7202  	    jp z,print_str_end
+  16: 1108+17	026B  CD6002  	    call print_char
+  17: 1125+6	026E  23      	    inc hl
+  18: 1131+10	026F  C36602  	    jp print_str
+  19:     -	0272          	print_str_end:
+  20: 1141+10	0272  C9      	    ret
+  21:				
+  22:     -	0273          	print_clear:
+  23: 1151+10	0273  21AA02  	    ld hl, [MSG_CLEAR]
+  24: 1161+17	0276  CD6602  	    call print_str
+  25: 1178+10	0279  C9      	    ret
+  26:				
+  27:     -	027A          	print_newLine:
+  28: 1188+7	027A  3E0A    	    ld a,10
+  29: 1195+17	027C  CD6002  	    call print_char
+  30: 1212+7	027F  3E0D    	    ld a,13
+  31: 1219+17	0281  CD6002  	    call print_char
+  32: 1236+10	0284  C9      	    ret
+  33:				; destroys a
+  34:     -	0285          	print_wait_out:
+  35:				    ; check for TX buffer empty
+  36: 1246+4	0285  97      	    sub a ;clear a, write into WR0: select RR0
+  37: 1250+4	0286  3C      	    inc a ;select RR1
+  38: 1254+11	0287  D313    	    out (IO_SIO0B_C),A
+  39: 1265+11	0289  DB13    	    in A,(IO_SIO0B_C) ;read RRx
+  40: 1276+8	028B  CB47    	    bit 0,A
+  41: 1284+10	028D  CA8502  	    jp z,print_wait_out
+  42: 1294+10	0290  C9      	    ret
+  43:				
+  44:				
+  45:     -	0291          	read_char:
+  46: 1304+4	0291  AF      	    xor a               ; a = 0
+  47: 1308+11	0292  D313    	    out (IO_SIO0B_C), a ; select reg 0
+  48: 1319+11	0294  DB13    	    in a, (IO_SIO0B_C)  ; read reg 0
+  49: 1330+7	0296  E601    	    and	1               ; mask D0 (recieve char available)
+  50: 1337+5+6	0298  C8      	    ret	Z               ; return 0 if no char
+  51: 1342+11	0299  DB11    	    in a, (IO_SIO0B_D)  ; read char if avail
+  52: 1353+10	029B  C9      	    ret                 ; return
+  53:				
+  54:     -	029C          	MSG_CRSR_0:
+  55:     -	029C  1B5B3F32	    db 0x1B, "[?25h",0
+	              356800
+  56:     -	02A3          	MSG_CRSR_1:
+  57:     -	02A3  1B5B3F32	    db 0x1B, "[?25l",0
+	              356C00
+  58:     -	02AA          	MSG_CLEAR:
+**** main.asm ****
+ 188:     -	02AA  1B5B324A	    db 27, '[2J', 27, '[H',0
+	              1B5B4800
+ 189:				; Strings
+ 190:     -	02B2          	STR_Banner_Start:
+ 191:     -	02B2  5A384320	    db "Z8C Monitor V2 by Dennis Gunia (2022)",10,13,0
+	              4D6F6E69
+	              746F7220
+	              56322062
+	              79204465
+	              6E6E6973
+	              2047756E
+	              69612028
+	              32303232
+	              290A0D00
+ 192:     -	02DA          	STR_SyntaxError:
+**** main.asm ****
+ 193:     -	02DA  53796E74	    db "Syntax error",10,13,0
+	              61782065
+	              72726F72
+	              0A0D00
+
+
+
+Statistics:
+
+     4	passes
+     0	jr promotions
+    71	symbols
+   620	bytes
+
+
+
+Symbol Table:
+
+AY0_WRITE_REG    1E7      487
+IO_AY0_ADDR    =40        64
+IO_AY0_DATA    =41        65
+IO_AY1_ADDR    =42        66
+IO_AY1_DATA    =43        67
+IO_CTC0_C0     =00        0
+IO_CTC0_C1     =01        1
+IO_CTC0_C2     =02        2
+IO_CTC0_C3     =03        3
+IO_REG0        =20        32
+IO_RTC_AMPM    =25        37
+IO_RTC_CTR_D   =2D        45
+IO_RTC_CTR_E   =2E        46
+IO_RTC_CTR_F   =2F        47
+IO_RTC_DAY0    =26        38
+IO_RTC_DAY1    =27        39
+IO_RTC_HOUR    =24        36
+IO_RTC_MIN0    =22        34
+IO_RTC_MIN1    =23        35
+IO_RTC_MON0    =28        40
+IO_RTC_MON1    =29        41
+IO_RTC_SEC0    =20        32
+IO_RTC_SEC1    =21        33
+IO_RTC_WEEK    =2C        44
+IO_RTC_YEAR1   =2B        43
+IO_RTC_YERR0   =2A        42
+IO_SIO0A_C     =12        18
+IO_SIO0A_D     =10        16
+IO_SIO0B_C     =13        19
+IO_SIO0B_D     =11        17
+Includes         260      608
+MONITOR_START  =80        128
+MSG_CLEAR        2AA      682
+MSG_CRSR_0       29C      668
+MSG_CRSR_1       2A3      675
+PRG_RAM_START  =4110      16656
+PRG_RAM_TOP    =FF00      65280
+PROG_MEM_START =4000      16384
+PROG_ROM_START = 100      256
+PROMPT_BEGIN     1EF      495
+PROMPT_BEGIN_READ_BACKSPACE  224      548
+PROMPT_BEGIN_READ_LOOP  1F9      505
+PROMPT_BEGIN_READ_PROCESS  24A      586
+STACK_RAM_TOP  =FFFF      65535
+START_ROM      =00        0
+STR_Banner_Start  2B2      690
+STR_SyntaxError  2DA      730
+SYS_BUF_START  =4010      16400
+SYS_RAM_START  =4000      16384
+VAR_CONSOLE_BAUD=0C        12
+VAR_CONSOLE_CONF=0F        15
+VDP_MEM        =81        129
+VDP_REG        =80        128
+main            00        0
+mon_start_complete  1DA      474
+mon_start_init_serial  196      406
+mon_start_init_sound  181      385
+mon_start_ram    1C6      454
+mon_start_ram_loop  1CF      463
+mon_var_template 80        128
+mon_var_template_end 4101      16641
+print_char       260      608
+print_clear      273      627
+print_newLine    27A      634
+print_str        266      614
+print_str_end    272      626
+print_wait_out   285      645
+read_char        291      657
+var_buffer      4002      16386
+var_buffer_len  4000      16384
+var_last_char   4001      16385

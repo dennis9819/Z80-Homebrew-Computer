@@ -1,0 +1,59 @@
+
+
+; A contains char
+; Destroys A
+print_char:
+    out (IO_SIO0B_D),a
+    call print_wait_out
+    ret
+; HL contains pointer to string
+; Destroy A, HL
+
+print_str:
+    ld a, (hl)
+    or a
+    jp z,print_str_end
+    call print_char
+    inc hl
+    jp print_str
+print_str_end:
+    ret
+
+print_clear:
+    ld hl, [MSG_CLEAR]
+    call print_str
+    ret
+
+print_newLine:
+    ld a,10
+    call print_char
+    ld a,13
+    call print_char
+    ret
+; destroys a
+print_wait_out:
+    ; check for TX buffer empty
+    sub a ;clear a, write into WR0: select RR0
+    inc a ;select RR1
+    out (IO_SIO0B_C),A
+    in A,(IO_SIO0B_C) ;read RRx
+    bit 0,A
+    jp z,print_wait_out
+    ret
+
+
+read_char:
+    xor a               ; a = 0
+    out (IO_SIO0B_C), a ; select reg 0
+    in a, (IO_SIO0B_C)  ; read reg 0
+    and	1               ; mask D0 (recieve char available)
+    ret	Z               ; return 0 if no char
+    in a, (IO_SIO0B_D)  ; read char if avail
+    ret                 ; return
+
+MSG_CRSR_0:
+    db 0x1B, "[?25h",0
+MSG_CRSR_1:
+    db 0x1B, "[?25l",0
+MSG_CLEAR:
+    db 27, '[2J', 27, '[H',0
