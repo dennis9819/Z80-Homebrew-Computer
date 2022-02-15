@@ -197,7 +197,7 @@ TermScrollLine:
     in a, (0x80)    ; read byte
     push af
 
-    ld a,c          ; setup VDP addressh
+    ld a,c          ; setup VDP address
     out (0x81),a
     ld a,b
     and 3fh         

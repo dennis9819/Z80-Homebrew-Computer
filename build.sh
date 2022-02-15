@@ -1,5 +1,6 @@
 #!/bin/bash
-./zmac main.asm -I functions -L --oo hex,lst 
+echo "Start building Z8C monitor..."
+./../zmac main.asm -I functions -L --oo hex,lst 
 RC_BUILD=$?
 
 if [ $RC_BUILD -gt 0 ]; then
