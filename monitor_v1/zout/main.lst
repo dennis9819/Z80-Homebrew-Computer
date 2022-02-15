@@ -1,22 +1,21 @@
-   1:     -	0080          	MONITOR_START   equ 0x0080
-   2:     -	4000          	SYS_RAM_START   equ 0x4000
-   3:     -	4010          	SYS_BUF_START   equ 0x4010
-   4:     -	4110          	PRG_RAM_START   equ 0x4110
-   5:     -	FF00          	PRG_RAM_TOP     equ 0xFF00
-   6:     -	FFFF          	STACK_RAM_TOP   equ 0xFFFF
-   7:				
-   8:				;VAR_CONSOLE_CONF    equ 0x07  ;CLK/TRG Clock @ 1843220.5/s
-   9:     -	000F          	VAR_CONSOLE_CONF    equ 0x0F  ;CPU/16  Clock @ 230402.5625/s
-  10:				
-  11:     -	000C          	VAR_CONSOLE_BAUD    equ 12  ;BAUD timer constant
-  12:				                            ;CLK/TRG Clock @ 1843220.5/s
-  13:				                            ; -> 0x16 : 14400
-  14:				                            ;CPU/16  Clock @ 230402.5625/s
-  15:				                            ; -> 12 : 19200
-  16:				                            ; -> 24 : 9600
-  17:				
-  18:				; include IO device addresses
-  19:				.include "addresses.s"
+   1:     -	4000          	SYS_RAM_START   equ 0x4000
+   2:     -	4010          	SYS_BUF_START   equ 0x4010
+   3:     -	4110          	PRG_RAM_START   equ 0x4110
+   4:     -	FF00          	PRG_RAM_TOP     equ 0xFF00
+   5:     -	FFFF          	STACK_RAM_TOP   equ 0xFFFF
+   6:				
+   7:				;VAR_CONSOLE_CONF    equ 0x07  ;CLK/TRG Clock @ 1843220.5/s
+   8:     -	000F          	VAR_CONSOLE_CONF    equ 0x0F  ;CPU/16  Clock @ 230402.5625/s
+   9:				
+  10:     -	000C          	VAR_CONSOLE_BAUD    equ 12  ;BAUD timer constant
+  11:				                            ;CLK/TRG Clock @ 1843220.5/s
+  12:				                            ; -> 0x16 : 14400
+  13:				                            ;CPU/16  Clock @ 230402.5625/s
+  14:				                            ; -> 12 : 19200
+  15:				                            ; -> 24 : 9600
+  16:				
+  17:				; include IO device addresses
+  18:				.include "addresses.s"
 **** include/addresses.s ****
    1:     -	0000          	IO_CTC0_C0  equ 0x00
    2:     -	0001          	IO_CTC0_C1  equ 0x01
@@ -58,241 +57,521 @@
   38:				
   39:     -	0100          	PROG_ROM_START equ 0x0100
 **** main.asm ****
-  20:     -	4000          	PROG_MEM_START equ 04000h
-  21:				
-  22:				
-  23:     -	0000          	    org 0x0000
-  24:     -	0000          	main:
-  25:    0+10	0000  C38101  	    jp mon_start_init_sound    
-  26:				
-  27:     -	0080          	    org MONITOR_START
+  19:     -	4000          	PROG_MEM_START equ 04000h
+  20:				
+  21:     -	0000          	    org 0x0000
+  22:     -	0000          	main:
+  23:    0+10	0000  C30600  	    jp mon_start_init_sound    
+  24:				
+  25:				;memory var template
+  26:     -	0003          	mon_var_template:
+  27:     -	4000          	    phase SYS_RAM_START
   28:				
-  29:				;memory var template
-  30:     -	0080          	mon_var_template:
-  31:     -	4000          	    phase SYS_RAM_START
-  32:				
-  33:     -	4000          	var_buffer_len:
-  34:     -	4000  00      	    defb 0
-  35:     -	4001          	var_last_char:
-  36:     -	4001  00      	    defb 0
-  37:     -	4002          	var_buffer:
-  38:     -	4002 ..4100 00	    dc 255,0x00
+  29:     -	4000          	var_buffer_len:
+  30:     -	4000  00      	    defb 0
+  31:     -	4001          	var_last_char:
+  32:     -	4001  00      	    defb 0
+  33:     -	4002          	var_buffer:
+  34:     -	4002  00      	    defb 0
+  35:				
+  36:     -	4003          	mon_var_template_end:
+  37:     -	0006          	    dephase
+  38:				;end memory var template
   39:				
-  40:     -	4101          	mon_var_template_end:
-  41:     -	0181          	    dephase
-  42:				;end memory var template
-  43:				
-  44:     -	0181          	mon_start_init_sound:
-  45:   10+7	0181  1608    	    ld	  D,0x08	; Select register #8
-  46:   17+7	0183  3E00    	    ld	  A,0x00	; Volume channel A 0
-  47:   24+17	0185  CDE701  	    call AY0_WRITE_REG
-  48:   41+7	0188  1609    	    ld	  D,0x09	; Select register #9
-  49:   48+7	018A  3E00    	    ld	  A,0x00	; Volume channel B 0
-  50:   55+17	018C  CDE701  	    call AY0_WRITE_REG
-  51:   72+7	018F  160A    	    ld	  D,0x0A	; Select register #10
-  52:   79+7	0191  3E00    	    ld	  A,0x00	; Volume channel C 0
-  53:   86+17	0193  CDE701  	    call AY0_WRITE_REG
-  54:     -	0196          	mon_start_init_serial:
-  55:  103+7	0196  3E0F    	    ld A,VAR_CONSOLE_CONF   ; Setup CTC
-  56:  110+11	0198  D301    	    out (IO_CTC0_C1),A      ; Controll word, software reset, time constant follows, CLK/TRG starts timer
-  57:  121+7	019A  3E0C    	    ld A,VAR_CONSOLE_BAUD   ; Setup timer const
-  58:  128+11	019C  D301    	    out (IO_CTC0_C1),A      ; Load timer const into CTC (Setup Baud generator)
-  59:				    ;set up TX and RX:W
-  60:  139+7	019E  3E30    	    ld a,00110000b      ;write into WR0: error reset, select WR0
-  61:  146+11	01A0  D313    	    out (IO_SIO0B_C),A
-  62:  157+7	01A2  3E18    	    ld a,018h           ;write into WR0: channel reset
-  63:  164+11	01A4  D313    	    out (IO_SIO0B_C),A
-  64:  175+7	01A6  3E04    	    ld a,004h           ;write into WR0: select WR4
-  65:  182+11	01A8  D313    	    out (IO_SIO0B_C),A
-  66:  193+7	01AA  3E04    	    ld a,04h            ;44h write into WR4: clkx1,1 stop bit, no parity
-  67:  200+11	01AC  D313    	    out (IO_SIO0B_C),A
-  68:  211+7	01AE  3E05    	    ld a,005h           ;write into WR0: select WR5
-  69:  218+11	01B0  D313    	    out (IO_SIO0B_C),A
-  70:  229+7	01B2  3E68    	    ld a,068h           ;DTR active, TX 8bit, BREAK off, TX on, RTS inactive
-  71:  236+11	01B4  D313    	    out (IO_SIO0B_C),A
-  72:  247+7	01B6  3E01    	    ld a,01h            ;write into WR0: select WR1
-  73:  254+11	01B8  D313    	    out (IO_SIO0B_C),A
-  74:  265+7	01BA  3E04    	    ld a,00000100b      ;no interrupt in CH B, special RX condition affects vect
-  75:  272+11	01BC  D313    	    out (IO_SIO0B_C),A
-  76:				    ;enable SIO channel A RX
-  77:  283+7	01BE  3E03    	    ld a,003h ;write into WR0: select WR3
-  78:  290+11	01C0  D313    	    out (IO_SIO0B_C),A
-  79:  301+7	01C2  3EC1    	    ld a,0C1h ;RX 8bit, auto enable off, RX on
-  80:  308+11	01C4  D313    	    out (IO_SIO0B_C),A
-  81:				    ;Channel A RX active
-  82:				
-  83:				
-  84:				
-  85:     -	01C6          	mon_start_ram:
-  86:  319+10	01C6  218000  	    ld hl,mon_var_template
-  87:  329+10	01C9  110141  	    ld de,mon_var_template_end
-  88:  339+10	01CC  010040  	    ld bc,SYS_RAM_START
-  89:     -	01CF          	mon_start_ram_loop:
-  90:  349+7	01CF  7E      	    ld a,(hl)  ;copy values
-  91:  356+7	01D0  02      	    ld (bc),a
-  92:  363+6	01D1  23      	    inc hl      
-  93:  369+6	01D2  03      	    inc bc
-  94:  375+11	01D3  E5      	    push hl    ;check if end is reached
-  95:  386+15	01D4  ED52    	    sbc hl,de
-  96:  401+10	01D6  E1      	    pop hl
-  97:  411+10	01D7  C2CF01  	    jp nz, mon_start_ram_loop
-  98:				    ;template copy done
-  99:				    
- 100:     -	01DA          	mon_start_complete:
- 101:  421+17	01DA  CD7302  	    call print_clear
- 102:  438+10	01DD  21B202  	    ld hl, [STR_Banner_Start]
- 103:  448+17	01E0  CD6602  	    call print_str
- 104:  465+17	01E3  CDEF01  	    call PROMPT_BEGIN
- 105:				    
- 106:				    ;halt CPU if prompt exits
- 107:  482+4	01E6  76      	    halt
- 108:				
+  40:     -	0006          	mon_start_init_sound:
+  41:   10+7	0006  1608    	    ld	  D,0x08	; Select register #8
+  42:   17+7	0008  3E00    	    ld	  A,0x00	; Volume channel A 0
+  43:   24+17	000A  CD6900  	    call AY0_WRITE_REG
+  44:   41+7	000D  1609    	    ld	  D,0x09	; Select register #9
+  45:   48+7	000F  3E00    	    ld	  A,0x00	; Volume channel B 0
+  46:   55+17	0011  CD6900  	    call AY0_WRITE_REG
+  47:   72+7	0014  160A    	    ld	  D,0x0A	; Select register #10
+  48:   79+7	0016  3E00    	    ld	  A,0x00	; Volume channel C 0
+  49:   86+17	0018  CD6900  	    call AY0_WRITE_REG
+  50:     -	001B          	mon_start_init_serial:
+  51:  103+7	001B  3E0F    	    ld A,VAR_CONSOLE_CONF   ; Setup CTC
+  52:  110+11	001D  D301    	    out (IO_CTC0_C1),A      ; Controll word, software reset, time constant follows, CLK/TRG starts timer
+  53:  121+7	001F  3E0C    	    ld A,VAR_CONSOLE_BAUD   ; Setup timer const
+  54:  128+11	0021  D301    	    out (IO_CTC0_C1),A      ; Load timer const into CTC (Setup Baud generator)
+  55:				    ;set up TX and RX:W
+  56:  139+7	0023  3E30    	    ld a,00110000b      ;write into WR0: error reset, select WR0
+  57:  146+11	0025  D313    	    out (IO_SIO0B_C),A
+  58:  157+7	0027  3E18    	    ld a,018h           ;write into WR0: channel reset
+  59:  164+11	0029  D313    	    out (IO_SIO0B_C),A
+  60:  175+7	002B  3E04    	    ld a,004h           ;write into WR0: select WR4
+  61:  182+11	002D  D313    	    out (IO_SIO0B_C),A
+  62:  193+7	002F  3E04    	    ld a,04h            ;44h write into WR4: clkx1,1 stop bit, no parity
+  63:  200+11	0031  D313    	    out (IO_SIO0B_C),A
+  64:  211+7	0033  3E05    	    ld a,005h           ;write into WR0: select WR5
+  65:  218+11	0035  D313    	    out (IO_SIO0B_C),A
+  66:  229+7	0037  3E68    	    ld a,068h           ;DTR active, TX 8bit, BREAK off, TX on, RTS inactive
+  67:  236+11	0039  D313    	    out (IO_SIO0B_C),A
+  68:  247+7	003B  3E01    	    ld a,01h            ;write into WR0: select WR1
+  69:  254+11	003D  D313    	    out (IO_SIO0B_C),A
+  70:  265+7	003F  3E04    	    ld a,00000100b      ;no interrupt in CH B, special RX condition affects vect
+  71:  272+11	0041  D313    	    out (IO_SIO0B_C),A
+  72:				    ;enable SIO channel A RX
+  73:  283+7	0043  3E03    	    ld a,003h ;write into WR0: select WR3
+  74:  290+11	0045  D313    	    out (IO_SIO0B_C),A
+  75:  301+7	0047  3EC1    	    ld a,0C1h ;RX 8bit, auto enable off, RX on
+  76:  308+11	0049  D313    	    out (IO_SIO0B_C),A
+  77:				    ;Channel A RX active
+  78:     -	004B          	mon_start_ram:
+  79:  319+10	004B  210300  	    ld hl,mon_var_template
+  80:  329+10	004E  110340  	    ld de,mon_var_template_end
+  81:  339+10	0051  010040  	    ld bc,SYS_RAM_START
+  82:     -	0054          	mon_start_ram_loop:
+  83:  349+7	0054  7E      	    ld a,(hl)  ;copy values
+  84:  356+7	0055  02      	    ld (bc),a
+  85:  363+6	0056  23      	    inc hl      
+  86:  369+6	0057  03      	    inc bc
+  87:  375+11	0058  E5      	    push hl    ;check if end is reached
+  88:  386+15	0059  ED52    	    sbc hl,de
+  89:  401+10	005B  E1      	    pop hl
+  90:  411+10	005C  C25400  	    jp nz, mon_start_ram_loop
+  91:				    ;template copy done
+  92:				
+  93:     -	005F          	mon_start_complete:
+  94:				    ;call print_clear
+  95:  421+10	005F  21A702  	    ld hl, [STR_Banner_Start]
+  96:  431+17	0062  CD0A02  	    call print_str
+  97:  448+17	0065  CD7100  	    call PROMPT_BEGIN
+  98:				    ;halt CPU if prompt exits
+  99:  465+4	0068  76      	    halt
+ 100:				    
+ 101:				; Misc Functions
+ 102:     -	0069          	AY0_WRITE_REG:
+ 103:  469+4	0069  47      	    LD B,A
+ 104:  473+4	006A  7A      	    LD A,D
+ 105:  477+11	006B  D340    	    OUT (IO_AY0_ADDR),A
+ 106:  488+4	006D  78      	    LD A,B
+ 107:  492+11	006E  D341    	    OUT (IO_AY0_DATA),A
+ 108:  503+10	0070  C9      	    RET
  109:				
- 110:				
- 111:				; Misc Functions
- 112:     -	01E7          	AY0_WRITE_REG:
- 113:  486+4	01E7  47      	    LD B,A
- 114:  490+4	01E8  7A      	    LD A,D
- 115:  494+11	01E9  D340    	    OUT (IO_AY0_ADDR),A
- 116:  505+4	01EB  78      	    LD A,B
- 117:  509+11	01EC  D341    	    OUT (IO_AY0_DATA),A
- 118:  520+10	01EE  C9      	    RET
- 119:				
- 120:     -	01EF          	PROMPT_BEGIN:
- 121:  530+7	01EF  3E3E    	    ld a,'>'
- 122:  537+17	01F1  CD6002  	    call print_char
- 123:  554+7	01F4  3E00    	    ld a,0  ;reset buffer len
- 124:  561+13	01F6  320040  	    ld (var_buffer_len),a
+ 110:     -	0071          	PROMPT_BEGIN:
+ 111:  513+7	0071  3E3E    	    ld a,'>'
+ 112:  520+17	0073  CD0402  	    call print_char
+ 113:  537+7	0076  3E00    	    ld a,0  ;reset buffer len
+ 114:  544+13	0078  320040  	    ld (var_buffer_len),a
+ 115:				
+ 116:     -	007B          	PROMPT_BEGIN_READ_LOOP:
+ 117:  557+17	007B  CD4302  	    call read_char
+ 118:  574+10	007E  CA7B00  	    jp z, PROMPT_BEGIN_READ_LOOP    ; wait until char avail
+ 119:				    
+ 120:				    ; process special ops
+ 121:  584+7	0081  FE0D    	    cp 13   ; enter
+ 122:  591+10	0083  CACC00  	    jp z,PROMPT_BEGIN_READ_PROCESS
+ 123:  601+7	0086  FE08    	    cp 0x08 ; backspace 0x08 VT102 0x7f Putty
+ 124:  608+10	0088  CAA600  	    jp z,PROMPT_BEGIN_READ_BACKSPACE
  125:				
- 126:     -	01F9          	PROMPT_BEGIN_READ_LOOP:
- 127:  574+17	01F9  CD9102  	    call read_char
- 128:  591+10	01FC  CAF901  	    jp z, PROMPT_BEGIN_READ_LOOP    ; wait until char avail
- 129:				    
- 130:				    ; process special ops
- 131:  601+7	01FF  FE0D    	    cp 13   ; enter
- 132:  608+10	0201  CA4A02  	    jp z,PROMPT_BEGIN_READ_PROCESS
- 133:  618+7	0204  FE08    	    cp 0x08 ; backspace 0x08 VT102 0x7f Putty
- 134:  625+10	0206  CA2402  	    jp z,PROMPT_BEGIN_READ_BACKSPACE
+ 126:  618+11	008B  F5      	    push af
+ 127:				    ; a contains latest char
+ 128:  629+10	008C  210240  	    ld hl,[var_buffer]
+ 129:  639+7	008F  1600    	    ld d,0
+ 130:  646+13	0091  3A0040  	    ld a,(var_buffer_len)
+ 131:  659+4	0094  5F      	    ld e,a
+ 132:  663+11	0095  19      	    add hl,de   ;hl now contains pointer to last position in buffer
+ 133:  674+4	0096  3C      	    inc a
+ 134:  678+13	0097  320040  	    ld (var_buffer_len),a ;store incremented buffer length
  135:				
- 136:  635+11	0209  F5      	    push af
- 137:				    ; a contains latest char
- 138:  646+10	020A  210240  	    ld hl,[var_buffer]
- 139:  656+7	020D  1600    	    ld d,0
- 140:  663+13	020F  3A0040  	    ld a,(var_buffer_len)
- 141:  676+4	0212  5F      	    ld e,a
- 142:  680+11	0213  19      	    add hl,de   ;hl now contains pointer to last position in buffer
- 143:  691+4	0214  3C      	    inc a
- 144:  695+13	0215  320040  	    ld (var_buffer_len),a ;store incremented buffer length
- 145:				
- 146:  708+10	0218  F1      	    pop af
- 147:  718+7	0219  77      	    ld (hl),a
- 148:  725+17	021A  CD6002  	    call print_char
- 149:  742+6	021D  23      	    inc hl
- 150:  748+7	021E  3E00    	    ld a, 0x00
- 151:  755+7	0220  77      	    ld (hl),a   ;always add null termination after last char
- 152:  762+10	0221  C3F901  	    jp PROMPT_BEGIN_READ_LOOP
- 153:				
- 154:     -	0224          	PROMPT_BEGIN_READ_BACKSPACE:
- 155:  772+13	0224  3A0040  	    ld a,(var_buffer_len)
- 156:  785+4	0227  A7      	    and a
- 157:  789+10	0228  CAF901  	    jp z, PROMPT_BEGIN_READ_LOOP    ; do not continue if already at char 0
- 158:  799+4	022B  3D      	    dec a       ;decrement length
- 159:  803+13	022C  320040  	    ld (var_buffer_len),a   ;and store it
- 160:  816+4	022F  5F      	    ld e,a      ;load de with decremented value
- 161:  820+7	0230  1600    	    ld d,0
- 162:  827+10	0232  210240  	    ld hl,[var_buffer]
- 163:  837+11	0235  19      	    add hl,de   ;hl now contains pointer to last position in buffer
- 164:  848+4	0236  AF      	    xor a       ; store null byte to current location
- 165:  852+7	0237  77      	    ld (hl),a
- 166:  859+7	0238  3E08    	    ld a, 0x08
- 167:  866+17	023A  CD6002  	    call print_char
- 168:  883+7	023D  3E20    	    ld a, 0x20
- 169:  890+17	023F  CD6002  	    call print_char
- 170:  907+7	0242  3E08    	    ld a, 0x08
- 171:  914+17	0244  CD6002  	    call print_char
- 172:  931+10	0247  C3F901  	    jp PROMPT_BEGIN_READ_LOOP
- 173:				
- 174:     -	024A          	PROMPT_BEGIN_READ_PROCESS:
- 175:  941+17	024A  CD7A02  	    call print_newLine
- 176:  958+10	024D  210240  	    ld hl,var_buffer
- 177:  968+17	0250  CD6602  	    call print_str
- 178:  985+17	0253  CD7A02  	    call print_newLine
- 179: 1002+10	0256  21DA02  	    ld hl, [STR_SyntaxError]
- 180: 1012+17	0259  CD6602  	    call print_str
- 181: 1029+10	025C  C3EF01  	    jp PROMPT_BEGIN
- 182:				
- 183: 1039+10	025F  C9      	    ret
- 184:				
+ 136:  691+10	009A  F1      	    pop af
+ 137:  701+7	009B  77      	    ld (hl),a
+ 138:  708+17	009C  CD0402  	    call print_char
+ 139:  725+6	009F  23      	    inc hl
+ 140:  731+7	00A0  3E00    	    ld a, 0x00
+ 141:  738+7	00A2  77      	    ld (hl),a   ;always add null termination after last char
+ 142:  745+10	00A3  C37B00  	    jp PROMPT_BEGIN_READ_LOOP
+ 143:				
+ 144:     -	00A6          	PROMPT_BEGIN_READ_BACKSPACE:
+ 145:  755+13	00A6  3A0040  	    ld a,(var_buffer_len)
+ 146:  768+4	00A9  A7      	    and a
+ 147:  772+10	00AA  CA7B00  	    jp z, PROMPT_BEGIN_READ_LOOP    ; do not continue if already at char 0
+ 148:  782+4	00AD  3D      	    dec a       ;decrement length
+ 149:  786+13	00AE  320040  	    ld (var_buffer_len),a   ;and store it
+ 150:  799+4	00B1  5F      	    ld e,a      ;load de with decremented value
+ 151:  803+7	00B2  1600    	    ld d,0
+ 152:  810+10	00B4  210240  	    ld hl,[var_buffer]
+ 153:  820+11	00B7  19      	    add hl,de   ;hl now contains pointer to last position in buffer
+ 154:  831+4	00B8  AF      	    xor a       ; store null byte to current location
+ 155:  835+7	00B9  77      	    ld (hl),a
+ 156:  842+7	00BA  3E08    	    ld a, 0x08
+ 157:  849+17	00BC  CD0402  	    call print_char
+ 158:  866+7	00BF  3E20    	    ld a, 0x20
+ 159:  873+17	00C1  CD0402  	    call print_char
+ 160:  890+7	00C4  3E08    	    ld a, 0x08
+ 161:  897+17	00C6  CD0402  	    call print_char
+ 162:  914+10	00C9  C37B00  	    jp PROMPT_BEGIN_READ_LOOP
+ 163:				
+ 164:     -	00CC          	PROMPT_BEGIN_READ_PROCESS:
+ 165:				    ;call print_newLine
+ 166:				    ;ld hl,var_buffer
+ 167:				    ;call print_str
+ 168:				
+ 169:  924+13	00CC  3A0240  	    ld a,([var_buffer])
+ 170:  937+7	00CF  FE24    	    cp '$'
+ 171:  944+10	00D1  CAF500  	    jp z, CMD_EXEC
+ 172:  954+7	00D4  FE3F    	    cp '?'
+ 173:  961+10	00D6  CA1001  	    jp z, CMD_VIEW
+ 174:  971+7	00D9  FE21    	    cp '!'
+ 175:  978+10	00DB  CA7701  	    jp z, CMD_SET
+ 176:  988+7	00DE  FE72    	    cp 'r'
+ 177:  995+10	00E0  CADC01  	    jp z, CMD_IO_READ
+ 178: 1005+7	00E3  FE77    	    cp 'w'
+ 179: 1012+10	00E5  CAB301  	    jp z, CMD_IO_WRITE
+ 180:				
+ 181: 1022+17	00E8  CD1C02  	    call print_newLine
+ 182: 1039+10	00EB  21D602  	    ld hl, [STR_Unknown]
+ 183: 1049+17	00EE  CD0A02  	    call print_str
+ 184: 1066+10	00F1  C37100  	    jp PROMPT_BEGIN
  185:				
- 186:     -	0260          	Includes:
- 187:				.include "console.s"
+ 186: 1076+10	00F4  C9      	    ret
+ 187:				
+ 188:     -	00F5          	CMD_EXEC:
+ 189: 1086+10	00F5  210340  	    ld hl,var_buffer+1      ;load 1st byte
+ 190: 1096+17	00F8  CD5602  	    call DHEX_TO_BYTE       
+ 191: 1113+4	00FB  47      	    ld b,a                  ;store result in b
+ 192: 1117+4	00FC  7B      	    ld a,e                  ;check for error
+ 193: 1121+4	00FD  A7      	    and a
+ 194: 1125+10	00FE  C2F801  	    jp nz, CMD_SYNTAX_ERROR
+ 195:				
+ 196: 1135+10	0101  210540  	    ld hl,var_buffer+3      ;load 2nd byte
+ 197: 1145+17	0104  CD5602  	    call DHEX_TO_BYTE
+ 198: 1162+4	0107  4F      	    ld c,a
+ 199: 1166+4	0108  7B      	    ld a,e  ;check for error
+ 200: 1170+4	0109  A7      	    and a
+ 201: 1174+10	010A  C2F801  	    jp nz, CMD_SYNTAX_ERROR
+ 202:				
+ 203: 1184+4	010D  60      	    ld h,b
+ 204: 1188+4	010E  69      	    ld l,c
+ 205: 1192+4	010F  E9      	    jp (hl)
+ 206:				
+ 207:     -	0110          	CMD_VIEW:
+ 208: 1196+10	0110  210340  	    ld hl,var_buffer+1      ;load 1st byte
+ 209: 1206+17	0113  CD5602  	    call DHEX_TO_BYTE       
+ 210: 1223+4	0116  47      	    ld b,a                  ;store result in b
+ 211: 1227+4	0117  7B      	    ld a,e                  ;check for error
+ 212: 1231+4	0118  A7      	    and a
+ 213: 1235+10	0119  C2F801  	    jp nz, CMD_SYNTAX_ERROR
+ 214:				
+ 215: 1245+10	011C  210540  	    ld hl,var_buffer+3      ;load 2nd byte
+ 216: 1255+17	011F  CD5602  	    call DHEX_TO_BYTE
+ 217: 1272+4	0122  4F      	    ld c,a
+ 218: 1276+4	0123  7B      	    ld a,e  ;check for error
+ 219: 1280+4	0124  A7      	    and a
+ 220: 1284+10	0125  C2F801  	    jp nz, CMD_SYNTAX_ERROR  
+ 221:				
+ 222:				
+ 223: 1294+13	0128  3A0740  	    ld a,(var_buffer+5)
+ 224: 1307+7	012B  FE20    	    cp ' '
+ 225: 1314+10	012D  C2F801  	    jp nz, CMD_SYNTAX_ERROR
+ 226:				
+ 227: 1324+10	0130  210840  	    ld hl,var_buffer+6      ;load length
+ 228: 1334+17	0133  CD5602  	    call DHEX_TO_BYTE
+ 229: 1351+11	0136  F5      	    push af
+ 230: 1362+4	0137  7B      	    ld a,e  ;check for error
+ 231: 1366+4	0138  A7      	    and a
+ 232: 1370+10	0139  C2F801  	    jp nz, CMD_SYNTAX_ERROR  
+ 233:				    
+ 234:				    ;draw header
+ 235: 1380+10	013C  21DD02  	    ld hl,[STR_HEXDUMP_HEADER]
+ 236: 1390+17	013F  CD0A02  	    call print_str
+ 237:				
+ 238: 1407+10	0142  F1      	    pop af
+ 239:				    ;loading vars done. display results
+ 240: 1417+4	0143  60      	    ld h, b ;pointer to current byte
+ 241: 1421+4	0144  69      	    ld l, c ;pointer to current byte
+ 242: 1425+4	0145  47      	    ld b, a                 ;bytes counter
+ 243:				
+ 244:				    ;draw row
+ 245:     -	0146          	CMD_VIEW_ROW:
+ 246: 1429+17	0146  CD1C02  	    call print_newLine
+ 247: 1446+4	0149  7C      	    ld a,h              ;print start
+ 248: 1450+17	014A  CD3202  	    call print_a_hex
+ 249: 1467+4	014D  7D      	    ld a,l
+ 250: 1471+17	014E  CD3202  	    call print_a_hex
+ 251: 1488+7	0151  3E20    	    ld a, ' '
+ 252: 1495+17	0153  CD0402  	    call print_char
+ 253: 1512+7	0156  0E10    	    ld c, 16                 ;column counter
+ 254:     -	0158          	CMD_VIEW_ROW_LOOP:
+ 255: 1519+7	0158  7E      	    ld a,(hl)
+ 256: 1526+17	0159  CD3202  	    call print_a_hex
+ 257:				    
+ 258: 1543+6	015C  23      	    inc hl  ;increment pointer
+ 259: 1549+4	015D  05      	    dec b   ;decrement byte counter
+ 260: 1553+4	015E  0D      	    dec c   ;decrement column counter
+ 261:				
+ 262: 1557+4	015F  78      	    ld a,b
+ 263: 1561+4	0160  A7      	    and a
+ 264: 1565+10	0161  CA7101  	    jp z,CMD_VIEW_END   ;if byte counter = 0 -> end reached
+ 265:				
+ 266: 1575+4	0164  79      	    ld a,c
+ 267: 1579+4	0165  A7      	    and a
+ 268: 1583+10	0166  CA4601  	    jp z,CMD_VIEW_ROW   ;else if column counter = 0 -> 16 chars printed. next row
+ 269:				
+ 270: 1593+7	0169  3E20    	    ld a, ' '
+ 271: 1600+17	016B  CD0402  	    call print_char
+ 272: 1617+10	016E  C35801  	    jp CMD_VIEW_ROW_LOOP    ;else
+ 273:     -	0171          	CMD_VIEW_END:
+ 274: 1627+17	0171  CD1C02  	    call print_newLine
+ 275: 1644+10	0174  C37100  	    jp PROMPT_BEGIN
+ 276:				
+ 277:     -	0177          	CMD_SET:
+ 278: 1654+10	0177  210340  	    ld hl,var_buffer+1      ;load 1st byte
+ 279: 1664+17	017A  CD5602  	    call DHEX_TO_BYTE       
+ 280: 1681+4	017D  47      	    ld b,a                  ;store result in b
+ 281: 1685+4	017E  7B      	    ld a,e                  ;check for error
+ 282: 1689+4	017F  A7      	    and a
+ 283: 1693+10	0180  C2F801  	    jp nz, CMD_SYNTAX_ERROR
+ 284:				
+ 285: 1703+10	0183  210540  	    ld hl,var_buffer+3      ;load 2nd byte
+ 286: 1713+17	0186  CD5602  	    call DHEX_TO_BYTE
+ 287: 1730+4	0189  4F      	    ld c,a
+ 288: 1734+4	018A  7B      	    ld a,e  ;check for error
+ 289: 1738+4	018B  A7      	    and a
+ 290: 1742+10	018C  C2F801  	    jp nz, CMD_SYNTAX_ERROR    
+ 291:				    ;bc now contains the start address
+ 292:				
+ 293: 1752+10	018F  210740  	    ld hl,var_buffer+5
+ 294:     -	0192          	CMD_SET_LOOP:
+ 295: 1762+7	0192  7E      	    ld a,(hl)
+ 296: 1769+7	0193  FE00    	    cp 0    ;if 0 then end
+ 297: 1776+10	0195  CAAD01  	    jp z, CMD_SET_END
+ 298: 1786+7	0198  FE20    	    cp ' '
+ 299: 1793+10	019A  C2F801  	    jp nz, CMD_SYNTAX_ERROR
+ 300: 1803+6	019D  23      	    inc hl  ;next byte
+ 301: 1809+17	019E  CD5602  	    call DHEX_TO_BYTE
+ 302: 1826+7	01A1  02      	    ld (bc),a   ;load byte to 
+ 303: 1833+4	01A2  7B      	    ld a,e
+ 304: 1837+4	01A3  A7      	    and a
+ 305: 1841+10	01A4  C2F801  	    jp nz, CMD_SYNTAX_ERROR    
+ 306: 1851+6	01A7  03      	    inc bc
+ 307: 1857+6	01A8  23      	    inc hl
+ 308: 1863+6	01A9  23      	    inc hl
+ 309: 1869+10	01AA  C39201  	    jp CMD_SET_LOOP
+ 310:     -	01AD          	CMD_SET_END:
+ 311: 1879+17	01AD  CD1C02  	    call print_newLine
+ 312: 1896+10	01B0  C37100  	    jp PROMPT_BEGIN
+ 313:				
+ 314:				
+ 315:     -	01B3          	CMD_IO_WRITE:
+ 316: 1906+10	01B3  210340  	    ld hl,var_buffer+1      ;load 1st byte
+ 317: 1916+17	01B6  CD5602  	    call DHEX_TO_BYTE       
+ 318: 1933+4	01B9  4F      	    ld c,a                  ;store result in b
+ 319: 1937+4	01BA  7B      	    ld a,e                  ;check for error
+ 320: 1941+4	01BB  A7      	    and a
+ 321: 1945+10	01BC  C2F801  	    jp nz, CMD_SYNTAX_ERROR
+ 322:				
+ 323: 1955+13	01BF  3A0540  	    ld a,(var_buffer+3)
+ 324: 1968+7	01C2  FE20    	    cp ' '
+ 325: 1975+10	01C4  C2F801  	    jp nz, CMD_SYNTAX_ERROR
+ 326:				
+ 327: 1985+10	01C7  210640  	    ld hl,var_buffer+4      ;load 1st byte
+ 328: 1995+17	01CA  CD5602  	    call DHEX_TO_BYTE       
+ 329: 2012+11	01CD  F5      	    push af
+ 330: 2023+4	01CE  7B      	    ld a,e                  ;check for error
+ 331: 2027+4	01CF  A7      	    and a
+ 332: 2031+10	01D0  C2F801  	    jp nz, CMD_SYNTAX_ERROR
+ 333:				
+ 334: 2041+10	01D3  F1      	    pop af
+ 335: 2051+12	01D4  ED79    	    out (c),a    
+ 336: 2063+17	01D6  CD1C02  	    call print_newLine
+ 337: 2080+10	01D9  C37100  	    jp PROMPT_BEGIN
+ 338:				
+ 339:     -	01DC          	CMD_IO_READ:
+ 340: 2090+10	01DC  210340  	    ld hl,var_buffer+1      ;load 1st byte
+ 341: 2100+17	01DF  CD5602  	    call DHEX_TO_BYTE       
+ 342: 2117+4	01E2  4F      	    ld c,a                  ;store result in b
+ 343: 2121+4	01E3  7B      	    ld a,e                  ;check for error
+ 344: 2125+4	01E4  A7      	    and a
+ 345: 2129+10	01E5  C2F801  	    jp nz, CMD_SYNTAX_ERROR
+ 346:				
+ 347: 2139+12	01E8  ED78    	    in a,(c)
+ 348: 2151+11	01EA  F5      	    push af
+ 349: 2162+17	01EB  CD1C02  	    call print_newLine
+ 350: 2179+10	01EE  F1      	    pop af
+ 351: 2189+17	01EF  CD3202  	    call print_a_hex
+ 352: 2206+17	01F2  CD1C02  	    call print_newLine
+ 353: 2223+10	01F5  C37100  	    jp PROMPT_BEGIN
+ 354:				
+ 355:     -	01F8          	CMD_SYNTAX_ERROR:
+ 356: 2233+17	01F8  CD1C02  	    call print_newLine
+ 357: 2250+10	01FB  21CF02  	    ld hl, [STR_SyntaxError]
+ 358: 2260+17	01FE  CD0A02  	    call print_str
+ 359: 2277+10	0201  C37100  	    jp PROMPT_BEGIN
+ 360:				
+ 361:				
+ 362:				
+ 363:     -	0204          	Includes:
+ 364:				.include "console.s"
 **** include/console.s ****
    1:				
    2:				
    3:				; A contains char
    4:				; Destroys A
-   5:     -	0260          	print_char:
-   6: 1049+11	0260  D311    	    out (IO_SIO0B_D),a
-   7: 1060+17	0262  CD8502  	    call print_wait_out
-   8: 1077+10	0265  C9      	    ret
+   5:     -	0204          	print_char:
+   6: 2287+11	0204  D311    	    out (IO_SIO0B_D),a
+   7: 2298+17	0206  CD2702  	    call print_wait_out
+   8: 2315+10	0209  C9      	    ret
    9:				; HL contains pointer to string
   10:				; Destroy A, HL
   11:				
-  12:     -	0266          	print_str:
-  13: 1087+7	0266  7E      	    ld a, (hl)
-  14: 1094+4	0267  B7      	    or a
-  15: 1098+10	0268  CA7202  	    jp z,print_str_end
-  16: 1108+17	026B  CD6002  	    call print_char
-  17: 1125+6	026E  23      	    inc hl
-  18: 1131+10	026F  C36602  	    jp print_str
-  19:     -	0272          	print_str_end:
-  20: 1141+10	0272  C9      	    ret
+  12:     -	020A          	print_str:
+  13: 2325+7	020A  7E      	    ld a, (hl)
+  14: 2332+4	020B  B7      	    or a
+  15: 2336+7+5	020C  2806    	    jr z,print_str_end
+  16: 2343+17	020E  CD0402  	    call print_char
+  17: 2360+6	0211  23      	    inc hl
+  18: 2366+12	0212  18F6    	    jr print_str
+  19:     -	0214          	print_str_end:
+  20: 2378+10	0214  C9      	    ret
   21:				
-  22:     -	0273          	print_clear:
-  23: 1151+10	0273  21AA02  	    ld hl, [MSG_CLEAR]
-  24: 1161+17	0276  CD6602  	    call print_str
-  25: 1178+10	0279  C9      	    ret
+  22:     -	0215          	print_clear:
+  23: 2388+10	0215  214E02  	    ld hl, [MSG_CLEAR]
+  24: 2398+17	0218  CD0A02  	    call print_str
+  25: 2415+10	021B  C9      	    ret
   26:				
-  27:     -	027A          	print_newLine:
-  28: 1188+7	027A  3E0A    	    ld a,10
-  29: 1195+17	027C  CD6002  	    call print_char
-  30: 1212+7	027F  3E0D    	    ld a,13
-  31: 1219+17	0281  CD6002  	    call print_char
-  32: 1236+10	0284  C9      	    ret
+  27:     -	021C          	print_newLine:
+  28: 2425+7	021C  3E0A    	    ld a,10
+  29: 2432+17	021E  CD0402  	    call print_char
+  30: 2449+7	0221  3E0D    	    ld a,13
+  31: 2456+17	0223  CD0402  	    call print_char
+  32: 2473+10	0226  C9      	    ret
   33:				; destroys a
-  34:     -	0285          	print_wait_out:
+  34:     -	0227          	print_wait_out:
   35:				    ; check for TX buffer empty
-  36: 1246+4	0285  97      	    sub a ;clear a, write into WR0: select RR0
-  37: 1250+4	0286  3C      	    inc a ;select RR1
-  38: 1254+11	0287  D313    	    out (IO_SIO0B_C),A
-  39: 1265+11	0289  DB13    	    in A,(IO_SIO0B_C) ;read RRx
-  40: 1276+8	028B  CB47    	    bit 0,A
-  41: 1284+10	028D  CA8502  	    jp z,print_wait_out
-  42: 1294+10	0290  C9      	    ret
+  36: 2483+4	0227  97      	    sub a ;clear a, write into WR0: select RR0
+  37: 2487+4	0228  3C      	    inc a ;select RR1
+  38: 2491+11	0229  D313    	    out (IO_SIO0B_C),A
+  39: 2502+11	022B  DB13    	    in A,(IO_SIO0B_C) ;read RRx
+  40: 2513+8	022D  CB47    	    bit 0,A
+  41: 2521+7+5	022F  28F6    	    jr z,print_wait_out
+  42: 2528+10	0231  C9      	    ret
   43:				
-  44:				
-  45:     -	0291          	read_char:
-  46: 1304+4	0291  AF      	    xor a               ; a = 0
-  47: 1308+11	0292  D313    	    out (IO_SIO0B_C), a ; select reg 0
-  48: 1319+11	0294  DB13    	    in a, (IO_SIO0B_C)  ; read reg 0
-  49: 1330+7	0296  E601    	    and	1               ; mask D0 (recieve char available)
-  50: 1337+5+6	0298  C8      	    ret	Z               ; return 0 if no char
-  51: 1342+11	0299  DB11    	    in a, (IO_SIO0B_D)  ; read char if avail
-  52: 1353+10	029B  C9      	    ret                 ; return
-  53:				
-  54:     -	029C          	MSG_CRSR_0:
-  55:     -	029C  1B5B3F32	    db 0x1B, "[?25h",0
-	              356800
-  56:     -	02A3          	MSG_CRSR_1:
-  57:     -	02A3  1B5B3F32	    db 0x1B, "[?25l",0
-	              356C00
-  58:     -	02AA          	MSG_CLEAR:
+  44:     -	0232          	print_a_hex:
+  45: 2538+11	0232  F5      	    push af
+  46: 2549+11	0233  C5      	    push bc
+  47: 2560+11	0234  D5      	    push de
+  48: 2571+17	0235  CD8D02  	    call STRCONV_BYTES_TO_HEX
+  49: 2588+4	0238  78      	    ld a,b
+  50: 2592+17	0239  CD0402  	    call print_char
+  51: 2609+4	023C  79      	    ld a,c
+  52: 2613+17	023D  CD0402  	    call print_char
+  53: 2630+10	0240  D1      	    pop de
+  54: 2640+10	0241  C1      	    pop bc
+  55: 2650+10	0242  F1      	    pop af
+  56:				
+  57:     -	0243          	read_char:
+  58: 2660+4	0243  AF      	    xor a               ; a = 0
+  59: 2664+11	0244  D313    	    out (IO_SIO0B_C), a ; select reg 0
+  60: 2675+11	0246  DB13    	    in a, (IO_SIO0B_C)  ; read reg 0
+  61: 2686+7	0248  E601    	    and	1               ; mask D0 (recieve char available)
+  62: 2693+5+6	024A  C8      	    ret	Z               ; return 0 if no char
+  63: 2698+11	024B  DB11    	    in a, (IO_SIO0B_D)  ; read char if avail
+  64: 2709+10	024D  C9      	    ret                 ; return
+  65:				
+  66:				;MSG_CRSR_0:
+  67:				;    db 0x1B, "[?25h",0
+  68:				;MSG_CRSR_1:
+  69:				;    db 0x1B, "[?25l",0
+  70:     -	024E          	MSG_CLEAR:
 **** main.asm ****
- 188:     -	02AA  1B5B324A	    db 27, '[2J', 27, '[H',0
+ 365:     -	024E  1B5B324A	    db 27, '[2J', 27, '[H',0
 	              1B5B4800
- 189:				; Strings
- 190:     -	02B2          	STR_Banner_Start:
- 191:     -	02B2  5A384320	    db "Z8C Monitor V2 by Dennis Gunia (2022)",10,13,0
+ 366:				.include "conversions.s"
+**** include/conversions.s ****
+   1:				; HL Contains Address to string
+   2:				; E is 0xFF if error
+   3:				; E is 0x00 if okay
+   4:				; A returns byte
+   5:				; A,DE are destroyed
+   6:     -	0256          	DHEX_TO_BYTE:
+   7: 2719+11	0256  E5      	    PUSH HL             ;Backup pointer
+   8:				    ; Load First Byte
+   9: 2730+7	0257  7E      	    LD A,(HL)           ;Load first char (high)
+  10: 2737+17	0258  CD7602  	    CALL HEX_TO_BIN     ;Conv chart to 4bit
+  11: 2754+7+5	025B  3815    	    jr C, DHEX_TO_BYTE_FAILED   ;If error jmp to DHEX_TO_BYTE_FAILED
+  12: 2761+8	025D  CB27    	    SLA A               ;shift result to upper 4 bits
+  13: 2769+8	025F  CB27    	    SLA A
+  14: 2777+8	0261  CB27    	    SLA A
+  15: 2785+8	0263  CB27    	    SLA A
+  16: 2793+4	0265  57      	    LD D,A              ;store result in D
+  17:				
+  18: 2797+6	0266  23      	    INC HL              ;next byte
+  19: 2803+7	0267  7E      	    LD A,(HL)           ;load 2nd char (lower)
+  20: 2810+17	0268  CD7602  	    CALL HEX_TO_BIN     ;Conv chart to 4bit
+  21: 2827+7+5	026B  3805    	    jr C, DHEX_TO_BYTE_FAILED   ;If error jmp to DHEX_TO_BYTE_FAILED
+  22: 2834+4	026D  B2      	    OR D                ;merge D with accumulator
+  23:				
+  24: 2838+10	026E  E1      	    POP HL              ;restor original pointer
+  25: 2848+7	026F  1E00    	    LD E,0x00           ;set error to 0x00 = no error
+  26: 2855+10	0271  C9      	    RET
+  27:     -	0272          	DHEX_TO_BYTE_FAILED:
+  28: 2865+7	0272  1EFF    	    LD E,0xFF           ;set error to oxFF
+  29:				    ;LD A,0x00
+  30: 2872+10	0274  E1      	    POP HL
+  31: 2882+10	0275  C9      	    RET
+  32:				
+  33:				; REG A Contains CHAR-Low
+  34:				; If failed, Carry is set
+  35:     -	0276          	HEX_TO_BIN:
+  36: 2892+7	0276  D630    	    SUB 48 ; 0 is 0
+  37: 2899+10	0278  EA8B02  	    jp PE, HEX_TO_INVALID_2; to low (SUB overflow)
+  38: 2909+7	027B  FE0A    	    CP 10 ; Value is between 0 and 9
+  39: 2916+7+5	027D  3805    	    JR C, HEX_TO_BIN_2
+  40: 2923+7	027F  D607    	    SUB 7
+  41: 2930+10	0281  EA8B02  	    jp PE, HEX_TO_INVALID_2; to low (SUB overflow)
+  42:     -	0284          	HEX_TO_BIN_2:
+  43: 2940+7	0284  FE10    	    CP 16
+  44: 2947+7+5	0286  3003    	    JR NC, HEX_TO_INVALID_2; if bigger than 15-> fail
+  45: 2954+7	0288  E60F    	    AND 0x0F
+  46: 2961+10	028A  C9      	    RET
+  47:     -	028B          	HEX_TO_INVALID_2:
+  48: 2971+4	028B  37      	    SCF ;set carry flag
+  49: 2975+10	028C  C9      	    RET
+  50:				
+  51:				
+  52:				;*****************
+  53:				; Convert Byte to Hex Char (ASCII)
+  54:				;*****************
+  55:				;Description: the StrLength function inline
+  56:				;
+  57:				;Inputs: A contains input byte
+  58:				;
+  59:				;Outputs: BC contains 2 Bytes of ASCII (HEX)
+  60:				;
+  61:				;Destroys: A, BC,
+  62:     -	028D          	STRCONV_BYTES_TO_HEX:
+  63: 2985+11	028D  F5      	    PUSH AF;Backup A Register
+  64: 2996+4	028E  1F      	    RRA
+  65: 3000+4	028F  1F      	    RRA
+  66: 3004+4	0290  1F      	    RRA
+  67: 3008+4	0291  1F      	    RRA
+  68: 3012+17	0292  CD9C02  	    CALL STRCONV_BYTES_TO_HEX_1
+  69:				    ;LD A,D
+  70: 3029+4	0295  47      	    LD B,A  
+  71: 3033+10	0296  F1      	    POP AF ; Reload first Byte
+  72: 3043+17	0297  CD9C02  	    CALL STRCONV_BYTES_TO_HEX_1
+  73:				    ;LD A,D
+  74: 3060+4	029A  4F      	    LD C,A
+  75: 3064+10	029B  C9      	    RET
+  76:				
+  77:     -	029C          	STRCONV_BYTES_TO_HEX_1:
+  78: 3074+7	029C  E60F    	    AND 0x0F
+  79: 3081+7	029E  C630    	    ADD 48
+  80: 3088+7	02A0  FE3A    	    CP 58 ; Check if less than 58 (less than ASCII 9)
+  81:				    ;JR C, STRCONV_BYTES_TO_HEX_2
+  82: 3095+5+6	02A2  D8      	    RET C
+  83: 3100+7	02A3  C607    	    ADD 7 ; A-F
+  84: 3107+10	02A5  C9      	    RET
+  85:     -	02A6          	STRCONV_BYTES_TO_HEX_2:
+  86:				    ;LD D,A
+  87: 3117+10	02A6  C9      	    RET
+  88:				
+  89:				
+**** main.asm ****
+ 367:				; Strings
+ 368:     -	02A7          	STR_Banner_Start:
+ 369:     -	02A7  5A384320	    db "Z8C Monitor V2 by Dennis Gunia (2022)",10,13,0
 	              4D6F6E69
 	              746F7220
 	              56322062
@@ -302,12 +581,27 @@
 	              69612028
 	              32303232
 	              290A0D00
- 192:     -	02DA          	STR_SyntaxError:
-**** main.asm ****
- 193:     -	02DA  53796E74	    db "Syntax error",10,13,0
-	              61782065
-	              72726F72
+ 370:     -	02CF          	STR_SyntaxError:
+ 371:     -	02CF  73796E3F	    db "syn?",10,13,0
 	              0A0D00
+ 372:     -	02D6          	STR_Unknown:
+ 373:     -	02D6  636D643F	    db "cmd?",10,13,0
+	              0A0D00
+ 374:     -	02DD          	STR_HEXDUMP_HEADER:
+ 375:     -	02DD  0D0A4241	    db 13,10,'BASE 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F',0
+	              53452030
+	              20203120
+	              20322020
+	              33202034
+	              20203520
+	              20362020
+	              37202038
+	              20203920
+	              20412020
+	              42202043
+	              20204420
+	              20452020
+	              4600
 
 
 
@@ -315,14 +609,30 @@ Statistics:
 
      4	passes
      0	jr promotions
-    71	symbols
-   620	bytes
+    90	symbols
+   787	bytes
 
 
 
 Symbol Table:
 
-AY0_WRITE_REG    1E7      487
+AY0_WRITE_REG   69        105
+CMD_EXEC        F5        245
+CMD_IO_READ      1DC      476
+CMD_IO_WRITE     1B3      435
+CMD_SET          177      375
+CMD_SET_END      1AD      429
+CMD_SET_LOOP     192      402
+CMD_SYNTAX_ERROR  1F8      504
+CMD_VIEW         110      272
+CMD_VIEW_END     171      369
+CMD_VIEW_ROW     146      326
+CMD_VIEW_ROW_LOOP  158      344
+DHEX_TO_BYTE     256      598
+DHEX_TO_BYTE_FAILED  272      626
+HEX_TO_BIN       276      630
+HEX_TO_BIN_2     284      644
+HEX_TO_INVALID_2  28B      651
 IO_AY0_ADDR    =40        64
 IO_AY0_DATA    =41        65
 IO_AY1_ADDR    =42        66
@@ -352,23 +662,25 @@ IO_SIO0A_C     =12        18
 IO_SIO0A_D     =10        16
 IO_SIO0B_C     =13        19
 IO_SIO0B_D     =11        17
-Includes         260      608
-MONITOR_START  =80        128
-MSG_CLEAR        2AA      682
-MSG_CRSR_0       29C      668
-MSG_CRSR_1       2A3      675
+Includes         204      516
+MSG_CLEAR        24E      590
 PRG_RAM_START  =4110      16656
 PRG_RAM_TOP    =FF00      65280
 PROG_MEM_START =4000      16384
 PROG_ROM_START = 100      256
-PROMPT_BEGIN     1EF      495
-PROMPT_BEGIN_READ_BACKSPACE  224      548
-PROMPT_BEGIN_READ_LOOP  1F9      505
-PROMPT_BEGIN_READ_PROCESS  24A      586
+PROMPT_BEGIN    71        113
+PROMPT_BEGIN_READ_BACKSPACE A6        166
+PROMPT_BEGIN_READ_LOOP 7B        123
+PROMPT_BEGIN_READ_PROCESS CC        204
 STACK_RAM_TOP  =FFFF      65535
 START_ROM      =00        0
-STR_Banner_Start  2B2      690
-STR_SyntaxError  2DA      730
+STRCONV_BYTES_TO_HEX  28D      653
+STRCONV_BYTES_TO_HEX_1  29C      668
+STRCONV_BYTES_TO_HEX_2  2A6      678
+STR_Banner_Start  2A7      679
+STR_HEXDUMP_HEADER  2DD      733
+STR_SyntaxError  2CF      719
+STR_Unknown      2D6      726
 SYS_BUF_START  =4010      16400
 SYS_RAM_START  =4000      16384
 VAR_CONSOLE_BAUD=0C        12
@@ -376,20 +688,21 @@ VAR_CONSOLE_CONF=0F        15
 VDP_MEM        =81        129
 VDP_REG        =80        128
 main            00        0
-mon_start_complete  1DA      474
-mon_start_init_serial  196      406
-mon_start_init_sound  181      385
-mon_start_ram    1C6      454
-mon_start_ram_loop  1CF      463
-mon_var_template 80        128
-mon_var_template_end 4101      16641
-print_char       260      608
-print_clear      273      627
-print_newLine    27A      634
-print_str        266      614
-print_str_end    272      626
-print_wait_out   285      645
-read_char        291      657
+mon_start_complete 5F        95
+mon_start_init_serial 1B        27
+mon_start_init_sound 06        6
+mon_start_ram   4B        75
+mon_start_ram_loop 54        84
+mon_var_template 03        3
+mon_var_template_end 4003      16387
+print_a_hex      232      562
+print_char       204      516
+print_clear      215      533
+print_newLine    21C      540
+print_str        20A      522
+print_str_end    214      532
+print_wait_out   227      551
+read_char        243      579
 var_buffer      4002      16386
 var_buffer_len  4000      16384
 var_last_char   4001      16385

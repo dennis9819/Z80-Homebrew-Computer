@@ -12,10 +12,10 @@ print_char:
 print_str:
     ld a, (hl)
     or a
-    jp z,print_str_end
+    jr z,print_str_end
     call print_char
     inc hl
-    jp print_str
+    jr print_str
 print_str_end:
     ret
 
@@ -38,9 +38,21 @@ print_wait_out:
     out (IO_SIO0B_C),A
     in A,(IO_SIO0B_C) ;read RRx
     bit 0,A
-    jp z,print_wait_out
+    jr z,print_wait_out
     ret
 
+print_a_hex:
+    push af
+    push bc
+    push de
+    call STRCONV_BYTES_TO_HEX
+    ld a,b
+    call print_char
+    ld a,c
+    call print_char
+    pop de
+    pop bc
+    pop af
 
 read_char:
     xor a               ; a = 0
@@ -51,9 +63,9 @@ read_char:
     in a, (IO_SIO0B_D)  ; read char if avail
     ret                 ; return
 
-MSG_CRSR_0:
-    db 0x1B, "[?25h",0
-MSG_CRSR_1:
-    db 0x1B, "[?25l",0
+;MSG_CRSR_0:
+;    db 0x1B, "[?25h",0
+;MSG_CRSR_1:
+;    db 0x1B, "[?25l",0
 MSG_CLEAR:
     db 27, '[2J', 27, '[H',0

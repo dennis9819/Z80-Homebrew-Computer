@@ -37,7 +37,7 @@ planned
 * `byte`: byte in hex followed by space -> bytes to write to memory
 
 ### Run program
-`%<addr>`
+`$<addr>`
 * `addr`: word in hex -> start address of program
 
 ### X-Modem

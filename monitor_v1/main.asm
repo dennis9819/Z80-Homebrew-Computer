@@ -1,4 +1,3 @@
-MONITOR_START   equ 0x0080
 SYS_RAM_START   equ 0x4000
 SYS_BUF_START   equ 0x4010
 PRG_RAM_START   equ 0x4110
@@ -22,8 +21,6 @@ VAR_CONSOLE_BAUD    equ 12  ;BAUD timer constant
 main:
     jp mon_start_init_sound    
 
-    org MONITOR_START
-
 ;memory var template
 mon_var_template:
     phase SYS_RAM_START
@@ -33,7 +30,7 @@ var_buffer_len:
 var_last_char:
     defb 0
 var_buffer:
-    dc 255,0x00
+    defb 0
 
 mon_var_template_end:
     dephase
@@ -93,12 +90,13 @@ mon_start_ram_loop:
     ;template copy done
 
 mon_start_complete:
-    call print_clear
+    ;call print_clear
     ld hl, [STR_Banner_Start]
     call print_str
     call PROMPT_BEGIN
     ;halt CPU if prompt exits
     halt
+    
 ; Misc Functions
 AY0_WRITE_REG:
     LD B,A
@@ -163,21 +161,213 @@ PROMPT_BEGIN_READ_BACKSPACE:
     jp PROMPT_BEGIN_READ_LOOP
 
 PROMPT_BEGIN_READ_PROCESS:
+    ;call print_newLine
+    ;ld hl,var_buffer
+    ;call print_str
+
+    ld a,([var_buffer])
+    cp '$'
+    jp z, CMD_EXEC
+    cp '?'
+    jp z, CMD_VIEW
+    cp '!'
+    jp z, CMD_SET
+    cp 'r'
+    jp z, CMD_IO_READ
+    cp 'w'
+    jp z, CMD_IO_WRITE
+
     call print_newLine
-    ld hl,var_buffer
-    call print_str
-    call print_newLine
-    ld hl, [STR_SyntaxError]
+    ld hl, [STR_Unknown]
     call print_str
     jp PROMPT_BEGIN
 
     ret
 
+CMD_EXEC:
+    ld hl,var_buffer+1      ;load 1st byte
+    call DHEX_TO_BYTE       
+    ld b,a                  ;store result in b
+    ld a,e                  ;check for error
+    and a
+    jp nz, CMD_SYNTAX_ERROR
+
+    ld hl,var_buffer+3      ;load 2nd byte
+    call DHEX_TO_BYTE
+    ld c,a
+    ld a,e  ;check for error
+    and a
+    jp nz, CMD_SYNTAX_ERROR
+
+    ld h,b
+    ld l,c
+    jp (hl)
+
+CMD_VIEW:
+    ld hl,var_buffer+1      ;load 1st byte
+    call DHEX_TO_BYTE       
+    ld b,a                  ;store result in b
+    ld a,e                  ;check for error
+    and a
+    jp nz, CMD_SYNTAX_ERROR
+
+    ld hl,var_buffer+3      ;load 2nd byte
+    call DHEX_TO_BYTE
+    ld c,a
+    ld a,e  ;check for error
+    and a
+    jp nz, CMD_SYNTAX_ERROR  
+
+
+    ld a,(var_buffer+5)
+    cp ' '
+    jp nz, CMD_SYNTAX_ERROR
+
+    ld hl,var_buffer+6      ;load length
+    call DHEX_TO_BYTE
+    push af
+    ld a,e  ;check for error
+    and a
+    jp nz, CMD_SYNTAX_ERROR  
+    
+    ;draw header
+    ld hl,[STR_HEXDUMP_HEADER]
+    call print_str
+
+    pop af
+    ;loading vars done. display results
+    ld h, b ;pointer to current byte
+    ld l, c ;pointer to current byte
+    ld b, a                 ;bytes counter
+
+    ;draw row
+CMD_VIEW_ROW:
+    call print_newLine
+    ld a,h              ;print start
+    call print_a_hex
+    ld a,l
+    call print_a_hex
+    ld a, ' '
+    call print_char
+    ld c, 16                 ;column counter
+CMD_VIEW_ROW_LOOP:
+    ld a,(hl)
+    call print_a_hex
+    
+    inc hl  ;increment pointer
+    dec b   ;decrement byte counter
+    dec c   ;decrement column counter
+
+    ld a,b
+    and a
+    jp z,CMD_VIEW_END   ;if byte counter = 0 -> end reached
+
+    ld a,c
+    and a
+    jp z,CMD_VIEW_ROW   ;else if column counter = 0 -> 16 chars printed. next row
+
+    ld a, ' '
+    call print_char
+    jp CMD_VIEW_ROW_LOOP    ;else
+CMD_VIEW_END:
+    call print_newLine
+    jp PROMPT_BEGIN
+
+CMD_SET:
+    ld hl,var_buffer+1      ;load 1st byte
+    call DHEX_TO_BYTE       
+    ld b,a                  ;store result in b
+    ld a,e                  ;check for error
+    and a
+    jp nz, CMD_SYNTAX_ERROR
+
+    ld hl,var_buffer+3      ;load 2nd byte
+    call DHEX_TO_BYTE
+    ld c,a
+    ld a,e  ;check for error
+    and a
+    jp nz, CMD_SYNTAX_ERROR    
+    ;bc now contains the start address
+
+    ld hl,var_buffer+5
+CMD_SET_LOOP:
+    ld a,(hl)
+    cp 0    ;if 0 then end
+    jp z, CMD_SET_END
+    cp ' '
+    jp nz, CMD_SYNTAX_ERROR
+    inc hl  ;next byte
+    call DHEX_TO_BYTE
+    ld (bc),a   ;load byte to 
+    ld a,e
+    and a
+    jp nz, CMD_SYNTAX_ERROR    
+    inc bc
+    inc hl
+    inc hl
+    jp CMD_SET_LOOP
+CMD_SET_END:
+    call print_newLine
+    jp PROMPT_BEGIN
+
+
+CMD_IO_WRITE:
+    ld hl,var_buffer+1      ;load 1st byte
+    call DHEX_TO_BYTE       
+    ld c,a                  ;store result in b
+    ld a,e                  ;check for error
+    and a
+    jp nz, CMD_SYNTAX_ERROR
+
+    ld a,(var_buffer+3)
+    cp ' '
+    jp nz, CMD_SYNTAX_ERROR
+
+    ld hl,var_buffer+4      ;load 1st byte
+    call DHEX_TO_BYTE       
+    push af
+    ld a,e                  ;check for error
+    and a
+    jp nz, CMD_SYNTAX_ERROR
+
+    pop af
+    out (c),a    
+    call print_newLine
+    jp PROMPT_BEGIN
+
+CMD_IO_READ:
+    ld hl,var_buffer+1      ;load 1st byte
+    call DHEX_TO_BYTE       
+    ld c,a                  ;store result in b
+    ld a,e                  ;check for error
+    and a
+    jp nz, CMD_SYNTAX_ERROR
+
+    in a,(c)
+    push af
+    call print_newLine
+    pop af
+    call print_a_hex
+    call print_newLine
+    jp PROMPT_BEGIN
+
+CMD_SYNTAX_ERROR:
+    call print_newLine
+    ld hl, [STR_SyntaxError]
+    call print_str
+    jp PROMPT_BEGIN
+
+
 
 Includes:
 .include "console.s"
+.include "conversions.s"
 ; Strings
 STR_Banner_Start:
     db "Z8C Monitor V2 by Dennis Gunia (2022)",10,13,0
 STR_SyntaxError:
-    db "Syntax error",10,13,0
+    db "syn?",10,13,0
+STR_Unknown:
+    db "cmd?",10,13,0
+STR_HEXDUMP_HEADER:
+    db 13,10,'BASE 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F',0
