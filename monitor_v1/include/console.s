@@ -69,3 +69,19 @@ read_char:
 ;    db 0x1B, "[?25l",0
 MSG_CLEAR:
     db 27, '[2J', 27, '[H',0
+
+
+
+; Serial Util Functions
+A_RTS_OFF:
+    ld a,005h ;write into WR0: select WR5
+    out (IO_SIO0B_C),A
+    ld a,0E8h ;DTR active, TX 8bit, BREAK off, TX on, RTS inactive
+    out (IO_SIO0B_C),A
+    ret
+A_RTS_ON:
+    ld a,005h ;write into WR0: select WR5
+    out (IO_SIO0B_C),A
+    ld a,0EAh ;DTR active, TX 8bit, BREAK off, TX on, RTS active
+    out (IO_SIO0B_C),A
+    ret

@@ -7,7 +7,7 @@ STACK_RAM_TOP   equ 0xFFFF
 ;VAR_CONSOLE_CONF    equ 0x07  ;CLK/TRG Clock @ 1843220.5/s
 VAR_CONSOLE_CONF    equ 0x0F  ;CPU/16  Clock @ 230402.5625/s
 
-VAR_CONSOLE_BAUD    equ 12  ;BAUD timer constant
+VAR_CONSOLE_BAUD    equ 24  ;BAUD timer constant
                             ;CLK/TRG Clock @ 1843220.5/s
                             ; -> 0x16 : 14400
                             ;CPU/16  Clock @ 230402.5625/s
@@ -90,9 +90,11 @@ mon_start_ram_loop:
     ;template copy done
 
 mon_start_complete:
+    
     ;call print_clear
     ld hl, [STR_Banner_Start]
     call print_str
+    ;call debug_init
     call PROMPT_BEGIN
     ;halt CPU if prompt exits
     halt
@@ -107,9 +109,10 @@ AY0_WRITE_REG:
     RET
 
 PROMPT_BEGIN:
+    call A_RTS_ON
     ld a,'>'
     call print_char
-    ld a,0  ;reset buffer len
+    xor a  ;reset buffer len
     ld (var_buffer_len),a
 
 PROMPT_BEGIN_READ_LOOP:
@@ -136,7 +139,7 @@ PROMPT_BEGIN_READ_LOOP:
     ld (hl),a
     call print_char
     inc hl
-    ld a, 0x00
+    xor a       ;a = 0
     ld (hl),a   ;always add null termination after last char
     jp PROMPT_BEGIN_READ_LOOP
 
@@ -166,16 +169,19 @@ PROMPT_BEGIN_READ_PROCESS:
     ;call print_str
 
     ld a,([var_buffer])
-    cp '$'
+    cp '$'              ;jump to addr
     jp z, CMD_EXEC
-    cp '?'
+    cp '?'              ;print hexdump
     jp z, CMD_VIEW
-    cp '!'
+    cp '!'              ;set memory
     jp z, CMD_SET
-    cp 'r'
+    cp 'i'              ;in IO
     jp z, CMD_IO_READ
-    cp 'w'
+    cp 'o'              ;out IO
     jp z, CMD_IO_WRITE
+    cp 'x'              ;start xmodem
+    jp z, xmodem_init
+
 
     call print_newLine
     ld hl, [STR_Unknown]
@@ -185,6 +191,9 @@ PROMPT_BEGIN_READ_PROCESS:
     ret
 
 CMD_EXEC:
+    xor a                   ;write null byte to buffer pos 0 to prevent reexecute the last command
+    ld (var_buffer),a
+
     ld hl,var_buffer+1      ;load 1st byte
     call DHEX_TO_BYTE       
     ld b,a                  ;store result in b
@@ -371,3 +380,6 @@ STR_Unknown:
     db "cmd?",10,13,0
 STR_HEXDUMP_HEADER:
     db 13,10,'BASE 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F',0
+
+.include "xmodem.s"
+;.include "debug.s"

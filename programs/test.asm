@@ -1,5 +1,5 @@
-    org 04800h
-CONSOLE_PRINTSTR    equ 0039Ah
+    org 04480h
+CONSOLE_PRINTSTR    equ 00208h
 
 START:
     LD BC, [STR]

@@ -1,0 +1,30 @@
+   1:     -	4480          	    org 04480h
+   2:     -	0208          	CONSOLE_PRINTSTR    equ 00208h
+   3:				
+   4:     -	4480          	START:
+   5:    0+10	4480  018744  	    LD BC, [STR]
+   6:   10+17	4483  CD0802  	    CALL CONSOLE_PRINTSTR
+   7:   27+4	4486  76      	    HALT
+   8:				
+   9:     -	4487          	STR:
+  10:     -	4487  0D0A4865	    db 13,10,'Hello World',0
+	              6C6C6F20
+	              576F726C
+	              6400
+
+
+
+Statistics:
+
+     4	passes
+     0	jr promotions
+     3	symbols
+    21	bytes
+
+
+
+Symbol Table:
+
+CONSOLE_PRINTSTR= 208      520
+START           4480      17536
+STR             4487      17543
