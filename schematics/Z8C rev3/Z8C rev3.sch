@@ -3,7 +3,7 @@ EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 1 6
+Sheet 1 7
 Title "Z8C Homebrew Z80 Computer"
 Date ""
 Rev ""
@@ -42,5 +42,11 @@ S 5750 800  1350 550
 U 624F3E6F
 F0 "PS2+FPU" 50
 F1 "file624F3E6E.sch" 50
+$EndSheet
+$Sheet
+S 4250 1550 1350 500 
+U 62109D9B
+F0 "Sound" 50
+F1 "file62109D9A.sch" 50
 $EndSheet
 $EndSCHEMATC

@@ -3,7 +3,7 @@ EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 4 6
+Sheet 4 7
 Title "SPI Interface"
 Date "2022-02-18"
 Rev ""
@@ -14,9 +14,11 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L 74xx:74HC165 U?
+L Z8C-rev3-rescue:74HC165-74xx U?
 U 1 1 620ED2DC
 P 3700 1650
+AR Path="/620ED2DC" Ref="U?"  Part="1" 
+AR Path="/620ED227/620ED2DC" Ref="U?"  Part="1" 
 F 0 "U?" H 3700 2731 50  0000 C CNN
 F 1 "74HC165" H 3700 2640 50  0000 C CNN
 F 2 "" H 3700 1650 50  0001 C CNN

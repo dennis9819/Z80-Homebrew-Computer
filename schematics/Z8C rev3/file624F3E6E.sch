@@ -3,7 +3,7 @@ EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 6 6
+Sheet 6 7
 Title ""
 Date ""
 Rev ""
@@ -17,50 +17,34 @@ Wire Wire Line
 	2500 1400 1900 1400
 Entry Wire Line
 	1900 1400 1800 1300
-Text Label -2500 2200 2    50   ~ 0
-D0
 Wire Wire Line
 	2500 1500 1900 1500
 Entry Wire Line
 	1900 1500 1800 1400
-Text Label -2500 2300 2    50   ~ 0
-D1
 Wire Wire Line
 	2500 1600 1900 1600
 Entry Wire Line
 	1900 1600 1800 1500
-Text Label -2500 2400 2    50   ~ 0
-D2
 Wire Wire Line
 	2500 1700 1900 1700
 Entry Wire Line
 	1900 1700 1800 1600
-Text Label -2500 2500 2    50   ~ 0
-D3
 Wire Wire Line
 	2500 1800 1900 1800
 Entry Wire Line
 	1900 1800 1800 1700
-Text Label -2500 2600 2    50   ~ 0
-D4
 Wire Wire Line
 	2500 1900 1900 1900
 Entry Wire Line
 	1900 1900 1800 1800
-Text Label -2500 2700 2    50   ~ 0
-D5
 Wire Wire Line
 	2500 2000 1900 2000
 Entry Wire Line
 	1900 2000 1800 1900
-Text Label -2500 2800 2    50   ~ 0
-D6
 Wire Wire Line
 	2500 2100 1900 2100
 Entry Wire Line
 	1900 2100 1800 2000
-Text Label -2500 2900 2    50   ~ 0
-D7
 Wire Wire Line
 	2500 2400 1900 2400
 Entry Wire Line
@@ -73,85 +57,8 @@ Entry Wire Line
 	1900 2300 1800 2200
 Text Label 2400 2300 2    50   ~ 0
 A1
-Text GLabel -2600 3250 0    50   Input ~ 0
-!M1
-Text GLabel -2600 3350 0    50   Input ~ 0
-!IOREQ
-Text GLabel -2600 3450 0    50   Input ~ 0
-!RD
-Wire Wire Line
-	-2600 3250 -2400 3250
-Wire Wire Line
-	-2400 3350 -2600 3350
-Wire Wire Line
-	-2600 3450 -2400 3450
-Text GLabel -2600 3150 0    50   Input ~ 0
-RESET
-Wire Wire Line
-	-2600 3150 -2400 3150
-Text GLabel -2600 3650 0    50   Input ~ 0
-CLK_CPU
-Wire Wire Line
-	-2400 3650 -2600 3650
-Text GLabel -2600 3800 0    50   Output ~ 0
-!INT
-Wire Wire Line
-	-2400 3800 -2600 3800
-Wire Wire Line
-	-1400 2500 -1200 2500
-Wire Wire Line
-	-1200 2300 -1400 2300
-Wire Wire Line
-	-1400 3400 -1100 3400
-Wire Wire Line
-	-1400 2400 -400 2400
-Wire Wire Line
-	-1400 2200 -500 2200
-Wire Wire Line
-	-1400 2850 -700 2850
-Wire Wire Line
-	-1400 2950 -600 2950
-Wire Wire Line
-	-700 3500 -1400 3500
-Wire Wire Line
-	-800 3300 -1400 3300
-Wire Wire Line
-	-900 3950 -1400 3950
-Wire Wire Line
-	-1000 4050 -1400 4050
 Wire Bus Line
 	1800 950  1000 950 
-NoConn ~ -1400 2600
-NoConn ~ -1400 2700
-NoConn ~ -1400 3050
-NoConn ~ -1400 3150
-NoConn ~ -1400 3700
-NoConn ~ -1400 4150
-NoConn ~ -1400 4250
-NoConn ~ -1400 3800
-$Comp
-L Zilog_Z80_Peripherals:SIO0-DIP-40 IC?
-U 1 1 624FB9ED
-P -2200 2150
-AR Path="/622409DC/624FB9ED" Ref="IC?"  Part="1" 
-AR Path="/624F3E6F/624FB9ED" Ref="IC?"  Part="1" 
-F 0 "IC?" H -1900 2531 50  0000 C CNN
-F 1 "SIO0-DIP-40" H -1900 2440 50  0000 C CNN
-F 2 "Package_DIP:DIP-40_W15.24mm_LongPads" H -1800 4000 50  0001 L CNN
-F 3 "" H -3000 1000 50  0001 L CNN
-F 4 "Z80 CMOS SIO/0 Z84C40 Zilog" H -1800 3800 50  0001 L CNN "Description"
-F 5 "4.06" H -1800 3700 50  0001 L CNN "Height"
-F 6 "Zilog" H -1800 3600 50  0001 L CNN "Manufacturer_Name"
-F 7 "Z84C4206PEG" H -1800 3500 50  0001 L CNN "Manufacturer_Part_Number"
-F 8 "692-Z84C4206PEG" H -1800 3400 50  0001 L CNN "Mouser Part Number"
-F 9 "https://www.mouser.com/Search/Refine.aspx?Keyword=692-Z84C4206PEG" H -1800 3300 50  0001 L CNN "Mouser Price/Stock"
-F 10 "6600766" H -1800 3200 50  0001 L CNN "RS Part Number"
-F 11 "https://uk.rs-online.com/web/p/products/6600766" H -1800 3100 50  0001 L CNN "RS Price/Stock"
-F 12 "R1000052" H -1800 3000 50  0001 L CNN "Allied_Number"
-F 13 "https://www.alliedelec.com/zilog-z84c4206peg/R1000052/" H -1800 2900 50  0001 L CNN "Allied Price/Stock"
-	1    -2200 2150
-	1    0    0    -1  
-$EndComp
 $Comp
 L Zilog_Z80_Peripherals:PIO-DIP-40 U?
 U 1 1 624FCE64
@@ -485,8 +392,6 @@ Wire Wire Line
 	10450 2750 8400 2750
 Wire Wire Line
 	8400 2750 8400 2400
-Wire Bus Line
-	1800 950  1800 2300
 Connection ~ 8400 2400
 Text Label 10300 1700 2    50   ~ 0
 PS2_DATA
@@ -503,4 +408,6 @@ F 3 "http://www.ti.com/lit/gpn/sn74LS125" H 7900 2400 50  0001 C CNN
 	2    7900 2400
 	1    0    0    -1  
 $EndComp
+Wire Bus Line
+	1800 950  1800 2300
 $EndSCHEMATC

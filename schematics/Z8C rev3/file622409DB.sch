@@ -3,7 +3,7 @@ EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 5 6
+Sheet 5 7
 Title "IO Addr Decoding & R232"
 Date ""
 Rev ""
@@ -740,10 +740,6 @@ NoConn ~ 5650 2850
 NoConn ~ 5650 3300
 NoConn ~ 5650 3400
 NoConn ~ 5650 2950
-Wire Bus Line
-	3950 900  3950 3300
-Wire Bus Line
-	950  900  950  5350
 $Comp
 L Zilog_Z80_Peripherals:SIO0-DIP-40 IC?
 U 1 1 62272F5A
@@ -765,4 +761,8 @@ F 13 "https://www.alliedelec.com/zilog-z84c4206peg/R1000052/" H 5250 2050 50  00
 	1    4850 1300
 	1    0    0    -1  
 $EndComp
+Wire Bus Line
+	3950 900  3950 3300
+Wire Bus Line
+	950  900  950  5350
 $EndSCHEMATC
