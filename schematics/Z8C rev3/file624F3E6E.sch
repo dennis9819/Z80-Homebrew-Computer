@@ -60,7 +60,7 @@ A1
 Wire Bus Line
 	1800 950  1000 950 
 $Comp
-L Zilog_Z80_Peripherals:PIO-DIP-40 U?
+L Z8C-rev3-rescue:PIO-DIP-40-Zilog_Z80_Peripherals U?
 U 1 1 624FCE64
 P 2600 1300
 F 0 "U?" H 3000 1581 50  0000 C CNN
@@ -408,6 +408,10 @@ F 3 "http://www.ti.com/lit/gpn/sn74LS125" H 7900 2400 50  0001 C CNN
 	2    7900 2400
 	1    0    0    -1  
 $EndComp
+Text GLabel 2300 2600 0    50   Input ~ 0
+IO_PS2_CS
+Wire Wire Line
+	2300 2600 2500 2600
 Wire Bus Line
 	1800 950  1800 2300
 $EndSCHEMATC
