@@ -35,7 +35,10 @@
   33:     -	0000          	START_ROM   equ 0x0000
   34:     -	0020          	IO_REG0     equ 0x20
   35:				
-  36:     -	0100          	PROG_ROM_START equ 0x0100
+  36:     -	0080          	VDP_REG     equ 0x80
+  37:     -	0081          	VDP_MEM     equ 0x81
+  38:				
+  39:     -	0100          	PROG_ROM_START equ 0x0100
 **** main.asm ****
    2:     -	4000          	PROG_MEM_START equ 04000h
    3:				
@@ -1312,7 +1315,7 @@
   56: 5583+7	07CB  3E00    	    ld      a, 0                           ; put title at 11, 1
   57: 5590+7	07CD  1E00    	    ld      e, 0
   58: 5597+17	07CF  CD6F2A  	    call    TmsTextPos
-  59: 5614+10	07D2  211709  	    ld      hl, TitleMessage                ; output title
+  59: 5614+10	07D2  210409  	    ld      hl, TitleMessage                ; output title
   60: 5624+17	07D5  CD862A  	    call    TmsStrOut
   61:				
   62: 5641+7	07D8  3E00    	    ld      a, 0                           ; put title at 11, 1
@@ -1436,95 +1439,86 @@
  180:				
  181:     -	08A1          	TermScroll:
  182: 6594+10	08A1  010038  	    ld bc, 0x3800    ; load start of text-buffer into pointer
- 183:				    ; enable blank
- 184: 6604+7	08A4  3E80    	    ld a, 0x80
- 185: 6611+11	08A6  D381    	    out (0x81),a
- 186: 6622+7	08A8  3E81    	    ld a, 0x81
- 187: 6629+11	08AA  D381    	    out (0x81),a
- 188:				
- 189:     -	08AC          	TermScrollLine:
- 190: 6640+4	08AC  60      	    ld h,b
- 191: 6644+4	08AD  69      	    ld l,c
- 192:				
- 193: 6648+10	08AE  112800  	    ld de, 40   ; line width
- 194: 6658+11	08B1  19      	    add hl, de
- 195:				
- 196: 6669+4	08B2  7D      	    ld a,l          ; setup VDP address
- 197: 6673+11	08B3  D381    	    out (0x81),a
- 198: 6684+4	08B5  7C      	    ld a,h
- 199: 6688+7	08B6  E63F    	    and 3fh
- 200: 6695+11	08B8  D381    	    out (0x81),a
- 201: 6706+17	08BA  CD1209  	    call VDPWait
- 202: 6723+11	08BD  DB80    	    in a, (0x80)    ; read byte
- 203: 6734+11	08BF  F5      	    push af
- 204:				
- 205: 6745+4	08C0  79      	    ld a,c          ; setup VDP addressh
- 206: 6749+11	08C1  D381    	    out (0x81),a
- 207: 6760+4	08C3  78      	    ld a,b
- 208: 6764+7	08C4  E63F    	    and 3fh         
- 209: 6771+7	08C6  F640    	    or 40h          ; write bit
- 210: 6778+11	08C8  D381    	    out (0x81),a
- 211: 6789+10	08CA  F1      	    pop af
- 212: 6799+17	08CB  CD1209  	    call VDPWait
- 213: 6816+11	08CE  D380    	    out (0x80),a
- 214:				
- 215: 6827+6	08D0  03      	    inc bc
+ 183:				
+ 184:     -	08A4          	TermScrollLine:
+ 185: 6604+4	08A4  60      	    ld h,b
+ 186: 6608+4	08A5  69      	    ld l,c
+ 187:				
+ 188: 6612+10	08A6  112800  	    ld de, 40   ; line width
+ 189: 6622+11	08A9  19      	    add hl, de
+ 190:				
+ 191: 6633+4	08AA  7D      	    ld a,l          ; setup VDP address
+ 192: 6637+11	08AB  D381    	    out (0x81),a
+ 193: 6648+4	08AD  7C      	    ld a,h
+ 194: 6652+7	08AE  E63F    	    and 3fh
+ 195: 6659+11	08B0  D381    	    out (0x81),a
+ 196: 6670+17	08B2  CD0209  	    call VDPWait
+ 197: 6687+11	08B5  DB80    	    in a, (0x80)    ; read byte
+ 198: 6698+11	08B7  F5      	    push af
+ 199:				
+ 200: 6709+4	08B8  79      	    ld a,c          ; setup VDP address
+ 201: 6713+11	08B9  D381    	    out (0x81),a
+ 202: 6724+4	08BB  78      	    ld a,b
+ 203: 6728+7	08BC  E63F    	    and 3fh         
+ 204: 6735+7	08BE  F640    	    or 40h          ; write bit
+ 205: 6742+11	08C0  D381    	    out (0x81),a
+ 206: 6753+10	08C2  F1      	    pop af
+ 207: 6763+17	08C3  CD0209  	    call VDPWait
+ 208: 6780+11	08C6  D380    	    out (0x80),a
+ 209:				
+ 210: 6791+6	08C8  03      	    inc bc
+ 211:				
+ 212: 6797+4	08C9  60      	    ld h,b
+ 213: 6801+4	08CA  69      	    ld l,c
+ 214: 6805+10	08CB  11983B  	    ld de, VDPTextBufferEnd   ; buffer end
+ 215: 6815+15	08CE  ED52    	    sbc hl, de
  216:				
- 217: 6833+4	08D1  60      	    ld h,b
- 218: 6837+4	08D2  69      	    ld l,c
- 219: 6841+10	08D3  11983B  	    ld de, VDPTextBufferEnd   ; buffer end
- 220: 6851+15	08D6  ED52    	    sbc hl, de
- 221:				
- 222: 6866+10	08D8  C2AC08  	    jp nz, TermScrollLine
- 223:				
- 224:				    ; clear last line
- 225: 6876+10	08DB  019803  	    ld bc,920
- 226: 6886+4	08DE  79      	    ld a,c          ; setup VDP address
- 227: 6890+11	08DF  D381    	    out (0x81),a
- 228: 6901+4	08E1  78      	    ld a,b
- 229: 6905+7	08E2  E63F    	    and 3fh         
- 230: 6912+7	08E4  F640    	    or 40h          ; write bit
- 231: 6919+11	08E6  D381    	    out (0x81),a
- 232: 6930+7	08E8  0E28    	    ld c,40
- 233:     -	08EA          	TermScrollClearLine:
- 234: 6937+10	08EA  01983B  	    ld bc, 0x3800 + 920
- 235:     -	08ED          	TermScrollClearLineLoop:
- 236:				
- 237: 6947+4	08ED  79      	    ld a,c          ; setup VDP addressh
- 238: 6951+11	08EE  D381    	    out (0x81),a
- 239: 6962+4	08F0  78      	    ld a,b
- 240: 6966+7	08F1  E63F    	    and 3fh         
- 241: 6973+7	08F3  F640    	    or 40h          ; write bit
- 242: 6980+11	08F5  D381    	    out (0x81),a
- 243: 6991+7	08F7  3E20    	    ld a, ' '
- 244: 6998+11	08F9  D380    	    out (0x80),a
- 245: 7009+17	08FB  CD1209  	    call VDPWait
- 246:				
- 247: 7026+6	08FE  03      	    inc bc
- 248: 7032+4	08FF  60      	    ld h,b
- 249: 7036+4	0900  69      	    ld l,c
- 250: 7040+10	0901  11C03B  	    ld de, 0x3800 + 960   ; buffer end
- 251: 7050+15	0904  ED52    	    sbc hl, de
- 252:				
- 253: 7065+10	0906  C2ED08  	    jp nz, TermScrollClearLineLoop
- 254: 7075+7	0909  3ED0    	    ld a, 0xD0
- 255: 7082+11	090B  D381    	    out (0x81),a
- 256: 7093+7	090D  3E81    	    ld a, 0x81
- 257: 7100+11	090F  D381    	    out (0x81),a
- 258: 7111+10	0911  C9      	    ret
- 259:				
- 260:     -	0912          	VDPWait:
- 261: 7121+4	0912  00      	    nop
- 262: 7125+4	0913  00      	    nop
- 263: 7129+4	0914  00      	    nop
- 264: 7133+4	0915  00      	    nop
- 265: 7137+10	0916  C9      	    ret
- 266:				
- 267:     -	0000          	VDPTextBufferStart  equ 0
- 268:     -	3B98          	VDPTextBufferEnd    equ 0x3800 + 920
- 269:				
- 270:     -	0917          	TitleMessage:    
- 271:     -	0917  20205A38	    db '  Z8C Mk IV - A Z80 Homebrew Computer   '
+ 217: 6830+10	08D0  C2A408  	    jp nz, TermScrollLine
+ 218:				
+ 219:				    ; clear last line
+ 220: 6840+10	08D3  019803  	    ld bc,920
+ 221: 6850+4	08D6  79      	    ld a,c          ; setup VDP address
+ 222: 6854+11	08D7  D381    	    out (0x81),a
+ 223: 6865+4	08D9  78      	    ld a,b
+ 224: 6869+7	08DA  E63F    	    and 3fh         
+ 225: 6876+7	08DC  F640    	    or 40h          ; write bit
+ 226: 6883+11	08DE  D381    	    out (0x81),a
+ 227: 6894+7	08E0  0E28    	    ld c,40
+ 228:     -	08E2          	TermScrollClearLine:
+ 229: 6901+10	08E2  01983B  	    ld bc, 0x3800 + 920
+ 230:     -	08E5          	TermScrollClearLineLoop:
+ 231:				
+ 232: 6911+4	08E5  79      	    ld a,c          ; setup VDP addressh
+ 233: 6915+11	08E6  D381    	    out (0x81),a
+ 234: 6926+4	08E8  78      	    ld a,b
+ 235: 6930+7	08E9  E63F    	    and 3fh         
+ 236: 6937+7	08EB  F640    	    or 40h          ; write bit
+ 237: 6944+11	08ED  D381    	    out (0x81),a
+ 238: 6955+7	08EF  3E20    	    ld a, ' '
+ 239: 6962+11	08F1  D380    	    out (0x80),a
+ 240: 6973+17	08F3  CD0209  	    call VDPWait
+ 241:				
+ 242: 6990+6	08F6  03      	    inc bc
+ 243: 6996+4	08F7  60      	    ld h,b
+ 244: 7000+4	08F8  69      	    ld l,c
+ 245: 7004+10	08F9  11C03B  	    ld de, 0x3800 + 960   ; buffer end
+ 246: 7014+15	08FC  ED52    	    sbc hl, de
+ 247:				
+ 248: 7029+10	08FE  C2E508  	    jp nz, TermScrollClearLineLoop
+ 249: 7039+10	0901  C9      	    ret
+ 250:				
+ 251:     -	0902          	VDPWait:
+ 252:				    ;nop
+ 253:				    ;nop
+ 254:				    ;nop
+ 255: 7049+4	0902  00      	    nop
+ 256: 7053+10	0903  C9      	    ret
+ 257:				
+ 258:     -	0000          	VDPTextBufferStart  equ 0
+ 259:     -	3B98          	VDPTextBufferEnd    equ 0x3800 + 920
+ 260:				
+ 261:     -	0904          	TitleMessage:    
+ 262:     -	0904  20205A38	    db '  Z8C Mk IV - A Z80 Homebrew Computer   '
 	              43204D6B
 	              20495620
 	              2D204120
@@ -1534,7 +1528,7 @@
 	              20436F6D
 	              70757465
 	              72202020
- 272:     -	093F  2020524F	    db '  ROM Ver. 1.0 by Dennis Gunia (2022)   '
+ 263:     -	092C  2020524F	    db '  ROM Ver. 1.0 by Dennis Gunia (2022)   '
 	              4D205665
 	              722E2031
 	              2E302062
@@ -1544,7 +1538,7 @@
 	              69612028
 	              32303232
 	              29202020
- 273:     -	0967  20202020	    db '         48k RAM - 4MHz Z80 CPU         ',0
+ 264:     -	0954  20202020	    db '         48k RAM - 4MHz Z80 CPU         ',0
 	              20202020
 	              2034386B
 	              2052414D
@@ -1555,9 +1549,9 @@
 	              20202020
 	              20202020
 	              00
- 274:				
- 275:     -	0990          	TmsSubs:
- 276:				    .include "tms.s"                       ; TMS graphics routines
+ 265:				
+ 266:     -	097D          	TmsSubs:
+ 267:				    .include "tms.s"                       ; TMS graphics routines
 **** functions/tms.s ****
    1:				; TMS9918A graphics subroutines
    2:				; Copyright 2018-2020 J.B. Langston
@@ -1608,45 +1602,45 @@
   47:     -	2800          	    org 0x2800
   48:     -	2800          	setup_vars:
   49:				    
-  50: 7147+7	2800  3E80    	    ld a,0x80
-  51: 7154+13	2802  3200E4  	    ld (TmsPort),a
+  50: 7063+7	2800  3E80    	    ld a,0x80
+  51: 7070+13	2802  3200E4  	    ld (TmsPort),a
   52:				
-  53: 7167+7	2805  3E02    	    ld a,2
-  54: 7174+13	2807  3201E4  	    ld (TmsWait),a
+  53: 7083+7	2805  3E02    	    ld a,2
+  54: 7090+13	2807  3201E4  	    ld (TmsWait),a
   55:				
-  56: 7187+7	280A  3E00    	    ld a,0
-  57: 7194+13	280C  3202E4  	    ld (TmsMode),a
-  58: 7207+7	280F  3E00    	    ld a,0
-  59: 7214+13	2811  3203E4  	    ld (TmsMode+1),a
+  56: 7103+7	280A  3E00    	    ld a,0
+  57: 7110+13	280C  3202E4  	    ld (TmsMode),a
+  58: 7123+7	280F  3E00    	    ld a,0
+  59: 7130+13	2811  3203E4  	    ld (TmsMode+1),a
   60:				
-  61: 7227+7	2814  3E00    	    ld a,0
-  62: 7234+13	2816  3204E4  	    ld (TmsNameAddr),a
-  63: 7247+7	2819  3E38    	    ld a,38h
-  64: 7254+13	281B  3205E4  	    ld (TmsNameAddr+1),a
+  61: 7143+7	2814  3E00    	    ld a,0
+  62: 7150+13	2816  3204E4  	    ld (TmsNameAddr),a
+  63: 7163+7	2819  3E38    	    ld a,38h
+  64: 7170+13	281B  3205E4  	    ld (TmsNameAddr+1),a
   65:				
-  66: 7267+7	281E  3E00    	    ld a,0
-  67: 7274+13	2820  3208E4  	    ld (TmsPatternAddr),a
-  68: 7287+7	2823  3E00    	    ld a,0
-  69: 7294+13	2825  3209E4  	    ld (TmsPatternAddr+1),a
+  66: 7183+7	281E  3E00    	    ld a,0
+  67: 7190+13	2820  3208E4  	    ld (TmsPatternAddr),a
+  68: 7203+7	2823  3E00    	    ld a,0
+  69: 7210+13	2825  3209E4  	    ld (TmsPatternAddr+1),a
   70:				
-  71: 7307+7	2828  3E00    	    ld a,0
-  72: 7314+13	282A  3206E4  	    ld (TmsColorAddr),a
-  73: 7327+7	282D  3E20    	    ld a,20h
-  74: 7334+13	282F  3207E4  	    ld (TmsColorAddr+1),a
+  71: 7223+7	2828  3E00    	    ld a,0
+  72: 7230+13	282A  3206E4  	    ld (TmsColorAddr),a
+  73: 7243+7	282D  3E20    	    ld a,20h
+  74: 7250+13	282F  3207E4  	    ld (TmsColorAddr+1),a
   75:				
   76:				
-  77: 7347+7	2832  3E00    	    ld a,0
-  78: 7354+13	2834  320AE4  	    ld (TmsSpritePatternAddr),a
-  79: 7367+7	2837  3E18    	    ld a,0x18
-  80: 7374+13	2839  320BE4  	    ld (TmsSpritePatternAddr+1),a
+  77: 7263+7	2832  3E00    	    ld a,0
+  78: 7270+13	2834  320AE4  	    ld (TmsSpritePatternAddr),a
+  79: 7283+7	2837  3E18    	    ld a,0x18
+  80: 7290+13	2839  320BE4  	    ld (TmsSpritePatternAddr+1),a
   81:				
   82:				
-  83: 7387+7	283C  3EC0    	    ld a,0xc0
-  84: 7394+13	283E  320CE4  	    ld (TmsSpriteAttrAddr),a
-  85: 7407+7	2841  3E3B    	    ld a,0x3b
-  86: 7414+13	2843  320DE4  	    ld (TmsSpriteAttrAddr+1),a
+  83: 7303+7	283C  3EC0    	    ld a,0xc0
+  84: 7310+13	283E  320CE4  	    ld (TmsSpriteAttrAddr),a
+  85: 7323+7	2841  3E3B    	    ld a,0x3b
+  86: 7330+13	2843  320DE4  	    ld (TmsSpriteAttrAddr+1),a
   87:				
-  88: 7427+10	2846  C9      	    ret
+  88: 7343+10	2846  C9      	    ret
   89:				
   90:     -	0040          	TmsWriteBit:            equ 40h                 ; bit to indicate memory write
   91:				
@@ -1740,33 +1734,33 @@
  179:				
  180:				; set up wait time based on clock multiplier in E
  181:     -	284A          	TmsSetWait:
- 182: 7437+7	284A  3E01    	        ld a,1
- 183: 7444+13	284C  3201E4  	        ld      (TmsWait), a
- 184: 7457+10	284F  C9      	        ret
+ 182: 7353+7	284A  3E01    	        ld a,1
+ 183: 7360+13	284C  3201E4  	        ld      (TmsWait), a
+ 184: 7373+10	284F  C9      	        ret
  185:				
  186:				; try to find TMS9918A on common ports
  187:     -	2850          	TmsProbe:
- 188: 7467+10	2850  217428  	        ld      hl, TmsPorts
- 189: 7477+7	2853  0603    	        ld      b, TmsNumPorts
+ 188: 7383+10	2850  217428  	        ld      hl, TmsPorts
+ 189: 7393+7	2853  0603    	        ld      b, TmsNumPorts
  190:     -	2855          	TmsProbeNext:       
- 191: 7484+7	2855  7E      	        ld      a, (hl)
- 192: 7491+13	2856  3200E4  	        ld      (TmsPort), a
- 193: 7504+17	2859  CD8528  	        call    TmsRegIn                ; clear vsync bit
- 194: 7521+17	285C  CD8528  	        call    TmsRegIn                ; check it again
- 195: 7538+10	285F  FA6F28  	        jp      m, TmsProbeFailed       ; if still set, not a TMS9918A
- 196: 7548+10	2862  11FFFF  	        ld      de, 0ffffh              ; long enough for another vsync
+ 191: 7400+7	2855  7E      	        ld      a, (hl)
+ 192: 7407+13	2856  3200E4  	        ld      (TmsPort), a
+ 193: 7420+17	2859  CD8528  	        call    TmsRegIn                ; clear vsync bit
+ 194: 7437+17	285C  CD8528  	        call    TmsRegIn                ; check it again
+ 195: 7454+10	285F  FA6F28  	        jp      m, TmsProbeFailed       ; if still set, not a TMS9918A
+ 196: 7464+10	2862  11FFFF  	        ld      de, 0ffffh              ; long enough for another vsync
  197:     -	2865          	TmsProbeWait:
- 198: 7558+17	2865  CD8528  	        call    TmsRegIn                ; check vsync bit again
- 199: 7575+5+6	2868  F8      	        ret     m                       ; if set, it's a TMS9918A (and Z is clear)
- 200: 7580+6	2869  1B      	        dec     de                      ; otherwise, keep waiting
- 201: 7586+4	286A  7B      	        ld      a, e
- 202: 7590+4	286B  B2      	        or      d
- 203: 7594+10	286C  C26528  	        jp      nz, TmsProbeWait
+ 198: 7474+17	2865  CD8528  	        call    TmsRegIn                ; check vsync bit again
+ 199: 7491+5+6	2868  F8      	        ret     m                       ; if set, it's a TMS9918A (and Z is clear)
+ 200: 7496+6	2869  1B      	        dec     de                      ; otherwise, keep waiting
+ 201: 7502+4	286A  7B      	        ld      a, e
+ 202: 7506+4	286B  B2      	        or      d
+ 203: 7510+10	286C  C26528  	        jp      nz, TmsProbeWait
  204:     -	286F          	TmsProbeFailed:
- 205: 7604+6	286F  23      	        inc     hl                      ; if still clear after this long, try next port
- 206: 7610+8+5	2870  10E3    	        djnz    TmsProbeNext
- 207: 7618+4	2872  AF      	        xor     a                       ; set Z if we ran out of ports to check
- 208: 7622+10	2873  C9      	        ret
+ 205: 7520+6	286F  23      	        inc     hl                      ; if still clear after this long, try next port
+ 206: 7526+8+5	2870  10E3    	        djnz    TmsProbeNext
+ 207: 7534+4	2872  AF      	        xor     a                       ; set Z if we ran out of ports to check
+ 208: 7538+10	2873  C9      	        ret
  209:				
  210:     -	2874          	TmsPorts:                               ; List of ports to probe:
  211:     -	2874  80      	        defb 0x80                       ; ColecoVision / SG-1000
@@ -1781,59 +1775,59 @@
  220:				;       A = register value
  221:				;       E = register to set
  222:     -	2877          	TmsSetReg:
- 223: 7632+17	2877  CD7B28  	        call    TmsRegOut
- 224: 7649+4	287A  7B      	        ld      a, e
+ 223: 7548+17	2877  CD7B28  	        call    TmsRegOut
+ 224: 7565+4	287A  7B      	        ld      a, e
  225:				        ; fallthrough to TmsRegOut
  226:				
  227:				; write to configured register port
  228:				; parameters:
  229:				;       A = value to write
  230:     -	287B          	TmsRegOut:
- 231: 7653+11	287B  C5      	        push    bc
- 232: 7664+20	287C  ED4B00E4	        ld      bc, (TmsPort)
- 233: 7684+4	2880  0C      	        inc     c
- 234: 7688+12	2881  ED79    	        out     (c), a
- 235: 7700+10	2883  C1      	        pop     bc
- 236: 7710+10	2884  C9      	        ret
+ 231: 7569+11	287B  C5      	        push    bc
+ 232: 7580+20	287C  ED4B00E4	        ld      bc, (TmsPort)
+ 233: 7600+4	2880  0C      	        inc     c
+ 234: 7604+12	2881  ED79    	        out     (c), a
+ 235: 7616+10	2883  C1      	        pop     bc
+ 236: 7626+10	2884  C9      	        ret
  237:				
  238:				; read from configured register port
  239:				; returns:
  240:				;       A = value read
  241:     -	2885          	TmsRegIn:
- 242: 7720+11	2885  C5      	        push    bc
- 243: 7731+20	2886  ED4B00E4	        ld      bc, (TmsPort)
- 244: 7751+4	288A  0C      	        inc     c
- 245: 7755+12	288B  ED78    	        in      a, (c)
- 246: 7767+10	288D  C1      	        pop     bc
- 247: 7777+10	288E  C9      	        ret
+ 242: 7636+11	2885  C5      	        push    bc
+ 243: 7647+20	2886  ED4B00E4	        ld      bc, (TmsPort)
+ 244: 7667+4	288A  0C      	        inc     c
+ 245: 7671+12	288B  ED78    	        in      a, (c)
+ 246: 7683+10	288D  C1      	        pop     bc
+ 247: 7693+10	288E  C9      	        ret
  248:				
  249:				; write to configured VRAM port
  250:				; parameters:
  251:				;       A = value to write
  252:				                                        ; Z80 | Z180 cycles...
  253:     -	288F          	TmsRamOut:                              ; 17  | 16 (call)
- 254: 7787+11	288F  C5      	        push    bc                      ; 11  | 11
- 255: 7798+20	2890  ED4B00E4	        ld      bc, (TmsPort)           ; 20  | 18
- 256: 7818+12	2894  ED79    	        out     (c), a                  ; 12  | 10
+ 254: 7703+11	288F  C5      	        push    bc                      ; 11  | 11
+ 255: 7714+20	2890  ED4B00E4	        ld      bc, (TmsPort)           ; 20  | 18
+ 256: 7734+12	2894  ED79    	        out     (c), a                  ; 12  | 10
  257:     -	2896          	TmsRamOutDelay:
- 258: 7830+8+5	2896  10FE    	        djnz    TmsRamOutDelay          ; 8   | 7  plus (13 | 9) * (iterations-1)
- 259: 7838+10	2898  C1      	        pop     bc                      ; 10  | 9
- 260: 7848+10	2899  C9      	        ret                             ; 10  | 9
+ 258: 7746+8+5	2896  10FE    	        djnz    TmsRamOutDelay          ; 8   | 7  plus (13 | 9) * (iterations-1)
+ 259: 7754+10	2898  C1      	        pop     bc                      ; 10  | 9
+ 260: 7764+10	2899  C9      	        ret                             ; 10  | 9
  261:				
  262:				; read from configured VRAM port
  263:				; returns:
  264:				;       A = value read
  265:     -	289A          	TmsRamIn:
- 266: 7858+11	289A  C5      	        push    bc
- 267: 7869+20	289B  ED4B00E4	        ld      bc, (TmsPort)
+ 266: 7774+11	289A  C5      	        push    bc
+ 267: 7785+20	289B  ED4B00E4	        ld      bc, (TmsPort)
  268:     -	289F          	TmsRamInDelay:
- 269: 7889+8+5	289F  10FE    	        djnz    TmsRamInDelay
- 270: 7897+12	28A1  ED78    	        in      a, (c)
- 271: 7909+20	28A3  ED4B00E4	        ld      bc, (TmsPort)
+ 269: 7805+8+5	289F  10FE    	        djnz    TmsRamInDelay
+ 270: 7813+12	28A1  ED78    	        in      a, (c)
+ 271: 7825+20	28A3  ED4B00E4	        ld      bc, (TmsPort)
  272:     -	28A7          	TmsRamInDelay2:
- 273: 7929+8+5	28A7  10FE    	        djnz    TmsRamInDelay2
- 274: 7937+10	28A9  C1      	        pop     bc
- 275: 7947+10	28AA  C9      	        ret
+ 273: 7845+8+5	28A7  10FE    	        djnz    TmsRamInDelay2
+ 274: 7853+10	28A9  C1      	        pop     bc
+ 275: 7863+10	28AA  C9      	        ret
  276:				
  277:				; ---------------------------------------------------------------------------
  278:				; register configuration routines
@@ -1841,43 +1835,43 @@
  280:				; set the background color
  281:				;       A = requested color
  282:     -	28AB          	TmsBackground:
- 283: 7957+7	28AB  E60F    	        and     0fh
- 284: 7964+4	28AD  47      	        ld      b, a
- 285: 7968+13	28AE  3A0EE4  	        ld      a, (TmsScreenColors)
- 286: 7981+7	28B1  E6F0    	        and     0f0h
- 287: 7988+4	28B3  B0      	        or      b
- 288: 7992+13	28B4  320EE4  	        ld      (TmsScreenColors), a
- 289: 8005+7	28B7  1E87    	        ld      e, TmsColorReg
- 290: 8012+10	28B9  C37728  	        jp      TmsSetReg
+ 283: 7873+7	28AB  E60F    	        and     0fh
+ 284: 7880+4	28AD  47      	        ld      b, a
+ 285: 7884+13	28AE  3A0EE4  	        ld      a, (TmsScreenColors)
+ 286: 7897+7	28B1  E6F0    	        and     0f0h
+ 287: 7904+4	28B3  B0      	        or      b
+ 288: 7908+13	28B4  320EE4  	        ld      (TmsScreenColors), a
+ 289: 7921+7	28B7  1E87    	        ld      e, TmsColorReg
+ 290: 7928+10	28B9  C37728  	        jp      TmsSetReg
  291:				
  292:				; set the sprite configuration
  293:				;       A = sprite options
  294:     -	28BC          	TmsSpriteConfig:
- 295: 8022+7	28BC  E603    	        and     TmsSprite32|TmsSpriteMag
- 296: 8029+4	28BE  47      	        ld      b, a
- 297: 8033+13	28BF  3A02E4  	        ld      a, (TmsMode)
- 298: 8046+7	28C2  E6FC    	        and     ~(TmsSprite32|TmsSpriteMag)
- 299: 8053+4	28C4  B0      	        or      b
- 300: 8057+13	28C5  3202E4  	        ld      (TmsMode), a
- 301: 8070+7	28C8  1E81    	        ld      e, TmsCtrl1Reg
- 302: 8077+10	28CA  C37728  	        jp      TmsSetReg
+ 295: 7938+7	28BC  E603    	        and     TmsSprite32|TmsSpriteMag
+ 296: 7945+4	28BE  47      	        ld      b, a
+ 297: 7949+13	28BF  3A02E4  	        ld      a, (TmsMode)
+ 298: 7962+7	28C2  E6FC    	        and     ~(TmsSprite32|TmsSpriteMag)
+ 299: 7969+4	28C4  B0      	        or      b
+ 300: 7973+13	28C5  3202E4  	        ld      (TmsMode), a
+ 301: 7986+7	28C8  1E81    	        ld      e, TmsCtrl1Reg
+ 302: 7993+10	28CA  C37728  	        jp      TmsSetReg
  303:				
  304:				
  305:				; enable vblank interrupts
  306:     -	28CD          	TmsIntEnable:
- 307: 8087+13	28CD  3A02E4  	        ld      a, (TmsMode)
- 308: 8100+7	28D0  F620    	        or      TmsIntEnableBit
- 309: 8107+13	28D2  3202E4  	        ld      (TmsMode), a
- 310: 8120+7	28D5  1E81    	        ld      e, TmsCtrl1Reg
- 311: 8127+10	28D7  C37728  	        jp      TmsSetReg
+ 307: 8003+13	28CD  3A02E4  	        ld      a, (TmsMode)
+ 308: 8016+7	28D0  F620    	        or      TmsIntEnableBit
+ 309: 8023+13	28D2  3202E4  	        ld      (TmsMode), a
+ 310: 8036+7	28D5  1E81    	        ld      e, TmsCtrl1Reg
+ 311: 8043+10	28D7  C37728  	        jp      TmsSetReg
  312:				
  313:				; disable vblank interrupts
  314:     -	28DA          	TmsIntDisable:
- 315: 8137+13	28DA  3A02E4  	        ld      a, (TmsMode)
- 316: 8150+7	28DD  E6DF    	        and     ~TmsIntEnableBit
- 317: 8157+13	28DF  3202E4  	        ld      (TmsMode), a
- 318: 8170+7	28E2  1E81    	        ld      e, TmsCtrl1Reg
- 319: 8177+10	28E4  C37728  	        jp      TmsSetReg
+ 315: 8053+13	28DA  3A02E4  	        ld      a, (TmsMode)
+ 316: 8066+7	28DD  E6DF    	        and     ~TmsIntEnableBit
+ 317: 8073+13	28DF  3202E4  	        ld      (TmsMode), a
+ 318: 8086+7	28E2  1E81    	        ld      e, TmsCtrl1Reg
+ 319: 8093+10	28E4  C37728  	        jp      TmsSetReg
  320:				
  321:				; ---------------------------------------------------------------------------
  322:				; initialization routines
@@ -1890,185 +1884,185 @@
  329:				
  330:				; reset registers and clear all 16KB of video memory
  331:     -	28E7          	TmsReset:
- 332: 8187+10	28E7  218000  	        ld      hl, TmsBlankFlags       ; blank the screen with 16KB enabled
- 333: 8197+16	28EA  2202E4  	        ld      (TmsMode), hl
- 334: 8213+4	28ED  7D      	        ld      a, l
- 335: 8217+7	28EE  1E81    	        ld      e, TmsCtrl1Reg
- 336: 8224+17	28F0  CD7728  	        call    TmsSetReg
- 337: 8241+4	28F3  7C      	        ld      a, h
- 338: 8245+7	28F4  1E80    	        ld      e, TmsCtrl0Reg
- 339: 8252+17	28F6  CD7728  	        call    TmsSetReg
- 340: 8269+7	28F9  3E00    	        ld      a, TmsTransparent
- 341: 8276+17	28FB  CDAB28  	        call    TmsBackground
- 342: 8293+7	28FE  3E00    	        ld      a, TmsTransparent
- 343: 8300+17	2900  CD5C2A  	        call    TmsTextColor
- 344: 8317+10	2903  110000  	        ld      de, 0                   ; clear entire VRAM
- 345: 8327+10	2906  010040  	        ld      bc, 4000h
- 346: 8337+7	2909  3E00    	        ld      a, 0
- 347: 8344+17	290B  CD4D2A  	        call    TmsFill
- 348: 8361+10	290E  C9      	        ret
+ 332: 8103+10	28E7  218000  	        ld      hl, TmsBlankFlags       ; blank the screen with 16KB enabled
+ 333: 8113+16	28EA  2202E4  	        ld      (TmsMode), hl
+ 334: 8129+4	28ED  7D      	        ld      a, l
+ 335: 8133+7	28EE  1E81    	        ld      e, TmsCtrl1Reg
+ 336: 8140+17	28F0  CD7728  	        call    TmsSetReg
+ 337: 8157+4	28F3  7C      	        ld      a, h
+ 338: 8161+7	28F4  1E80    	        ld      e, TmsCtrl0Reg
+ 339: 8168+17	28F6  CD7728  	        call    TmsSetReg
+ 340: 8185+7	28F9  3E00    	        ld      a, TmsTransparent
+ 341: 8192+17	28FB  CDAB28  	        call    TmsBackground
+ 342: 8209+7	28FE  3E00    	        ld      a, TmsTransparent
+ 343: 8216+17	2900  CD5C2A  	        call    TmsTextColor
+ 344: 8233+10	2903  110000  	        ld      de, 0                   ; clear entire VRAM
+ 345: 8243+10	2906  010040  	        ld      bc, 4000h
+ 346: 8253+7	2909  3E00    	        ld      a, 0
+ 347: 8260+17	290B  CD4D2A  	        call    TmsFill
+ 348: 8277+10	290E  C9      	        ret
  349:				
  350:				; initialize for multicolor mode 
  351:     -	290F          	TmsMulticolor:
- 352: 8371+17	290F  CDE728  	        call    TmsReset
- 353: 8388+20	2912  ED5B04E4	        ld      de, (TmsNameAddr)
- 354: 8408+17	2916  CD262A  	        call    TmsWriteAddr
- 355: 8425+7	2919  1606    	        ld      d, 6                    ; name table has 6 sections
- 356: 8432+7	291B  1E00    	        ld      e, 0                    ; lines in first section start at 0
+ 352: 8287+17	290F  CDE728  	        call    TmsReset
+ 353: 8304+20	2912  ED5B04E4	        ld      de, (TmsNameAddr)
+ 354: 8324+17	2916  CD262A  	        call    TmsWriteAddr
+ 355: 8341+7	2919  1606    	        ld      d, 6                    ; name table has 6 sections
+ 356: 8348+7	291B  1E00    	        ld      e, 0                    ; lines in first section start at 0
  357:     -	291D          	TmsSectionLoop:
- 358: 8439+7	291D  0E04    	        ld      c, 4                    ; each section has 4 identical lines
+ 358: 8355+7	291D  0E04    	        ld      c, 4                    ; each section has 4 identical lines
  359:     -	291F          	TmsLineLoop:
- 360: 8446+7	291F  0620    	        ld      b, 32                   ; each line is 32 bytes long
- 361: 8453+4	2921  7B      	        ld      a, e                    ; same starting value for each line in section
+ 360: 8362+7	291F  0620    	        ld      b, 32                   ; each line is 32 bytes long
+ 361: 8369+4	2921  7B      	        ld      a, e                    ; same starting value for each line in section
  362:     -	2922          	TmsByteLoop: 
- 363: 8457+17	2922  CD8F28  	        call    TmsRamOut
- 364: 8474+4	2925  3C      	        inc     a                       ; byte value
- 365: 8478+8+5	2926  10FA    	        djnz    TmsByteLoop
- 366: 8486+4	2928  0D      	        dec     c                       ; line counter
- 367: 8490+10	2929  C21F29  	        jp      nz, TmsLineLoop
- 368: 8500+4	292C  5F      	        ld      e, a                    ; next starting value = current + 32
- 369: 8504+4	292D  15      	        dec     d                       ; section counter
- 370: 8508+10	292E  C21D29  	        jp      nz, TmsSectionLoop
- 371: 8518+10	2931  21C800  	        ld      hl, TmsMulticolorFlags
- 372: 8528+16	2934  2202E4  	        ld      (TmsMode), hl
- 373: 8544+10	2937  C35B29  	        jp      TmsInitNonBitmap
+ 363: 8373+17	2922  CD8F28  	        call    TmsRamOut
+ 364: 8390+4	2925  3C      	        inc     a                       ; byte value
+ 365: 8394+8+5	2926  10FA    	        djnz    TmsByteLoop
+ 366: 8402+4	2928  0D      	        dec     c                       ; line counter
+ 367: 8406+10	2929  C21F29  	        jp      nz, TmsLineLoop
+ 368: 8416+4	292C  5F      	        ld      e, a                    ; next starting value = current + 32
+ 369: 8420+4	292D  15      	        dec     d                       ; section counter
+ 370: 8424+10	292E  C21D29  	        jp      nz, TmsSectionLoop
+ 371: 8434+10	2931  21C800  	        ld      hl, TmsMulticolorFlags
+ 372: 8444+16	2934  2202E4  	        ld      (TmsMode), hl
+ 373: 8460+10	2937  C35B29  	        jp      TmsInitNonBitmap
  374:				
  375:				; initialize for tiled graphics
  376:     -	293A          	TmsTile:
- 377: 8554+17	293A  CDE728  	        call    TmsReset
- 378: 8571+10	293D  21C000  	        ld      hl, TmsTileFlags
- 379: 8581+16	2940  2202E4  	        ld      (TmsMode), hl
- 380: 8597+10	2943  C35B29  	        jp      TmsInitNonBitmap
+ 377: 8470+17	293A  CDE728  	        call    TmsReset
+ 378: 8487+10	293D  21C000  	        ld      hl, TmsTileFlags
+ 379: 8497+16	2940  2202E4  	        ld      (TmsMode), hl
+ 380: 8513+10	2943  C35B29  	        jp      TmsInitNonBitmap
  381:				
  382:				; initialize for text mode
  383:				;       HL = address of font to load
  384:     -	2946          	TmsTextMode:
- 385: 8607+11	2946  E5      	        push    hl
- 386: 8618+17	2947  CDE728  	        call    TmsReset
- 387: 8635+10	294A  E1      	        pop     hl
- 388: 8645+20	294B  ED5B08E4	        ld      de, (TmsPatternAddr)    ; load font from address in hl
- 389: 8665+10	294F  010008  	        ld      bc, TmsTextPatternLen
- 390: 8675+17	2952  CD3E2A  	        call    TmsWrite
- 391: 8692+10	2955  21D000  	        ld      hl, TmsTextFlags
- 392: 8702+16	2958  2202E4  	        ld      (TmsMode), hl
+ 385: 8523+11	2946  E5      	        push    hl
+ 386: 8534+17	2947  CDE728  	        call    TmsReset
+ 387: 8551+10	294A  E1      	        pop     hl
+ 388: 8561+20	294B  ED5B08E4	        ld      de, (TmsPatternAddr)    ; load font from address in hl
+ 389: 8581+10	294F  010008  	        ld      bc, TmsTextPatternLen
+ 390: 8591+17	2952  CD3E2A  	        call    TmsWrite
+ 391: 8608+10	2955  21D000  	        ld      hl, TmsTextFlags
+ 392: 8618+16	2958  2202E4  	        ld      (TmsMode), hl
  393:				        ; fallthrough to TmsInitNonBitmap
  394:				
  395:				; non-bitmap color and pattern table configuration
  396:     -	295B          	TmsInitNonBitmap:
  397:				        ; set up color table address (register = address / 400H)
- 398: 8718+13	295B  3A06E4  	        ld      a, (TmsColorAddr)
- 399: 8731+7	295E  E6C0    	        and     0c0h
- 400: 8738+13	2960  3206E4  	        ld      (TmsColorAddr), a
- 401: 8751+4	2963  57      	        ld      d, a
- 402: 8755+13	2964  3A07E4  	        ld      a, (TmsColorAddr+1)
- 403: 8768+7	2967  E63F    	        and     3fh
- 404: 8775+13	2969  3207E4  	        ld      (TmsColorAddr+1), a
- 405: 8788+8	296C  CB12    	        rl      d
- 406: 8796+4	296E  17      	        rla
- 407: 8800+8	296F  CB12    	        rl      d
- 408: 8808+4	2971  17      	        rla
- 409: 8812+7	2972  1E83    	        ld      e, TmsColorTableReg
- 410: 8819+17	2974  CD7728  	        call    TmsSetReg
+ 398: 8634+13	295B  3A06E4  	        ld      a, (TmsColorAddr)
+ 399: 8647+7	295E  E6C0    	        and     0c0h
+ 400: 8654+13	2960  3206E4  	        ld      (TmsColorAddr), a
+ 401: 8667+4	2963  57      	        ld      d, a
+ 402: 8671+13	2964  3A07E4  	        ld      a, (TmsColorAddr+1)
+ 403: 8684+7	2967  E63F    	        and     3fh
+ 404: 8691+13	2969  3207E4  	        ld      (TmsColorAddr+1), a
+ 405: 8704+8	296C  CB12    	        rl      d
+ 406: 8712+4	296E  17      	        rla
+ 407: 8716+8	296F  CB12    	        rl      d
+ 408: 8724+4	2971  17      	        rla
+ 409: 8728+7	2972  1E83    	        ld      e, TmsColorTableReg
+ 410: 8735+17	2974  CD7728  	        call    TmsSetReg
  411:				
  412:				        ; set up pattern table address (register = address / 800H)
- 413: 8836+4	2977  AF      	        xor     a
- 414: 8840+13	2978  3208E4  	        ld      (TmsPatternAddr), a
- 415: 8853+13	297B  3A09E4  	        ld      a, (TmsPatternAddr+1) 
- 416: 8866+7	297E  E638    	        and     38h
- 417: 8873+13	2980  3209E4  	        ld      (TmsPatternAddr+1), a
- 418: 8886+4	2983  0F      	        rrca
- 419: 8890+4	2984  0F      	        rrca
- 420: 8894+4	2985  0F      	        rrca
- 421: 8898+7	2986  1E84    	        ld      e, TmsPatternReg
- 422: 8905+17	2988  CD7728  	        call    TmsSetReg
- 423: 8922+10	298B  C3D929  	        jp      TmsInitCommon
+ 413: 8752+4	2977  AF      	        xor     a
+ 414: 8756+13	2978  3208E4  	        ld      (TmsPatternAddr), a
+ 415: 8769+13	297B  3A09E4  	        ld      a, (TmsPatternAddr+1) 
+ 416: 8782+7	297E  E638    	        and     38h
+ 417: 8789+13	2980  3209E4  	        ld      (TmsPatternAddr+1), a
+ 418: 8802+4	2983  0F      	        rrca
+ 419: 8806+4	2984  0F      	        rrca
+ 420: 8810+4	2985  0F      	        rrca
+ 421: 8814+7	2986  1E84    	        ld      e, TmsPatternReg
+ 422: 8821+17	2988  CD7728  	        call    TmsSetReg
+ 423: 8838+10	298B  C3D929  	        jp      TmsInitCommon
  424:				
  425:				; initialize for bitmapped graphics
  426:     -	298E          	TmsBitmap:
- 427: 8932+17	298E  CDE728  	        call    TmsReset
- 428: 8949+20	2991  ED5B04E4	        ld      de, (TmsNameAddr)       ; initialize name table with 3 sets
- 429: 8969+17	2995  CD262A  	        call    TmsWriteAddr            ; of 256 bytes ranging from 00-FF
- 430: 8986+7	2998  0603    	        ld      b, 3
- 431: 8993+4	299A  AF      	        xor     a
+ 427: 8848+17	298E  CDE728  	        call    TmsReset
+ 428: 8865+20	2991  ED5B04E4	        ld      de, (TmsNameAddr)       ; initialize name table with 3 sets
+ 429: 8885+17	2995  CD262A  	        call    TmsWriteAddr            ; of 256 bytes ranging from 00-FF
+ 430: 8902+7	2998  0603    	        ld      b, 3
+ 431: 8909+4	299A  AF      	        xor     a
  432:     -	299B          	TmsBitmapLoop:
- 433: 8997+17	299B  CD8F28  	        call    TmsRamOut
- 434: 9014+4	299E  3C      	        inc     a
- 435: 9018+10	299F  C29B29  	        jp      nz, TmsBitmapLoop
- 436: 9028+8+5	29A2  10F7    	        djnz    TmsBitmapLoop
- 437: 9036+10	29A4  21C002  	        ld      hl, TmsBitmapFlags
- 438: 9046+16	29A7  2202E4  	        ld      (TmsMode), hl
+ 433: 8913+17	299B  CD8F28  	        call    TmsRamOut
+ 434: 8930+4	299E  3C      	        inc     a
+ 435: 8934+10	299F  C29B29  	        jp      nz, TmsBitmapLoop
+ 436: 8944+8+5	29A2  10F7    	        djnz    TmsBitmapLoop
+ 437: 8952+10	29A4  21C002  	        ld      hl, TmsBitmapFlags
+ 438: 8962+16	29A7  2202E4  	        ld      (TmsMode), hl
  439:				
  440:				        ; set up color table at 0H (register = 7FH) or 2000H (register = 0FFH)
- 441: 9062+4	29AA  AF      	        xor     a
- 442: 9066+13	29AB  3206E4  	        ld      (TmsColorAddr), a
- 443: 9079+13	29AE  3208E4  	        ld      (TmsPatternAddr), a
- 444: 9092+13	29B1  3A07E4  	        ld      a, (TmsColorAddr+1)
- 445: 9105+7	29B4  E620    	        and     20h
- 446: 9112+13	29B6  3207E4  	        ld      (TmsColorAddr+1), a
- 447: 9125+7	29B9  3EFF    	        ld      a, 0ffh                 ; color table at 2000H
- 448: 9132+10	29BB  C2C029  	        jp      nz, TmsColorTableHigh
- 449: 9142+7	29BE  3E7F    	        ld      a, 7fh                  ; color table at 0H
+ 441: 8978+4	29AA  AF      	        xor     a
+ 442: 8982+13	29AB  3206E4  	        ld      (TmsColorAddr), a
+ 443: 8995+13	29AE  3208E4  	        ld      (TmsPatternAddr), a
+ 444: 9008+13	29B1  3A07E4  	        ld      a, (TmsColorAddr+1)
+ 445: 9021+7	29B4  E620    	        and     20h
+ 446: 9028+13	29B6  3207E4  	        ld      (TmsColorAddr+1), a
+ 447: 9041+7	29B9  3EFF    	        ld      a, 0ffh                 ; color table at 2000H
+ 448: 9048+10	29BB  C2C029  	        jp      nz, TmsColorTableHigh
+ 449: 9058+7	29BE  3E7F    	        ld      a, 7fh                  ; color table at 0H
  450:     -	29C0          	TmsColorTableHigh:
- 451: 9149+7	29C0  1E83    	        ld      e, TmsColorTableReg
- 452: 9156+17	29C2  CD7728  	        call    TmsSetReg
+ 451: 9065+7	29C0  1E83    	        ld      e, TmsColorTableReg
+ 452: 9072+17	29C2  CD7728  	        call    TmsSetReg
  453:				
  454:				        ; set up pattern table at 0H (register = 3) or 2000H (register = 7)
- 455: 9173+13	29C5  3A09E4  	        ld      a, (TmsPatternAddr+1)
- 456: 9186+7	29C8  E620    	        and     20h
- 457: 9193+13	29CA  3209E4  	        ld      (TmsPatternAddr+1), a
- 458: 9206+7	29CD  3E07    	        ld      a, 7                    ; pattern table at 2000H
- 459: 9213+10	29CF  C2D429  	        jp      nz, TmsPatternTableHigh
- 460: 9223+7	29D2  3E03    	        ld      a, 3                    ; pattern table at 0H
+ 455: 9089+13	29C5  3A09E4  	        ld      a, (TmsPatternAddr+1)
+ 456: 9102+7	29C8  E620    	        and     20h
+ 457: 9109+13	29CA  3209E4  	        ld      (TmsPatternAddr+1), a
+ 458: 9122+7	29CD  3E07    	        ld      a, 7                    ; pattern table at 2000H
+ 459: 9129+10	29CF  C2D429  	        jp      nz, TmsPatternTableHigh
+ 460: 9139+7	29D2  3E03    	        ld      a, 3                    ; pattern table at 0H
  461:     -	29D4          	TmsPatternTableHigh:
- 462: 9230+7	29D4  1E84    	        ld      e, TmsPatternReg
- 463: 9237+17	29D6  CD7728  	        call    TmsSetReg
+ 462: 9146+7	29D4  1E84    	        ld      e, TmsPatternReg
+ 463: 9153+17	29D6  CD7728  	        call    TmsSetReg
  464:				        ; fall through to TmsInitCommon
  465:				
  466:				
  467:				; common initialization for all modes
  468:     -	29D9          	TmsInitCommon:
  469:				        ; set up name table address (register = address / 400H)
- 470: 9254+4	29D9  AF      	        xor     a
- 471: 9258+13	29DA  3204E4  	        ld      (TmsNameAddr), a
- 472: 9271+13	29DD  3A05E4  	        ld      a, (TmsNameAddr+1)
- 473: 9284+7	29E0  E63C    	        and     3ch
- 474: 9291+13	29E2  3205E4  	        ld      (TmsNameAddr+1), a
- 475: 9304+4	29E5  0F      	        rrca
- 476: 9308+4	29E6  0F      	        rrca
- 477: 9312+7	29E7  1E82    	        ld      e, TmsNameReg
- 478: 9319+17	29E9  CD7728  	        call    TmsSetReg
+ 470: 9170+4	29D9  AF      	        xor     a
+ 471: 9174+13	29DA  3204E4  	        ld      (TmsNameAddr), a
+ 472: 9187+13	29DD  3A05E4  	        ld      a, (TmsNameAddr+1)
+ 473: 9200+7	29E0  E63C    	        and     3ch
+ 474: 9207+13	29E2  3205E4  	        ld      (TmsNameAddr+1), a
+ 475: 9220+4	29E5  0F      	        rrca
+ 476: 9224+4	29E6  0F      	        rrca
+ 477: 9228+7	29E7  1E82    	        ld      e, TmsNameReg
+ 478: 9235+17	29E9  CD7728  	        call    TmsSetReg
  479:				
  480:				        ; set up sprite pattern table address (register = address / 80H)
- 481: 9336+13	29EC  3A0CE4  	        ld      a, (TmsSpriteAttrAddr)
- 482: 9349+7	29EF  E680    	        and     80h
- 483: 9356+13	29F1  320CE4  	        ld      (TmsSpriteAttrAddr), a
- 484: 9369+4	29F4  57      	        ld      d, a
- 485: 9373+13	29F5  3A0DE4  	        ld      a, (TmsSpriteAttrAddr+1)
- 486: 9386+7	29F8  E67F    	        and     7fh
- 487: 9393+8	29FA  CB12    	        rl      d
- 488: 9401+4	29FC  17      	        rla
- 489: 9405+7	29FD  1E85    	        ld      e, TmsSpriteAttrReg
- 490: 9412+17	29FF  CD7728  	        call    TmsSetReg
+ 481: 9252+13	29EC  3A0CE4  	        ld      a, (TmsSpriteAttrAddr)
+ 482: 9265+7	29EF  E680    	        and     80h
+ 483: 9272+13	29F1  320CE4  	        ld      (TmsSpriteAttrAddr), a
+ 484: 9285+4	29F4  57      	        ld      d, a
+ 485: 9289+13	29F5  3A0DE4  	        ld      a, (TmsSpriteAttrAddr+1)
+ 486: 9302+7	29F8  E67F    	        and     7fh
+ 487: 9309+8	29FA  CB12    	        rl      d
+ 488: 9317+4	29FC  17      	        rla
+ 489: 9321+7	29FD  1E85    	        ld      e, TmsSpriteAttrReg
+ 490: 9328+17	29FF  CD7728  	        call    TmsSetReg
  491:				
  492:				        ; set up sprite attribute table address (register = address / 800H)
- 493: 9429+4	2A02  AF      	        xor     a                       
- 494: 9433+13	2A03  320AE4  	        ld      (TmsSpritePatternAddr), a
- 495: 9446+13	2A06  3A0BE4  	        ld      a, (TmsSpritePatternAddr+1)
- 496: 9459+7	2A09  E638    	        and     38h
- 497: 9466+13	2A0B  320BE4  	        ld      (TmsSpritePatternAddr+1), a
- 498: 9479+4	2A0E  0F      	        rrca
- 499: 9483+4	2A0F  0F      	        rrca
- 500: 9487+4	2A10  0F      	        rrca
- 501: 9491+7	2A11  1E86    	        ld      e, TmsSpritePatternReg
- 502: 9498+17	2A13  CD7728  	        call    TmsSetReg
+ 493: 9345+4	2A02  AF      	        xor     a                       
+ 494: 9349+13	2A03  320AE4  	        ld      (TmsSpritePatternAddr), a
+ 495: 9362+13	2A06  3A0BE4  	        ld      a, (TmsSpritePatternAddr+1)
+ 496: 9375+7	2A09  E638    	        and     38h
+ 497: 9382+13	2A0B  320BE4  	        ld      (TmsSpritePatternAddr+1), a
+ 498: 9395+4	2A0E  0F      	        rrca
+ 499: 9399+4	2A0F  0F      	        rrca
+ 500: 9403+4	2A10  0F      	        rrca
+ 501: 9407+7	2A11  1E86    	        ld      e, TmsSpritePatternReg
+ 502: 9414+17	2A13  CD7728  	        call    TmsSetReg
  503:				
  504:				        ; set up control registers
- 505: 9515+7	2A16  1E81    	        ld      e, TmsCtrl1Reg
- 506: 9522+13	2A18  3A02E4  	        ld      a, (TmsMode)
- 507: 9535+17	2A1B  CD7728  	        call    TmsSetReg
- 508: 9552+13	2A1E  3A03E4  	        ld      a, (TmsMode+1)
- 509: 9565+7	2A21  1E80    	        ld      e, TmsCtrl0Reg
- 510: 9572+10	2A23  C37728  	        jp      TmsSetReg
+ 505: 9431+7	2A16  1E81    	        ld      e, TmsCtrl1Reg
+ 506: 9438+13	2A18  3A02E4  	        ld      a, (TmsMode)
+ 507: 9451+17	2A1B  CD7728  	        call    TmsSetReg
+ 508: 9468+13	2A1E  3A03E4  	        ld      a, (TmsMode+1)
+ 509: 9481+7	2A21  1E80    	        ld      e, TmsCtrl0Reg
+ 510: 9488+10	2A23  C37728  	        jp      TmsSetReg
  511:				
  512:				; ---------------------------------------------------------------------------
  513:				; memory access routines
@@ -2076,109 +2070,109 @@
  515:				; set the next address of vram to write
  516:				;       DE = address
  517:     -	2A26          	TmsWriteAddr:
- 518: 9582+4	2A26  7B      	        ld      a, e                    ; send lsb
- 519: 9586+17	2A27  CD7B28  	        call    TmsRegOut
- 520: 9603+4	2A2A  7A      	        ld      a, d                    ; mask off msb to max of 16KB
- 521: 9607+7	2A2B  E63F    	        and     3fh
- 522: 9614+7	2A2D  F640    	        or      TmsWriteBit             ; indicate that this is a write
- 523: 9621+17	2A2F  CD7B28  	        call    TmsRegOut
- 524: 9638+10	2A32  C9      	        ret
+ 518: 9498+4	2A26  7B      	        ld      a, e                    ; send lsb
+ 519: 9502+17	2A27  CD7B28  	        call    TmsRegOut
+ 520: 9519+4	2A2A  7A      	        ld      a, d                    ; mask off msb to max of 16KB
+ 521: 9523+7	2A2B  E63F    	        and     3fh
+ 522: 9530+7	2A2D  F640    	        or      TmsWriteBit             ; indicate that this is a write
+ 523: 9537+17	2A2F  CD7B28  	        call    TmsRegOut
+ 524: 9554+10	2A32  C9      	        ret
  525:				
  526:				; set the next address of vram to read
  527:				;       DE = address
  528:     -	2A33          	TmsReadAddr:
- 529: 9648+4	2A33  7B      	        ld      a, e                    ; send lsb
- 530: 9652+17	2A34  CD7B28  	        call    TmsRegOut
- 531: 9669+4	2A37  7A      	        ld      a, d                    ; mask off msb to max of 16KB
- 532: 9673+7	2A38  E63F    	        and     3Fh
- 533: 9680+17	2A3A  CD7B28  	        call    TmsRegOut
- 534: 9697+10	2A3D  C9      	        ret
+ 529: 9564+4	2A33  7B      	        ld      a, e                    ; send lsb
+ 530: 9568+17	2A34  CD7B28  	        call    TmsRegOut
+ 531: 9585+4	2A37  7A      	        ld      a, d                    ; mask off msb to max of 16KB
+ 532: 9589+7	2A38  E63F    	        and     3Fh
+ 533: 9596+17	2A3A  CD7B28  	        call    TmsRegOut
+ 534: 9613+10	2A3D  C9      	        ret
  535:				
  536:				; copy bytes from ram to vram
  537:				;       HL = ram source address
  538:				;       DE = vram destination address
  539:				;       BC = byte count
  540:     -	2A3E          	TmsWrite:
- 541: 9707+17	2A3E  CD262A  	        call    TmsWriteAddr
+ 541: 9623+17	2A3E  CD262A  	        call    TmsWriteAddr
  542:     -	2A41          	TmsWriteLoop:
- 543: 9724+7	2A41  7E      	        ld      a, (hl)
- 544: 9731+17	2A42  CD8F28  	        call    TmsRamOut
- 545: 9748+6	2A45  23      	        inc     hl
- 546: 9754+6	2A46  0B      	        dec     bc
- 547: 9760+4	2A47  78      	        ld      a, b
- 548: 9764+4	2A48  B1      	        or      c
- 549: 9768+10	2A49  C2412A  	        jp      nz, TmsWriteLoop
- 550: 9778+10	2A4C  C9      	        ret
+ 543: 9640+7	2A41  7E      	        ld      a, (hl)
+ 544: 9647+17	2A42  CD8F28  	        call    TmsRamOut
+ 545: 9664+6	2A45  23      	        inc     hl
+ 546: 9670+6	2A46  0B      	        dec     bc
+ 547: 9676+4	2A47  78      	        ld      a, b
+ 548: 9680+4	2A48  B1      	        or      c
+ 549: 9684+10	2A49  C2412A  	        jp      nz, TmsWriteLoop
+ 550: 9694+10	2A4C  C9      	        ret
  551:				
  552:				; fill a section of memory with a single value
  553:				;       A = value to fill
  554:				;       DE = vram destination address
  555:				;       BC = byte count
  556:     -	2A4D          	TmsFill:
- 557: 9788+11	2A4D  F5      	        push    af
- 558: 9799+17	2A4E  CD262A  	        call    TmsWriteAddr
- 559: 9816+10	2A51  F1      	        pop     af
+ 557: 9704+11	2A4D  F5      	        push    af
+ 558: 9715+17	2A4E  CD262A  	        call    TmsWriteAddr
+ 559: 9732+10	2A51  F1      	        pop     af
  560:     -	2A52          	TmsFillLoop:
- 561: 9826+17	2A52  CD8F28  	        call    TmsRamOut
- 562: 9843+4	2A55  0D      	        dec     c
- 563: 9847+10	2A56  C2522A  	        jp      nz, TmsFillLoop
- 564: 9857+8+5	2A59  10F7    	        djnz    TmsFillLoop
- 565: 9865+10	2A5B  C9      	        ret
+ 561: 9742+17	2A52  CD8F28  	        call    TmsRamOut
+ 562: 9759+4	2A55  0D      	        dec     c
+ 563: 9763+10	2A56  C2522A  	        jp      nz, TmsFillLoop
+ 564: 9773+8+5	2A59  10F7    	        djnz    TmsFillLoop
+ 565: 9781+10	2A5B  C9      	        ret
  566:				
  567:				; ---------------------------------------------------------------------------
  568:				; text routines
  569:				; set text color
  570:				;       A = requested color
  571:     -	2A5C          	TmsTextColor:
- 572: 9875+4	2A5C  87      	        add     a, a                    ; text color into high nybble
- 573: 9879+4	2A5D  87      	        add     a, a
- 574: 9883+4	2A5E  87      	        add     a, a
- 575: 9887+4	2A5F  87      	        add     a, a
- 576: 9891+4	2A60  47      	        ld      b, a                    ; save for later
- 577: 9895+13	2A61  3A0EE4  	        ld      a, (TmsScreenColors)    ; get current colors
- 578: 9908+7	2A64  E60F    	        and     0fh                     ; mask off old text color
- 579: 9915+4	2A66  B0      	        or      b                       ; set new text color
- 580: 9919+13	2A67  320EE4  	        ld      (TmsScreenColors), a
- 581: 9932+7	2A6A  1E87    	        ld      e, TmsColorReg
- 582: 9939+10	2A6C  C37728  	        jp      TmsSetReg               ; save it back
+ 572: 9791+4	2A5C  87      	        add     a, a                    ; text color into high nybble
+ 573: 9795+4	2A5D  87      	        add     a, a
+ 574: 9799+4	2A5E  87      	        add     a, a
+ 575: 9803+4	2A5F  87      	        add     a, a
+ 576: 9807+4	2A60  47      	        ld      b, a                    ; save for later
+ 577: 9811+13	2A61  3A0EE4  	        ld      a, (TmsScreenColors)    ; get current colors
+ 578: 9824+7	2A64  E60F    	        and     0fh                     ; mask off old text color
+ 579: 9831+4	2A66  B0      	        or      b                       ; set new text color
+ 580: 9835+13	2A67  320EE4  	        ld      (TmsScreenColors), a
+ 581: 9848+7	2A6A  1E87    	        ld      e, TmsColorReg
+ 582: 9855+10	2A6C  C37728  	        jp      TmsSetReg               ; save it back
  583:				
  584:				; set the address to place text at X/Y coordinate
  585:				;       A = X
  586:				;       E = Y
  587:     -	2A6F          	TmsTextPos:
- 588: 9949+7	2A6F  1600    	        ld      d, 0
- 589: 9956+10	2A71  210000  	        ld      hl, 0
- 590: 9966+11	2A74  19      	        add     hl, de                  ; Y x 1
- 591: 9977+11	2A75  29      	        add     hl, hl                  ; Y x 2
- 592: 9988+11	2A76  29      	        add     hl, hl                  ; Y x 4
- 593: 9999+11	2A77  19      	        add     hl, de                  ; Y x 5
- 594:10010+11	2A78  29      	        add     hl, hl                  ; Y x 10
- 595:10021+11	2A79  29      	        add     hl, hl                  ; Y x 20
- 596:10032+11	2A7A  29      	        add     hl, hl                  ; Y x 40
- 597:10043+4	2A7B  5F      	        ld      e, a
- 598:10047+11	2A7C  19      	        add     hl, de                  ; add X for final address
- 599:10058+20	2A7D  ED5B04E4	        ld      de, (TmsNameAddr)       ; add name table base address
- 600:10078+11	2A81  19      	        add     hl, de
- 601:10089+4	2A82  EB      	        ex      de, hl
- 602:10093+10	2A83  C3262A  	        jp      TmsWriteAddr
+ 588: 9865+7	2A6F  1600    	        ld      d, 0
+ 589: 9872+10	2A71  210000  	        ld      hl, 0
+ 590: 9882+11	2A74  19      	        add     hl, de                  ; Y x 1
+ 591: 9893+11	2A75  29      	        add     hl, hl                  ; Y x 2
+ 592: 9904+11	2A76  29      	        add     hl, hl                  ; Y x 4
+ 593: 9915+11	2A77  19      	        add     hl, de                  ; Y x 5
+ 594: 9926+11	2A78  29      	        add     hl, hl                  ; Y x 10
+ 595: 9937+11	2A79  29      	        add     hl, hl                  ; Y x 20
+ 596: 9948+11	2A7A  29      	        add     hl, hl                  ; Y x 40
+ 597: 9959+4	2A7B  5F      	        ld      e, a
+ 598: 9963+11	2A7C  19      	        add     hl, de                  ; add X for final address
+ 599: 9974+20	2A7D  ED5B04E4	        ld      de, (TmsNameAddr)       ; add name table base address
+ 600: 9994+11	2A81  19      	        add     hl, de
+ 601:10005+4	2A82  EB      	        ex      de, hl
+ 602:10009+10	2A83  C3262A  	        jp      TmsWriteAddr
  603:				
  604:				; copy a null-terminated string to VRAM
  605:				;       HL = ram source address
  606:     -	2A86          	TmsStrOut:
- 607:10103+7	2A86  7E      	        ld      a, (hl)
- 608:10110+7	2A87  FE00    	        cp      0                       ; return when NULL is encountered
- 609:10117+5+6	2A89  C8      	        ret     z
- 610:10122+17	2A8A  CD8F28  	        call    TmsRamOut
- 611:10139+6	2A8D  23      	        inc     hl
- 612:10145+10	2A8E  C3862A  	        jp      TmsStrOut
+ 607:10019+7	2A86  7E      	        ld      a, (hl)
+ 608:10026+7	2A87  FE00    	        cp      0                       ; return when NULL is encountered
+ 609:10033+5+6	2A89  C8      	        ret     z
+ 610:10038+17	2A8A  CD8F28  	        call    TmsRamOut
+ 611:10055+6	2A8D  23      	        inc     hl
+ 612:10061+10	2A8E  C3862A  	        jp      TmsStrOut
  613:				
  614:				; repeat a character a certain number of times
  615:				;       A = character to output
  616:				;       B = count
  617:     -	2A91          	TmsRepeat:
- 618:10155+17	2A91  CD8F28  	        call    TmsRamOut
- 619:10172+8+5	2A94  10FB    	        djnz    TmsRepeat
- 620:10180+10	2A96  C9      	        ret
+ 618:10071+17	2A91  CD8F28  	        call    TmsRamOut
+ 619:10088+8+5	2A94  10FB    	        djnz    TmsRepeat
+ 620:10096+10	2A96  C9      	        ret
  621:				
  622:				; output a character
  623:				;       A = character to output
@@ -2193,36 +2187,36 @@
  632:				; set operation for TmsPlotPixel to perform
  633:				;       HL = pixel operation (TmsClearPixel, TmsSetPixel)
  634:     -	2A97          	TmsPixelOp:
- 635:10190+16	2A97  22B82A  	        ld      (TmsPixelOpPlaceHolder), hl
- 636:10206+10	2A9A  C9      	        ret
+ 635:10106+16	2A97  22B82A  	        ld      (TmsPixelOpPlaceHolder), hl
+ 636:10122+10	2A9A  C9      	        ret
  637:				
  638:				; set or clear pixel at X, Y position
  639:				;       B = Y position
  640:				;       C = X position
  641:     -	2A9B          	TmsPlotPixel:
- 642:10216+4	2A9B  78      	        ld      a, b                    ; bail out if Y coord > 191
- 643:10220+7	2A9C  FEC0    	        cp      192
- 644:10227+5+6	2A9E  D0      	        ret     nc
- 645:10232+17	2A9F  CDDE2A  	        call    TmsXYAddr               ; get address in DE for X/Y coord in BC
- 646:10249+4	2AA2  79      	        ld      a, c                    ; get lower 3 bits of X coord
- 647:10253+7	2AA3  E607    	        and     7
- 648:10260+7	2AA5  0600    	        ld      b, 0
- 649:10267+4	2AA7  4F      	        ld      c, a
- 650:10271+10	2AA8  21C22A  	        ld      hl, TmsMaskLookup       ; address of mask in table
- 651:10281+11	2AAB  09      	        add     hl, bc
- 652:10292+7	2AAC  46      	        ld      b, (hl)                 ; save mask in B
- 653:10299+16	2AAD  2A08E4  	        ld      hl, (TmsPatternAddr)    ; get base address for pattern table
- 654:10315+11	2AB0  19      	        add     hl, de
- 655:10326+4	2AB1  EB      	        ex      de, hl
- 656:10330+17	2AB2  CD332A  	        call    TmsReadAddr             ; set read within pattern table
- 657:10347+17	2AB5  CD9A28  	        call    TmsRamIn
+ 642:10132+4	2A9B  78      	        ld      a, b                    ; bail out if Y coord > 191
+ 643:10136+7	2A9C  FEC0    	        cp      192
+ 644:10143+5+6	2A9E  D0      	        ret     nc
+ 645:10148+17	2A9F  CDDE2A  	        call    TmsXYAddr               ; get address in DE for X/Y coord in BC
+ 646:10165+4	2AA2  79      	        ld      a, c                    ; get lower 3 bits of X coord
+ 647:10169+7	2AA3  E607    	        and     7
+ 648:10176+7	2AA5  0600    	        ld      b, 0
+ 649:10183+4	2AA7  4F      	        ld      c, a
+ 650:10187+10	2AA8  21C22A  	        ld      hl, TmsMaskLookup       ; address of mask in table
+ 651:10197+11	2AAB  09      	        add     hl, bc
+ 652:10208+7	2AAC  46      	        ld      b, (hl)                 ; save mask in B
+ 653:10215+16	2AAD  2A08E4  	        ld      hl, (TmsPatternAddr)    ; get base address for pattern table
+ 654:10231+11	2AB0  19      	        add     hl, de
+ 655:10242+4	2AB1  EB      	        ex      de, hl
+ 656:10246+17	2AB2  CD332A  	        call    TmsReadAddr             ; set read within pattern table
+ 657:10263+17	2AB5  CD9A28  	        call    TmsRamIn
  658:     -	2AB8          	TmsPixelOpPlaceHolder:
- 659:10364+4	2AB8  B0      	        or      b                       ; mask bit in previous byte
- 660:10368+4	2AB9  00      	        nop                             ; place holder for 2 byte mask operation
- 661:10372+11	2ABA  F5      	        push    af
- 662:10383+17	2ABB  CD262A  	        call    TmsWriteAddr            ; set write address within pattern table
- 663:10400+10	2ABE  F1      	        pop     af
- 664:10410+10	2ABF  C38F28  	        jp      TmsRamOut
+ 659:10280+4	2AB8  B0      	        or      b                       ; mask bit in previous byte
+ 660:10284+4	2AB9  00      	        nop                             ; place holder for 2 byte mask operation
+ 661:10288+11	2ABA  F5      	        push    af
+ 662:10299+17	2ABB  CD262A  	        call    TmsWriteAddr            ; set write address within pattern table
+ 663:10316+10	2ABE  F1      	        pop     af
+ 664:10326+10	2ABF  C38F28  	        jp      TmsRamOut
  665:				
  666:     -	2AC2          	TmsMaskLookup:
  667:     -	2AC2  80402010	        defb 80h, 40h, 20h, 10h, 8h, 4h, 2h, 1h
@@ -2233,42 +2227,42 @@
  671:				;       C = X position
  672:				;       A = foreground/background color to set
  673:     -	2ACA          	TmsPixelColor:
- 674:10420+11	2ACA  F5      	        push    af
- 675:10431+4	2ACB  78      	        ld      a, b                    ; bail out if Y coord > 191
- 676:10435+7	2ACC  FEC0    	        cp      192
- 677:10442+5+6	2ACE  D0      	        ret     nc
- 678:10447+17	2ACF  CDDE2A  	        call    TmsXYAddr               ; get address in DE for X/Y coord in BC
- 679:10464+16	2AD2  2A06E4  	        ld      hl, (TmsColorAddr)      ; add the color table base address
- 680:10480+11	2AD5  19      	        add     hl, de
- 681:10491+4	2AD6  EB      	        ex      de, hl
- 682:10495+17	2AD7  CD262A  	        call    TmsWriteAddr            ; set write address within color table
- 683:10512+10	2ADA  F1      	        pop     af
- 684:10522+10	2ADB  C38F28  	        jp      TmsRamOut
+ 674:10336+11	2ACA  F5      	        push    af
+ 675:10347+4	2ACB  78      	        ld      a, b                    ; bail out if Y coord > 191
+ 676:10351+7	2ACC  FEC0    	        cp      192
+ 677:10358+5+6	2ACE  D0      	        ret     nc
+ 678:10363+17	2ACF  CDDE2A  	        call    TmsXYAddr               ; get address in DE for X/Y coord in BC
+ 679:10380+16	2AD2  2A06E4  	        ld      hl, (TmsColorAddr)      ; add the color table base address
+ 680:10396+11	2AD5  19      	        add     hl, de
+ 681:10407+4	2AD6  EB      	        ex      de, hl
+ 682:10411+17	2AD7  CD262A  	        call    TmsWriteAddr            ; set write address within color table
+ 683:10428+10	2ADA  F1      	        pop     af
+ 684:10438+10	2ADB  C38F28  	        jp      TmsRamOut
  685:				
  686:				; calculate address byte containing X/Y coordinate
  687:				;       B = Y position
  688:				;       C = X position
  689:				;       returns address in DE
  690:     -	2ADE          	TmsXYAddr:
- 691:10532+4	2ADE  78      	        ld      a, b                    ; d = (y / 8)
- 692:10536+4	2ADF  0F      	        rrca
- 693:10540+4	2AE0  0F      	        rrca
- 694:10544+4	2AE1  0F      	        rrca
- 695:10548+7	2AE2  E61F    	        and     1fh
- 696:10555+4	2AE4  57      	        ld      d, a
+ 691:10448+4	2ADE  78      	        ld      a, b                    ; d = (y / 8)
+ 692:10452+4	2ADF  0F      	        rrca
+ 693:10456+4	2AE0  0F      	        rrca
+ 694:10460+4	2AE1  0F      	        rrca
+ 695:10464+7	2AE2  E61F    	        and     1fh
+ 696:10471+4	2AE4  57      	        ld      d, a
  697:				
- 698:10559+4	2AE5  79      	        ld      a, c                    ; e = (x & f8)
- 699:10563+7	2AE6  E6F8    	        and     0f8h
- 700:10570+4	2AE8  5F      	        ld      e, a
+ 698:10475+4	2AE5  79      	        ld      a, c                    ; e = (x & f8)
+ 699:10479+7	2AE6  E6F8    	        and     0f8h
+ 700:10486+4	2AE8  5F      	        ld      e, a
  701:				
- 702:10574+4	2AE9  78      	        ld      a, b                    ; e += (y & 7)
- 703:10578+7	2AEA  E607    	        and     7
- 704:10585+4	2AEC  B3      	        or      e
- 705:10589+4	2AED  5F      	        ld      e, a
+ 702:10490+4	2AE9  78      	        ld      a, b                    ; e += (y & 7)
+ 703:10494+7	2AEA  E607    	        and     7
+ 704:10501+4	2AEC  B3      	        or      e
+ 705:10505+4	2AED  5F      	        ld      e, a
 **** functions/vdpterm.s ****
- 277:10593+10	2AEE  C9      	        ret
- 278:				;        .include "utility.s"                   ; BDOS utility routines
- 279:				    .include "font1.s"
+ 268:10509+10	2AEE  C9      	        ret
+ 269:				;        .include "utility.s"                   ; BDOS utility routines
+ 270:				    .include "font1.s"
 **** functions/font1.s ****
    1:     -	2AEF          	TmsFont:
    2:				    ; 6x8 bitmap font by Oleg Kosenkov
@@ -4833,37 +4827,37 @@
 2561:     -	32EC  00      	    defb 00000000b
 2562:     -	32ED  00      	    defb 00000000b
 **** functions/vdpterm.s ****
- 280:     -	32EE  00      	    defb 00000000b
- 281:				    
- 282:				
- 283:     -	32EF          	TermClear:
- 284:10603+10	32EF  010038  	    ld bc, 0x3800
- 285:     -	32F2          	TermClearLoop:
- 286:10613+4	32F2  79      	    ld a,c          ; setup VDP addressh
- 287:10617+11	32F3  D381    	    out (0x81),a
- 288:10628+4	32F5  78      	    ld a,b
- 289:10632+7	32F6  E63F    	    and 3fh         
- 290:10639+7	32F8  F640    	    or 40h          ; write bit
- 291:10646+11	32FA  D381    	    out (0x81),a
- 292:10657+7	32FC  3E20    	    ld a, ' '
- 293:10664+11	32FE  D380    	    out (0x80),a
- 294:10675+17	3300  CD1209  	    call VDPWait
- 295:10692+6	3303  03      	    inc bc
- 296:				
- 297:10698+4	3304  60      	    ld h,b
- 298:10702+4	3305  69      	    ld l,c
- 299:10706+10	3306  11C03B  	    ld de, 0x3800 + 960   ; buffer end
- 300:10716+15	3309  ED52    	    sbc hl, de
- 301:10731+10	330B  C2F232  	    jp nz, TermClearLoop
- 302:				
- 303:10741+4	330E  AF      	    xor a
- 304:10745+13	330F  32E040  	    ld (TermCurrentX), a
- 305:10758+13	3312  32E140  	    ld (TermCurrentY), a
- 306:				
- 307:10771+17	3315  CDE207  	    call TermSetCursor
- 308:				
+ 271:     -	32EE  00      	    defb 00000000b
+ 272:				    
+ 273:				
+ 274:     -	32EF          	TermClear:
+ 275:10519+10	32EF  010038  	    ld bc, 0x3800
+ 276:     -	32F2          	TermClearLoop:
+ 277:10529+4	32F2  79      	    ld a,c          ; setup VDP addressh
+ 278:10533+11	32F3  D381    	    out (0x81),a
+ 279:10544+4	32F5  78      	    ld a,b
+ 280:10548+7	32F6  E63F    	    and 3fh         
+ 281:10555+7	32F8  F640    	    or 40h          ; write bit
+ 282:10562+11	32FA  D381    	    out (0x81),a
+ 283:10573+7	32FC  3E20    	    ld a, ' '
+ 284:10580+11	32FE  D380    	    out (0x80),a
+ 285:10591+17	3300  CD0209  	    call VDPWait
+ 286:10608+6	3303  03      	    inc bc
+ 287:				
+ 288:10614+4	3304  60      	    ld h,b
+ 289:10618+4	3305  69      	    ld l,c
+ 290:10622+10	3306  11C03B  	    ld de, 0x3800 + 960   ; buffer end
+ 291:10632+15	3309  ED52    	    sbc hl, de
+ 292:10647+10	330B  C2F232  	    jp nz, TermClearLoop
+ 293:				
+ 294:10657+4	330E  AF      	    xor a
+ 295:10661+13	330F  32E040  	    ld (TermCurrentX), a
+ 296:10674+13	3312  32E140  	    ld (TermCurrentY), a
+ 297:				
+ 298:10687+17	3315  CDE207  	    call TermSetCursor
+ 299:				
 **** main.asm ****
- 449:10788+10	3318  C9      	    ret
+ 449:10704+10	3318  C9      	    ret
  450:				;.include "ide.s"
  451:				;Strings
  452:     -	3319          	MSG_CLEAR:
@@ -4877,8 +4871,8 @@ Statistics:
 
      4	passes
      0	jr promotions
-   254	symbols
-  5063	bytes
+   256	symbols
+  5044	bytes
 
 
 
@@ -5011,14 +5005,14 @@ TermPrintStr     7ED      2029
 TermPrintStr_EXIT  7FB      2043
 TermPrintStr_LOOP  7EF      2031
 TermScroll       8A1      2209
-TermScrollClearLine  8EA      2282
-TermScrollClearLineLoop  8ED      2285
-TermScrollLine   8AC      2220
+TermScrollClearLine  8E2      2274
+TermScrollClearLineLoop  8E5      2277
+TermScrollLine   8A4      2212
 TermSetCursor    7E2      2018
 TermVarMemoryLocation=40E0      16608
 TermVarTemplate  7A0      1952
 TermVarTemplateEnd 40E4      16612
-TitleMessage     917      2327
+TitleMessage     904      2308
 Tms16k         =80        128
 TmsBackground   28AB      10411
 TmsBitmap       298E      10638
@@ -5108,7 +5102,7 @@ TmsSpriteMag   =01        1
 TmsSpritePatternAddr E40A      58378
 TmsSpritePatternReg=86        134
 TmsStrOut       2A86      10886
-TmsSubs          990      2448
+TmsSubs          97D      2429
 TmsTextColor    2A5C      10844
 TmsTextFlags   =D0        208
 TmsTextMode     2946      10566
@@ -5132,7 +5126,9 @@ TmsXYAddr       2ADE      10974
 VAR_CONSOLE_BAUD=10        16
 VDPTextBufferEnd=3B98      15256
 VDPTextBufferStart=00        0
-VDPWait          912      2322
+VDPWait          902      2306
+VDP_MEM        =81        129
+VDP_REG        =80        128
 init            00        0
 init_console     590      1424
 init_led         58C      1420

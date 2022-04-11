@@ -3,10 +3,6 @@
 ; A contains char
 ; Destroys A
 print_char:
-    push af
-    out (IO_SIO0B_D),a
-    call print_wait_out
-    pop af
     call vdp_char
     ret
 ; HL contains pointer to string
@@ -23,27 +19,28 @@ print_str_end:
     ret
 
 print_clear:
-    ld hl, [MSG_CLEAR]
-    call print_str
+    ;NOT IMPLEMENTED
+    ;ld hl, [MSG_CLEAR]
+    ;call print_str
     ret
 
 print_newLine:
-    ld a,10
-    call print_char
-    ld a,13
-    call print_char
+    xor a               
+    ld (var_curserx),a
+    ld a,(var_cursery)
+    cp 23
+    jp z,print_newLine_scroll
+    inc a
+    ld (var_cursery),a    
+    call vdp_cursor_move
     ret
-; destroys a
-print_wait_out:
-    ; check for TX buffer empty
-    sub a ;clear a, write into WR0: select RR0
-    inc a ;select RR1
-    out (IO_SIO0B_C),A
-    in A,(IO_SIO0B_C) ;read RRx
-    bit 0,A
-    jr z,print_wait_out
-    ret
+print_newLine_scroll:
+    call vdp_scroll
+    ld a,23
+    ld (var_cursery),a  
+    call vdp_cursor_move
 
+    ret
 print_a_hex:
     push af
     push bc
@@ -66,14 +63,18 @@ read_char:
     in a, (IO_SIO0B_D)  ; read char if avail
     ret                 ; return
 
-;MSG_CRSR_0:
-;    db 0x1B, "[?25h",0
-;MSG_CRSR_1:
-;    db 0x1B, "[?25l",0
-MSG_CLEAR:
-    db 27, '[2J', 27, '[H',0
-
-
+print_delete:
+    ld a,(var_curserx) 
+    cp 0
+    jp c,print_delete_end
+    dec a
+    ld (var_curserx),a
+    call vdp_cursor_move
+    ld a, ' '
+    out (VDP_MEM),a
+    call vdp_cursor_move
+print_delete_end:
+    ret
 
 ; Serial Util Functions
 A_RTS_OFF:

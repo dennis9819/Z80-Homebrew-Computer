@@ -29,8 +29,15 @@ var_buffer_len:
     defb 0
 var_last_char:
     defb 0
-var_buffer:
+var_curserx:
     defb 0
+var_cursery:
+    defb 0
+var_scratch:
+    defs 16 ;16 bytes space for scratch vars
+var_buffer:
+    defb 0  ;var lentgh 
+
 
 mon_var_template_end:
     dephase
@@ -90,7 +97,7 @@ mon_start_ram_loop:
     ;template copy done
 
 mon_start_complete:
-    
+    call vdpconsole_init
     ;call print_clear
     ld hl, [STR_Banner_Start]
     call print_str
@@ -109,6 +116,7 @@ AY0_WRITE_REG:
     RET
 
 PROMPT_BEGIN:
+    call print_newLine
     call A_RTS_ON
     ld a,'>'
     call print_char
@@ -155,12 +163,13 @@ PROMPT_BEGIN_READ_BACKSPACE:
     add hl,de   ;hl now contains pointer to last position in buffer
     xor a       ; store null byte to current location
     ld (hl),a
-    ld a, 0x08
-    call print_char
-    ld a, 0x20
-    call print_char
-    ld a, 0x08
-    call print_char
+    call print_delete
+    ;ld a, 0x08
+    ;call print_char
+    ;ld a, 0x20
+    ;call print_char
+    ;ld a, 0x08
+    ;call print_char
     jp PROMPT_BEGIN_READ_LOOP
 
 PROMPT_BEGIN_READ_PROCESS:
@@ -213,6 +222,7 @@ CMD_EXEC:
     jp (hl)
 
 CMD_VIEW:
+    call print_newLine
     ld hl,var_buffer+1      ;load 1st byte
     call DHEX_TO_BYTE       
     ld b,a                  ;store result in b
@@ -258,7 +268,7 @@ CMD_VIEW_ROW:
     call print_a_hex
     ld a, ' '
     call print_char
-    ld c, 16                 ;column counter
+    ld c, 8                 ;column counter
 CMD_VIEW_ROW_LOOP:
     ld a,(hl)
     call print_a_hex
@@ -369,17 +379,18 @@ CMD_SYNTAX_ERROR:
 
 
 Includes:
-.include "console.s"
+.include "vdpconsole.s"
 .include "conversions.s"
+.include "vdptext.s"
 ; Strings
 STR_Banner_Start:
-    db "Z8C Monitor V2 by Dennis Gunia (2022)",10,13,0
+    db "Z8C Monitor V2 by Dennis Gunia (2022)",0
 STR_SyntaxError:
-    db "syn?",10,13,0
+    db "syn?",0
 STR_Unknown:
-    db "cmd?",10,13,0
+    db "cmd?",0
 STR_HEXDUMP_HEADER:
-    db 13,10,'BASE 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F',0
+    db 'BASE 0  1  2  3  4  5  6  7',0
 
 .include "xmodem.s"
 ;.include "debug.s"
