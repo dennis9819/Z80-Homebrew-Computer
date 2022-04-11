@@ -246,12 +246,13 @@ TermScrollClearLineLoop:
     sbc hl, de
 
     jp nz, TermScrollClearLineLoop
+
     ret
 
 VDPWait:
-    nop
-    nop
-    nop
+    ;nop
+    ;nop
+    ;nop
     nop
     ret
 
