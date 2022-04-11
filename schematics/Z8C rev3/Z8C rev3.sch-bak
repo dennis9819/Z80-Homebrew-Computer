@@ -38,15 +38,15 @@ F0 "IO1" 50
 F1 "file622409DB.sch" 50
 $EndSheet
 $Sheet
-S 5750 800  1350 550 
-U 624F3E6F
-F0 "PS2+FPU" 50
-F1 "file624F3E6E.sch" 50
-$EndSheet
-$Sheet
 S 4250 1550 1350 500 
 U 62109D9B
 F0 "Sound" 50
 F1 "file62109D9A.sch" 50
+$EndSheet
+$Sheet
+S 5750 800  1350 550 
+U 63668A6A
+F0 "Expansion" 50
+F1 "file63668A69.sch" 50
 $EndSheet
 $EndSCHEMATC
