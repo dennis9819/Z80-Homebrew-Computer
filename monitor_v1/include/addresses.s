@@ -38,3 +38,14 @@ VDP_MEM     equ 0x80
 
 PROG_ROM_START equ 0x0100
 PROG_MEM_START equ 04000h
+
+IO_PIO_0_A_D equ 0x60
+IO_PIO_0_A_C equ 0x61
+IO_PIO_0_B_D equ 0x62
+IO_PIO_0_B_C equ 0x63
+
+IO_PIO_1_A_D equ 0x64   ;PS2
+IO_PIO_1_A_C equ 0x65
+IO_PIO_1_B_D equ 0x66
+IO_PIO_1_B_C equ 0x67
+

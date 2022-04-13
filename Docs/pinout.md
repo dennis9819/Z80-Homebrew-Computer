@@ -4,7 +4,7 @@
 
 Head1
 
-    NC      CTC_CLK
+    IRQ0    CTC_CLK
     NC      HALT
     NC      BUSACK
     NC      BUSREQ
@@ -32,7 +32,7 @@ Head1
 
 0b00100000
 
-
+IRQ0 -> VDP
 
 
 

@@ -58,6 +58,7 @@ vdpconsole_init:
     ld b, TmsCtrl1Reg
     call vdp_reg_write  ; write to reg 1
 
+    ;ld a,0xFC           ;white,blue
     ;ld a,0xF4           ;white,purple
     ld a,0xF0           ;white,black
     ld b, TmsColorReg
@@ -102,6 +103,8 @@ vdpconsole_init:
     ;copy charset to video ram
     ;TmsFont is start symbol of charset
     ld hl,[TmsFont] ;HL contains start addr of font
+    ld bc,TmsTextPatternLen
+    ld de, TmsPatternLoc    ;setup start addr
     call vdp_setup_font
 
     ;clear memory
@@ -133,16 +136,17 @@ vdp_reg_write:
     ret
 
 vdp_wait:
-    ;nop
-    ;nop
+    nop
+    nop
     ;nop
     ;nop
     ret
 
 ;HL contianst start addr of font
+;BC Length
+;DE start location
 vdp_setup_font:
-    ld bc,TmsTextPatternLen
-    ld de, TmsPatternLoc    ;setup start addr
+    
     ld a,e      ;load lsb
     out (VDP_REG), a
     ld a,d      ;load msb
@@ -232,6 +236,15 @@ vdp_cursor_move:
     out (VDP_REG),a
     pop de
     pop hl
+    ret
+
+; HL contains address
+vdp_address:
+    ld a,l
+    out (VDP_REG),a
+    ld a,h
+    or 0x40
+    out (VDP_REG),a  
     ret
 
 vdp_char:
@@ -335,5 +348,33 @@ vdp_scroll_clear_l24_loop:
 
     pop de
     pop bc
+    pop hl
+    ret
+
+
+vdp_im2_pos:
+    push hl
+    push de
+    ld hl,0
+    ld d,0
+    ld a,(var_cursery)
+    ld e,a
+    add hl,de   ;  Y x 1
+    add hl,hl   ;x2
+    add hl,hl   ;x4
+    add hl,hl   ;x8
+    add hl,hl   ;x16
+    add hl,hl   ;x32 
+    ld a,(var_curserx)
+    ld e,a
+    add hl,de   ;add x
+    ld de, TmsNameLoc
+    add hl,de   ;add table offset
+    ld a,l
+    out (VDP_REG),a
+    ld a,h
+    or 0x40
+    out (VDP_REG),a
+    pop de
     pop hl
     ret

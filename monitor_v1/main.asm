@@ -101,6 +101,10 @@ mon_start_complete:
     ;call print_clear
     ld hl, [STR_Banner_Start]
     call print_str
+
+
+    ;jp splash_run
+    jp ps2demo_run
     ;call debug_init
     call PROMPT_BEGIN
     ;halt CPU if prompt exits
@@ -382,6 +386,9 @@ Includes:
 .include "vdpconsole.s"
 .include "conversions.s"
 .include "vdptext.s"
+.include "ps2.s"
+.include "prg_ps2demo.s"
+.include "prg_splash.s"
 ; Strings
 STR_Banner_Start:
     db "Z8C Monitor V2 by Dennis Gunia (2022)",0
