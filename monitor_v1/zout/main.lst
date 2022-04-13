@@ -152,12 +152,12 @@
   99:     -	0071          	mon_start_complete:
  100:  421+17	0071  CDE602  	    call vdpconsole_init
  101:				    ;call print_clear
- 102:  438+10	0074  210C0F  	    ld hl, [STR_Banner_Start]
+ 102:  438+10	0074  21070F  	    ld hl, [STR_Banner_Start]
  103:  448+17	0077  CD2402  	    call print_str
  104:				
  105:				
  106:				    ;jp splash_run
- 107:  465+10	007A  C3080D  	    jp ps2demo_run
+ 107:  465+10	007A  C3030D  	    jp ps2demo_run
  108:				    ;call debug_init
  109:  475+17	007D  CD8900  	    call PROMPT_BEGIN
  110:				    ;halt CPU if prompt exits
@@ -246,11 +246,11 @@
  193: 1005+7	00F3  FE6F    	    cp 'o'              ;out IO
  194: 1012+10	00F5  CACF01  	    jp z, CMD_IO_WRITE
  195: 1022+7	00F8  FE78    	    cp 'x'              ;start xmodem
- 196: 1029+10	00FA  CA580F  	    jp z, xmodem_init
+ 196: 1029+10	00FA  CA530F  	    jp z, xmodem_init
  197:				
  198:				
  199: 1039+17	00FD  CD3002  	    call print_newLine
- 200: 1056+10	0100  21370F  	    ld hl, [STR_Unknown]
+ 200: 1056+10	0100  21320F  	    ld hl, [STR_Unknown]
  201: 1066+17	0103  CD2402  	    call print_str
  202: 1083+10	0106  C38900  	    jp PROMPT_BEGIN
  203:				
@@ -307,7 +307,7 @@
  254: 1421+10	0155  C21402  	    jp nz, CMD_SYNTAX_ERROR  
  255:				    
  256:				    ;draw header
- 257: 1431+10	0158  213C0F  	    ld hl,[STR_HEXDUMP_HEADER]
+ 257: 1431+10	0158  21370F  	    ld hl,[STR_HEXDUMP_HEADER]
  258: 1441+17	015B  CD2402  	    call print_str
  259:				
  260: 1458+10	015E  F1      	    pop af
@@ -429,7 +429,7 @@
  376:				
  377:     -	0214          	CMD_SYNTAX_ERROR:
  378: 2284+17	0214  CD3002  	    call print_newLine
- 379: 2301+10	0217  21320F  	    ld hl, [STR_SyntaxError]
+ 379: 2301+10	0217  212D0F  	    ld hl, [STR_SyntaxError]
  380: 2311+17	021A  CD2402  	    call print_str
  381: 2328+10	021D  C38900  	    jp PROMPT_BEGIN
  382:				
@@ -3579,337 +3579,339 @@
   15:				
   16: 5623+7	0C8C  3E0C    	    ld a, 0x0C  ;disable CLK_LOW, DATA_LOW pulldown (RX enable)
   17: 5630+11	0C8E  D366    	    out (IO_PIO_1_B_D), a
-  18: 5641+17	0C90  CDFE0C  	    call keyboard_off
+  18: 5641+17	0C90  CDF90C  	    call keyboard_off
   19:				
   20: 5658+10	0C93  C9      	    ret
   21:				
   22:				; a contains result
   23:     -	0C94          	keyboard_read:
-  24: 5668+17	0C94  CD030D  	    call keyboard_on
-  25: 5685+17	0C97  CDCE0C  	    call keyboard_wait_clk
-  26: 5702+11	0C9A  DB66    	    in a,(IO_PIO_1_B_D) ;read data bit
-  27: 5713+7	0C9C  E602    	    and 0x02
-  28: 5720+10	0C9E  C2C80C  	    jp nz, keyboard_read_fault  ;if startbit not 0 then fault
-  29: 5730+7	0CA1  0600    	    ld b,0      ;b is buffer for input data
-  30: 5737+7	0CA3  0E08    	    ld c,8      ;c is counter for data bytes
-  31:     -	0CA5          	keyboard_read_loop:
-  32: 5744+17	0CA5  CDCE0C  	    call keyboard_wait_clk
-  33: 5761+11	0CA8  DB66    	    in a,(IO_PIO_1_B_D) ;read data bit
-  34: 5772+4	0CAA  0F      	    rrca        ;carry now contains the clock bit
-  35: 5776+4	0CAB  0F      	    rrca        ;carry now contains the received bit
-  36: 5780+4	0CAC  78      	    ld a,b      ;load buffer in a
-  37: 5784+4	0CAD  1F      	    rra         ;carry bit is now appended to buffer
-  38: 5788+4	0CAE  47      	    ld b,a      ;store a to buffer
-  39: 5792+4	0CAF  0D      	    dec c       ;count chars
-  40: 5796+10	0CB0  C2A50C  	    jp nz, keyboard_read_loop   ;repeat for 8 times
-  41:     -	0CB3          	keyboard_read_eol:
-  42: 5806+17	0CB3  CDCE0C  	    call keyboard_wait_clk      ;ignore parity for now
-  43: 5823+17	0CB6  CDCE0C  	    call keyboard_wait_clk    
-  44: 5840+11	0CB9  DB66    	    in a,(IO_PIO_1_B_D) ;read data bit
-  45: 5851+7	0CBB  E602    	    and 0x02
-  46: 5858+10	0CBD  CAC80C  	    jp z, keyboard_read_fault  ;if stopbit not 1 then fault
-  47:				
-  48: 5868+17	0CC0  CDDD0C  	    call keyboard_wait_clk_high_only
-  49: 5885+17	0CC3  CDFE0C  	    call keyboard_off
-  50: 5902+4	0CC6  78      	    ld a,b  ;else load buffer to a
-  51: 5906+10	0CC7  C9      	    ret     ;and return
-  52:				
-  53:     -	0CC8          	keyboard_read_fault:
-  54: 5916+17	0CC8  CDE50C  	    call keyboard_abort
-  55: 5933+7	0CCB  3EFF    	    ld a,0xFF
-  56: 5940+10	0CCD  C9      	    ret
-  57:				
-  58:     -	0CCE          	keyboard_wait_clk:         
-  59:     -	0CCE          	keyboard_wait_clk_high:             ;wait until high
-  60: 5950+11	0CCE  DB66    	    in a,(IO_PIO_1_B_D)             
-  61: 5961+7	0CD0  E601    	    and 0x01
-  62: 5968+10	0CD2  CACE0C  	    jp z,keyboard_wait_clk_high
-  63:     -	0CD5          	keyboard_wait_clk_low:              ;wait until low
-  64: 5978+11	0CD5  DB66    	    in a,(IO_PIO_1_B_D)
-  65: 5989+7	0CD7  E601    	    and 0x01
-  66: 5996+10	0CD9  C2D50C  	    jp nz,keyboard_wait_clk_low
-  67: 6006+10	0CDC  C9      	    ret
-  68:				
-  69:				
-  70:     -	0CDD          	keyboard_wait_clk_high_only:             ;wait until high
-  71: 6016+11	0CDD  DB66    	    in a,(IO_PIO_1_B_D)             
-  72: 6027+7	0CDF  E601    	    and 0x01
-  73: 6034+10	0CE1  CACE0C  	    jp z,keyboard_wait_clk_high
-  74: 6044+10	0CE4  C9      	    ret
-  75:				
-  76:				
-  77:     -	0CE5          	keyboard_abort:
-  78: 6054+11	0CE5  C5      	    push bc
-  79: 6065+7	0CE6  0600    	    ld b,0
-  80: 6072+7	0CE8  0E01    	    ld c,1
-  81: 6079+7	0CEA  3E08    	    ld a,0x08   ;activate clock pulldown
-  82: 6086+11	0CEC  D366    	    out (IO_PIO_1_B_D),a
-  83: 6097+10	0CEE  210B00  	    ld hl,11
-  84:     -	0CF1          	keyboard_abort_delay:               ;35-T-States    = 105326.028571 loops per sec
-  85:				                                    ;  = 0.00000949433 s/loop
-  86: 6107+15	0CF1  ED42    	    sbc hl,bc                       ;15 T-States
-  87: 6122+4	0CF3  00      	    nop                             ;4  T-States
-  88: 6126+4	0CF4  00      	    nop                             ;4  T-States
-  89: 6130+10	0CF5  C2F10C  	    jp nz, keyboard_abort_delay     ;12 T-States
-  90:				
-  91: 6140+7	0CF8  3E0C    	    ld a,0x0C   ;deactivate clock pulldown
-  92: 6147+11	0CFA  D366    	    out (IO_PIO_1_B_D),a
-  93: 6158+10	0CFC  C1      	    pop bc
-  94: 6168+10	0CFD  C9      	    ret
-  95:				
-  96:				
-  97:     -	0CFE          	keyboard_off:
-  98: 6178+7	0CFE  3E08    	    ld a,0x08   ;activate clock pulldown
-  99: 6185+11	0D00  D366    	    out (IO_PIO_1_B_D),a
- 100: 6196+10	0D02  C9      	    ret
- 101:				
- 102:     -	0D03          	keyboard_on:
- 103: 6206+7	0D03  3E0C    	    ld a,0x0C   ;activate clock pulldown
- 104: 6213+11	0D05  D366    	    out (IO_PIO_1_B_D),a
+  24: 5668+17	0C94  CDFE0C  	    call keyboard_on
+  25: 5685+4	0C97  00      	    nop
+  26: 5689+17	0C98  CDC90C  	    call keyboard_wait_clk
+  27: 5706+11	0C9B  DB66    	    in a,(IO_PIO_1_B_D) ;read data bit
+  28: 5717+7	0C9D  E602    	    and 0x02
+  29: 5724+10	0C9F  C2C30C  	    jp nz, keyboard_read_fault  ;if startbit not 0 then fault
+  30: 5734+7	0CA2  0680    	    ld b,0x80      ;b is buffer for input data
+  31:     -	0CA4          	keyboard_read_loop:
+  32: 5741+17	0CA4  CDC90C  	    call keyboard_wait_clk
+  33: 5758+11	0CA7  DB66    	    in a,(IO_PIO_1_B_D) ;read data bit
+  34: 5769+4	0CA9  0F      	    rrca        ;carry now contains the clock bit
+  35: 5773+4	0CAA  0F      	    rrca        ;carry now contains the received bit
+  36: 5777+4	0CAB  78      	    ld a,b      ;load buffer in a
+  37: 5781+4	0CAC  1F      	    rra         ;carry bit is now appended to buffer
+  38: 5785+4	0CAD  47      	    ld b,a      ;store a to buffer
+  39: 5789+10	0CAE  D2A40C  	    jp nc, keyboard_read_loop   ;repeat for 8 times
+  40:     -	0CB1          	keyboard_read_eol:
+  41: 5799+17	0CB1  CDC90C  	    call keyboard_wait_clk      ;ignore parity for now
+  42: 5816+17	0CB4  CDC90C  	    call keyboard_wait_clk    
+  43: 5833+11	0CB7  DB66    	    in a,(IO_PIO_1_B_D) ;read data bit
+  44: 5844+7	0CB9  E602    	    and 0x02
+  45: 5851+10	0CBB  CAC30C  	    jp z, keyboard_read_fault  ;if stopbit not 1 then fault
+  46:				    ;call keyboard_wait_clk_high_only
+  47:				    ;nop
+  48:				    ;nop
+  49:				    ;nop
+  50:				    ;nop
+  51: 5861+17	0CBE  CDF90C  	    call keyboard_off
+  52: 5878+4	0CC1  78      	    ld a,b  ;else load buffer to a
+  53: 5882+10	0CC2  C9      	    ret     ;and return
+  54:				
+  55:     -	0CC3          	keyboard_read_fault:
+  56: 5892+17	0CC3  CDE00C  	    call keyboard_abort
+  57: 5909+7	0CC6  3EFF    	    ld a,0xFF
+  58: 5916+10	0CC8  C9      	    ret
+  59:				
+  60:     -	0CC9          	keyboard_wait_clk:         
+  61:     -	0CC9          	keyboard_wait_clk_high:             ;wait until high
+  62: 5926+11	0CC9  DB66    	    in a,(IO_PIO_1_B_D)             
+  63: 5937+7	0CCB  E601    	    and 0x01
+  64: 5944+10	0CCD  CAC90C  	    jp z,keyboard_wait_clk_high
+  65:     -	0CD0          	keyboard_wait_clk_low:              ;wait until low
+  66: 5954+11	0CD0  DB66    	    in a,(IO_PIO_1_B_D)
+  67: 5965+7	0CD2  E601    	    and 0x01
+  68: 5972+10	0CD4  C2D00C  	    jp nz,keyboard_wait_clk_low
+  69: 5982+10	0CD7  C9      	    ret
+  70:				
+  71:				
+  72:     -	0CD8          	keyboard_wait_clk_high_only:             ;wait until high
+  73: 5992+11	0CD8  DB66    	    in a,(IO_PIO_1_B_D)             
+  74: 6003+7	0CDA  E601    	    and 0x01
+  75: 6010+10	0CDC  CAC90C  	    jp z,keyboard_wait_clk_high
+  76: 6020+10	0CDF  C9      	    ret
+  77:				
+  78:				
+  79:     -	0CE0          	keyboard_abort:
+  80: 6030+11	0CE0  C5      	    push bc
+  81: 6041+7	0CE1  0600    	    ld b,0
+  82: 6048+7	0CE3  0E01    	    ld c,1
+  83: 6055+7	0CE5  3E08    	    ld a,0x08   ;activate clock pulldown
+  84: 6062+11	0CE7  D366    	    out (IO_PIO_1_B_D),a
+  85: 6073+10	0CE9  210B00  	    ld hl,11
+  86:     -	0CEC          	keyboard_abort_delay:               ;35-T-States    = 105326.028571 loops per sec
+  87:				                                    ;  = 0.00000949433 s/loop
+  88: 6083+15	0CEC  ED42    	    sbc hl,bc                       ;15 T-States
+  89: 6098+4	0CEE  00      	    nop                             ;4  T-States
+  90: 6102+4	0CEF  00      	    nop                             ;4  T-States
+  91: 6106+10	0CF0  C2EC0C  	    jp nz, keyboard_abort_delay     ;12 T-States
+  92:				
+  93: 6116+7	0CF3  3E0C    	    ld a,0x0C   ;deactivate clock pulldown
+  94: 6123+11	0CF5  D366    	    out (IO_PIO_1_B_D),a
+  95: 6134+10	0CF7  C1      	    pop bc
+  96: 6144+10	0CF8  C9      	    ret
+  97:				
+  98:				
+  99:     -	0CF9          	keyboard_off:
+ 100: 6154+7	0CF9  3E08    	    ld a,0x08   ;activate clock pulldown
+ 101: 6161+11	0CFB  D366    	    out (IO_PIO_1_B_D),a
+ 102: 6172+10	0CFD  C9      	    ret
+ 103:				
+ 104:     -	0CFE          	keyboard_on:
+ 105: 6182+7	0CFE  3E0C    	    ld a,0x0C   ;deactivate clock pulldown
+ 106: 6189+11	0D00  D366    	    out (IO_PIO_1_B_D),a
 **** main.asm ****
- 392: 6224+10	0D07  C9      	    ret
+ 392: 6200+10	0D02  C9      	    ret
  393:				.include "prg_ps2demo.s"
 **** include/prg_ps2demo.s ****
-   1:     -	0D08          	ps2demo_run:
-   2: 6234+17	0D08  CD840C  	    call keyboard_init
+   1:     -	0D03          	ps2demo_run:
+   2: 6210+17	0D03  CD840C  	    call keyboard_init
    3:				
-   4:     -	0D0B          	ps2demo_run_loop:
-   5: 6251+17	0D0B  CD940C  	    call keyboard_read
-   6: 6268+17	0D0E  CD5002  	    call print_a_hex
-   7: 6285+17	0D11  CD3002  	    call print_newLine
+   4:     -	0D06          	ps2demo_run_loop:
+   5: 6227+17	0D06  CD940C  	    call keyboard_read
+   6: 6244+17	0D09  CD5002  	    call print_a_hex
+   7: 6261+17	0D0C  CD3002  	    call print_newLine
 **** main.asm ****
- 394: 6302+10	0D14  C30B0D  	    jp ps2demo_run_loop
+ 394: 6278+10	0D0F  C3060D  	    jp ps2demo_run_loop
  395:				.include "prg_splash.s"
 **** include/prg_splash.s ****
    1:				; Z8C Splash-Screen
    2:				
-   3:     -	0D17          	splash_run:
-   4: 6312+7	0D17  3EC0    	    ld a, 11000000b ; Set 16k memory and disable blank blank and Mode I
-   5: 6319+7	0D19  0681    	    ld b,TmsCtrl1Reg
-   6: 6326+17	0D1B  CD5A03  	    call vdp_reg_write  ; write to reg 1
+   3:     -	0D12          	splash_run:
+   4: 6288+7	0D12  3EC0    	    ld a, 11000000b ; Set 16k memory and disable blank blank and Mode I
+   5: 6295+7	0D14  0681    	    ld b,TmsCtrl1Reg
+   6: 6302+17	0D16  CD5A03  	    call vdp_reg_write  ; write to reg 1
    7:				
    8:				    ;clear memory
-   9: 6343+10	0D1E  110038  	    ld de, TmsNameLoc
-  10: 6353+10	0D21  01C03B  	    ld bc, TmsNameLoc+960
-  11: 6363+17	0D24  CD7B03  	    call vdp_tms_clear
+   9: 6319+10	0D19  110038  	    ld de, TmsNameLoc
+  10: 6329+10	0D1C  01C03B  	    ld bc, TmsNameLoc+960
+  11: 6339+17	0D1F  CD7B03  	    call vdp_tms_clear
   12:				
-  13: 6380+10	0D27  110004  	    ld de, TmsPatternLoc + (128*8)    ;setup start addr
-  14: 6390+10	0D2A  210C0E  	    ld hl,[spash_pattern] ;HL contains start addr of spash_pattern
-  15: 6400+10	0D2D  010801  	    ld bc,8 + (32*8)
-  16: 6410+17	0D30  CD6303  	    call vdp_setup_font
+  13: 6356+10	0D22  110004  	    ld de, TmsPatternLoc + (128*8)    ;setup start addr
+  14: 6366+10	0D25  21070E  	    ld hl,[spash_pattern] ;HL contains start addr of spash_pattern
+  15: 6376+10	0D28  010801  	    ld bc,8 + (32*8)
+  16: 6386+17	0D2B  CD6303  	    call vdp_setup_font
   17:				
   18:				    ;create color table entry
-  19: 6427+10	0D33  210020  	    ld hl, TmsColorTableLoc
-  20: 6437+17	0D36  CDBF0B  	    call vdp_address
+  19: 6403+10	0D2E  210020  	    ld hl, TmsColorTableLoc
+  20: 6413+17	0D31  CDBF0B  	    call vdp_address
   21:				
-  22: 6454+7	0D39  0620    	    ld b, 32
-  23:     -	0D3B          	splash_run_ld_clr_loop:
-  24: 6461+7	0D3B  3EF0    	    ld a, 0xF0
-  25: 6468+11	0D3D  D380    	    out (VDP_MEM),a
-  26: 6479+4	0D3F  05      	    dec b
-  27: 6483+4	0D40  78      	    ld a,b
-  28: 6487+7	0D41  FE10    	    cp 16
-  29: 6494+10	0D43  C23B0D  	    jp nz, splash_run_ld_clr_loop
-  30:     -	0D46          	splash_run_ld_clr_loop2:
-  31: 6504+7	0D46  3E90    	    ld a, 0x90
-  32: 6511+11	0D48  D380    	    out (VDP_MEM),a
-  33: 6522+4	0D4A  05      	    dec b
-  34: 6526+10	0D4B  C2460D  	    jp nz, splash_run_ld_clr_loop2
+  22: 6430+7	0D34  0620    	    ld b, 32
+  23:     -	0D36          	splash_run_ld_clr_loop:
+  24: 6437+7	0D36  3EF0    	    ld a, 0xF0
+  25: 6444+11	0D38  D380    	    out (VDP_MEM),a
+  26: 6455+4	0D3A  05      	    dec b
+  27: 6459+4	0D3B  78      	    ld a,b
+  28: 6463+7	0D3C  FE10    	    cp 16
+  29: 6470+10	0D3E  C2360D  	    jp nz, splash_run_ld_clr_loop
+  30:     -	0D41          	splash_run_ld_clr_loop2:
+  31: 6480+7	0D41  3E90    	    ld a, 0x90
+  32: 6487+11	0D43  D380    	    out (VDP_MEM),a
+  33: 6498+4	0D45  05      	    dec b
+  34: 6502+10	0D46  C2410D  	    jp nz, splash_run_ld_clr_loop2
   35:				
   36:				
   37:				    ;print pattern
-  38: 6536+10	0D4E  210038  	    ld hl, TmsNameLoc
-  39: 6546+17	0D51  CDBF0B  	    call vdp_address
-  40: 6563+4	0D54  AF      	    xor a
+  38: 6512+10	0D49  210038  	    ld hl, TmsNameLoc
+  39: 6522+17	0D4C  CDBF0B  	    call vdp_address
+  40: 6539+4	0D4F  AF      	    xor a
   41:				
   42:				
   43:				
-  44: 6567+7	0D55  3E80    	    ld a, 128 ;first tile
-  45: 6574+7	0D57  0600    	    ld b, 0 ;start x
-  46: 6581+7	0D59  0E00    	    ld c, 0 ;start y
-  47: 6588+7	0D5B  1608    	    ld d, 8 ;size x
-  48: 6595+7	0D5D  1E04    	    ld e, 4 ;size y
+  44: 6543+7	0D50  3E80    	    ld a, 128 ;first tile
+  45: 6550+7	0D52  0600    	    ld b, 0 ;start x
+  46: 6557+7	0D54  0E00    	    ld c, 0 ;start y
+  47: 6564+7	0D56  1608    	    ld d, 8 ;size x
+  48: 6571+7	0D58  1E04    	    ld e, 4 ;size y
   49:				
-  50: 6602+13	0D5F  320440  	    ld (var_scratch), a
-  51: 6615+4	0D62  7A      	    ld a,d
-  52: 6619+13	0D63  320540  	    ld (var_scratch + 1), a
+  50: 6578+13	0D5A  320440  	    ld (var_scratch), a
+  51: 6591+4	0D5D  7A      	    ld a,d
+  52: 6595+13	0D5E  320540  	    ld (var_scratch + 1), a
   53:				
-  54: 6632+4	0D66  78      	    ld a,b
-  55: 6636+13	0D67  320240  	    ld (var_curserx), a
-  56: 6649+4	0D6A  79      	    ld a,c
-  57: 6653+13	0D6B  320340  	    ld (var_cursery), a
-  58: 6666+17	0D6E  CD5F0C  	    call vdp_im2_pos
+  54: 6608+4	0D61  78      	    ld a,b
+  55: 6612+13	0D62  320240  	    ld (var_curserx), a
+  56: 6625+4	0D65  79      	    ld a,c
+  57: 6629+13	0D66  320340  	    ld (var_cursery), a
+  58: 6642+17	0D69  CD5F0C  	    call vdp_im2_pos
   59:				    
-  60:     -	0D71          	_pattern_loop_column:
-  61: 6683+13	0D71  3A0440  	    ld a,(var_scratch)
-  62: 6696+11	0D74  D380    	    out (VDP_MEM),a
-  63: 6707+4	0D76  3C      	    inc a
-  64: 6711+13	0D77  320440  	    ld (var_scratch),a
-  65: 6724+4	0D7A  15      	    dec d
-  66: 6728+10	0D7B  CA810D  	    jp z,_pattern_loop_next_row
-  67: 6738+10	0D7E  C3710D  	    jp _pattern_loop_column
+  60:     -	0D6C          	_pattern_loop_column:
+  61: 6659+13	0D6C  3A0440  	    ld a,(var_scratch)
+  62: 6672+11	0D6F  D380    	    out (VDP_MEM),a
+  63: 6683+4	0D71  3C      	    inc a
+  64: 6687+13	0D72  320440  	    ld (var_scratch),a
+  65: 6700+4	0D75  15      	    dec d
+  66: 6704+10	0D76  CA7C0D  	    jp z,_pattern_loop_next_row
+  67: 6714+10	0D79  C36C0D  	    jp _pattern_loop_column
   68:				
-  69:     -	0D81          	_pattern_loop_next_row:
-  70: 6748+13	0D81  3A0540  	    ld a, (var_scratch + 1)
-  71: 6761+4	0D84  57      	    ld d,a
-  72: 6765+4	0D85  1D      	    dec e
-  73: 6769+10	0D86  CA960D  	    jp z,_pattern_loop_next_end
+  69:     -	0D7C          	_pattern_loop_next_row:
+  70: 6724+13	0D7C  3A0540  	    ld a, (var_scratch + 1)
+  71: 6737+4	0D7F  57      	    ld d,a
+  72: 6741+4	0D80  1D      	    dec e
+  73: 6745+10	0D81  CA910D  	    jp z,_pattern_loop_next_end
   74:				    
-  75: 6779+13	0D89  3A0340  	    ld a,(var_cursery)
-  76: 6792+4	0D8C  3C      	    inc a
-  77: 6796+13	0D8D  320340  	    ld (var_cursery), a
-  78: 6809+17	0D90  CD5F0C  	    call vdp_im2_pos
+  75: 6755+13	0D84  3A0340  	    ld a,(var_cursery)
+  76: 6768+4	0D87  3C      	    inc a
+  77: 6772+13	0D88  320340  	    ld (var_cursery), a
+  78: 6785+17	0D8B  CD5F0C  	    call vdp_im2_pos
   79:				
-  80: 6826+10	0D93  C3710D  	    jp _pattern_loop_column
+  80: 6802+10	0D8E  C36C0D  	    jp _pattern_loop_column
   81:				
-  82:     -	0D96          	_pattern_loop_next_end:
+  82:     -	0D91          	_pattern_loop_next_end:
   83:				
-  84: 6836+7	0D96  3E09    	    ld a,9
-  85: 6843+13	0D98  320240  	    ld (var_curserx), a
-  86: 6856+7	0D9B  3E00    	    ld a,0
-  87: 6863+13	0D9D  320340  	    ld (var_cursery), a
-  88: 6876+17	0DA0  CD5F0C  	    call vdp_im2_pos
-  89: 6893+10	0DA3  21D00D  	    ld hl, [STR_Title1]
-  90: 6903+17	0DA6  CD2402  	    call print_str
+  84: 6812+7	0D91  3E09    	    ld a,9
+  85: 6819+13	0D93  320240  	    ld (var_curserx), a
+  86: 6832+7	0D96  3E00    	    ld a,0
+  87: 6839+13	0D98  320340  	    ld (var_cursery), a
+  88: 6852+17	0D9B  CD5F0C  	    call vdp_im2_pos
+  89: 6869+10	0D9E  21CB0D  	    ld hl, [STR_Title1]
+  90: 6879+17	0DA1  CD2402  	    call print_str
   91:				
-  92: 6920+7	0DA9  3E02    	    ld a,2
-  93: 6927+13	0DAB  320340  	    ld (var_cursery), a
-  94: 6940+7	0DAE  3E09    	    ld a,9
-  95: 6947+13	0DB0  320240  	    ld (var_curserx), a
-  96: 6960+17	0DB3  CD5F0C  	    call vdp_im2_pos
-  97: 6977+10	0DB6  21E40D  	    ld hl, [STR_Title2]
-  98: 6987+17	0DB9  CD2402  	    call print_str
-  99: 7004+7	0DBC  3E03    	    ld a,3
- 100: 7011+13	0DBE  320340  	    ld (var_cursery), a
- 101: 7024+7	0DC1  3E09    	    ld a,9
- 102: 7031+13	0DC3  320240  	    ld (var_curserx), a
- 103: 7044+17	0DC6  CD5F0C  	    call vdp_im2_pos
- 104: 7061+10	0DC9  21F90D  	    ld hl, [STR_Title3]
- 105: 7071+17	0DCC  CD2402  	    call print_str
- 106: 7088+4	0DCF  76      	    halt
+  92: 6896+7	0DA4  3E02    	    ld a,2
+  93: 6903+13	0DA6  320340  	    ld (var_cursery), a
+  94: 6916+7	0DA9  3E09    	    ld a,9
+  95: 6923+13	0DAB  320240  	    ld (var_curserx), a
+  96: 6936+17	0DAE  CD5F0C  	    call vdp_im2_pos
+  97: 6953+10	0DB1  21DF0D  	    ld hl, [STR_Title2]
+  98: 6963+17	0DB4  CD2402  	    call print_str
+  99: 6980+7	0DB7  3E03    	    ld a,3
+ 100: 6987+13	0DB9  320340  	    ld (var_cursery), a
+ 101: 7000+7	0DBC  3E09    	    ld a,9
+ 102: 7007+13	0DBE  320240  	    ld (var_curserx), a
+ 103: 7020+17	0DC1  CD5F0C  	    call vdp_im2_pos
+ 104: 7037+10	0DC4  21F40D  	    ld hl, [STR_Title3]
+ 105: 7047+17	0DC7  CD2402  	    call print_str
+ 106: 7064+4	0DCA  76      	    halt
  107:				
  108:				
- 109:     -	0DD0          	STR_Title1:
- 110:     -	0DD0  4120486F	    db 'A Homebrew Computer',0
+ 109:     -	0DCB          	STR_Title1:
+ 110:     -	0DCB  4120486F	    db 'A Homebrew Computer',0
 	              6D656272
 	              65772043
 	              6F6D7075
 	              74657200
- 111:     -	0DE4          	STR_Title2:
- 112:     -	0DE4  62792044	    db 'by Dennis Gunia 2022',0
+ 111:     -	0DDF          	STR_Title2:
+ 112:     -	0DDF  62792044	    db 'by Dennis Gunia 2022',0
 	              656E6E69
 	              73204775
 	              6E696120
 	              32303232
 	              00
- 113:     -	0DF9          	STR_Title3:
- 114:     -	0DF9  7777772E	    db 'www.dennisgunia.de',0
+ 113:     -	0DF4          	STR_Title3:
+ 114:     -	0DF4  7777772E	    db 'www.dennisgunia.de',0
 	              64656E6E
 	              69736775
 	              6E69612E
 	              646500
  115:				
- 116:     -	0E0C          	spash_pattern:
- 117:     -	0E0C          	tile_0: ;(0,0)
- 118:     -	0E0C  003F7F7F	    db 0,63,127,127,127,63,0,0
+ 116:     -	0E07          	spash_pattern:
+ 117:     -	0E07          	tile_0: ;(0,0)
+ 118:     -	0E07  003F7F7F	    db 0,63,127,127,127,63,0,0
 	              7F3F0000
- 119:     -	0E14          	tile_1: ;(1,0)
- 120:     -	0E14  00FFFFFF	    db 0,255,255,255,255,255,3,7
+ 119:     -	0E0F          	tile_1: ;(1,0)
+ 120:     -	0E0F  00FFFFFF	    db 0,255,255,255,255,255,3,7
 	              FFFF0307
- 121:     -	0E1C          	tile_2: ;(2,0)
- 122:     -	0E1C  00FCFEFE	    db 0,252,254,254,254,253,253,249
+ 121:     -	0E17          	tile_2: ;(2,0)
+ 122:     -	0E17  00FCFEFE	    db 0,252,254,254,254,253,253,249
 	              FEFDFDF9
- 123:     -	0E24          	tile_3: ;(3,0)
- 124:     -	0E24  000F7FFF	    db 0,15,127,255,255,252,248,248
+ 123:     -	0E1F          	tile_3: ;(3,0)
+ 124:     -	0E1F  000F7FFF	    db 0,15,127,255,255,252,248,248
 	              FFFCF8F8
- 125:     -	0E2C          	tile_4: ;(4,0)
- 126:     -	0E2C  00FFFFFF	    db 0,255,255,255,255,127,63,63
+ 125:     -	0E27          	tile_4: ;(4,0)
+ 126:     -	0E27  00FFFFFF	    db 0,255,255,255,255,127,63,63
 	              FF7F3F3F
- 127:     -	0E34          	tile_5: ;(5,0)
- 128:     -	0E34  00FFFFFF	    db 0,255,255,255,255,255,15,31
+ 127:     -	0E2F          	tile_5: ;(5,0)
+ 128:     -	0E2F  00FFFFFF	    db 0,255,255,255,255,255,15,31
 	              FFFF0F1F
- 129:     -	0E3C          	tile_6: ;(6,0)
- 130:     -	0E3C  00FFFFFF	    db 0,255,255,255,255,255,240,224
+ 129:     -	0E37          	tile_6: ;(6,0)
+ 130:     -	0E37  00FFFFFF	    db 0,255,255,255,255,255,240,224
 	              FFFFF0E0
- 131:     -	0E44          	tile_7: ;(7,0)
- 132:     -	0E44  00E0FCFE	    db 0,224,252,254,254,254,28,0
+ 131:     -	0E3F          	tile_7: ;(7,0)
+ 132:     -	0E3F  00E0FCFE	    db 0,224,252,254,254,254,28,0
 	              FEFE1C00
- 133:     -	0E4C          	tile_8: ;(0,1)
- 134:     -	0E4C  00000000	    db 0,0,0,0,0,0,1,3
+ 133:     -	0E47          	tile_8: ;(0,1)
+ 134:     -	0E47  00000000	    db 0,0,0,0,0,0,1,3
 	              00000103
- 135:     -	0E54          	tile_9: ;(1,1)
- 136:     -	0E54  0F1F3F3F	    db 15,31,63,63,127,255,254,252
+ 135:     -	0E4F          	tile_9: ;(1,1)
+ 136:     -	0E4F  0F1F3F3F	    db 15,31,63,63,127,255,254,252
 	              7FFFFEFC
- 137:     -	0E5C          	tile_10: ;(2,1)
- 138:     -	0E5C  F1E1C0C0	    db 241,225,192,192,128,0,0,1
+ 137:     -	0E57          	tile_10: ;(2,1)
+ 138:     -	0E57  F1E1C0C0	    db 241,225,192,192,128,0,0,1
 	              80000001
- 139:     -	0E64          	tile_11: ;(3,1)
- 140:     -	0E64  F8F8FC7F	    db 248,248,252,127,63,127,255,248
+ 139:     -	0E5F          	tile_11: ;(3,1)
+ 140:     -	0E5F  F8F8FC7F	    db 248,248,252,127,63,127,255,248
 	              3F7FFFF8
- 141:     -	0E6C          	tile_12: ;(4,1)
- 142:     -	0E6C  3F3F7EFC	    db 63,63,126,252,248,252,254,63
+ 141:     -	0E67          	tile_12: ;(4,1)
+ 142:     -	0E67  3F3F7EFC	    db 63,63,126,252,248,252,254,63
 	              F8FCFE3F
- 143:     -	0E74          	tile_13: ;(5,1)
- 144:     -	0E74  1F3F3F3F	    db 31,63,63,63,63,63,63,63
+ 143:     -	0E6F          	tile_13: ;(5,1)
+ 144:     -	0E6F  1F3F3F3F	    db 31,63,63,63,63,63,63,63
 	              3F3F3F3F
- 145:     -	0E7C          	tile_14: ;(6,1)
- 146:     -	0E7C  C0800000	    db 192,128,0,0,0,0,0,0
+ 145:     -	0E77          	tile_14: ;(6,1)
+ 146:     -	0E77  C0800000	    db 192,128,0,0,0,0,0,0
 	              00000000
- 147:     -	0E84          	tile_15: ;(7,1)
- 148:     -	0E84  00000000	    db 0,0,0,0,0,0,0,0
+ 147:     -	0E7F          	tile_15: ;(7,1)
+ 148:     -	0E7F  00000000	    db 0,0,0,0,0,0,0,0
 	              00000000
- 149:     -	0E8C          	tile_16: ;(0,2)
- 150:     -	0E8C  03070F1F	    db 3,7,15,31,63,127,127,127
+ 149:     -	0E87          	tile_16: ;(0,2)
+ 150:     -	0E87  03070F1F	    db 3,7,15,31,63,127,127,127
 	              3F7F7F7F
- 151:     -	0E94          	tile_17: ;(1,2)
- 152:     -	0E94  F8F8F0E0	    db 248,248,240,224,192,255,255,255
+ 151:     -	0E8F          	tile_17: ;(1,2)
+ 152:     -	0E8F  F8F8F0E0	    db 248,248,240,224,192,255,255,255
 	              C0FFFFFF
- 153:     -	0E9C          	tile_18: ;(2,2)
- 154:     -	0E9C  03030303	    db 3,3,3,3,3,255,255,255
+ 153:     -	0E97          	tile_18: ;(2,2)
+ 154:     -	0E97  03030303	    db 3,3,3,3,3,255,255,255
 	              03FFFFFF
- 155:     -	0EA4          	tile_19: ;(3,2)
- 156:     -	0EA4  F0F0F0F0	    db 240,240,240,240,240,248,255,255
+ 155:     -	0E9F          	tile_19: ;(3,2)
+ 156:     -	0E9F  F0F0F0F0	    db 240,240,240,240,240,248,255,255
 	              F0F8FFFF
- 157:     -	0EAC          	tile_20: ;(4,2)
- 158:     -	0EAC  1F1F1F1F	    db 31,31,31,31,31,63,255,254
+ 157:     -	0EA7          	tile_20: ;(4,2)
+ 158:     -	0EA7  1F1F1F1F	    db 31,31,31,31,31,63,255,254
 	              1F3FFFFE
- 159:     -	0EB4          	tile_21: ;(5,2)
- 160:     -	0EB4  BFBF9F9F	    db 191,191,159,159,143,135,7,1
+ 159:     -	0EAF          	tile_21: ;(5,2)
+ 160:     -	0EAF  BFBF9F9F	    db 191,191,159,159,143,135,7,1
 	              8F870701
- 161:     -	0EBC          	tile_22: ;(6,2)
- 162:     -	0EBC  0080C0E0	    db 0,128,192,224,240,255,255,255
+ 161:     -	0EB7          	tile_22: ;(6,2)
+ 162:     -	0EB7  0080C0E0	    db 0,128,192,224,240,255,255,255
 	              F0FFFFFF
- 163:     -	0EC4          	tile_23: ;(7,2)
- 164:     -	0EC4  00000000	    db 0,0,0,0,28,254,254,254
+ 163:     -	0EBF          	tile_23: ;(7,2)
+ 164:     -	0EBF  00000000	    db 0,0,0,0,28,254,254,254
 	              1CFEFEFE
- 165:     -	0ECC          	tile_24: ;(0,3)
- 166:     -	0ECC  7F3F0000	    db 127,63,0,0,0,0,0,0
+ 165:     -	0EC7          	tile_24: ;(0,3)
+ 166:     -	0EC7  7F3F0000	    db 127,63,0,0,0,0,0,0
 	              00000000
- 167:     -	0ED4          	tile_25: ;(1,3)
- 168:     -	0ED4  FFFF0000	    db 255,255,0,0,0,0,0,0
+ 167:     -	0ECF          	tile_25: ;(1,3)
+ 168:     -	0ECF  FFFF0000	    db 255,255,0,0,0,0,0,0
 	              00000000
- 169:     -	0EDC          	tile_26: ;(2,3)
- 170:     -	0EDC  FFFF0000	    db 255,255,0,0,0,0,0,0
+ 169:     -	0ED7          	tile_26: ;(2,3)
+ 170:     -	0ED7  FFFF0000	    db 255,255,0,0,0,0,0,0
 	              00000000
- 171:     -	0EE4          	tile_27: ;(3,3)
- 172:     -	0EE4  FFFF0000	    db 255,255,0,0,0,0,0,0
+ 171:     -	0EDF          	tile_27: ;(3,3)
+ 172:     -	0EDF  FFFF0000	    db 255,255,0,0,0,0,0,0
 	              00000000
- 173:     -	0EEC          	tile_28: ;(4,3)
- 174:     -	0EEC  FCF00000	    db 252,240,0,0,0,0,0,0
+ 173:     -	0EE7          	tile_28: ;(4,3)
+ 174:     -	0EE7  FCF00000	    db 252,240,0,0,0,0,0,0
 	              00000000
- 175:     -	0EF4          	tile_29: ;(5,3)
- 176:     -	0EF4  00000000	    db 0,0,0,0,0,0,0,0
+ 175:     -	0EEF          	tile_29: ;(5,3)
+ 176:     -	0EEF  00000000	    db 0,0,0,0,0,0,0,0
 	              00000000
- 177:     -	0EFC          	tile_30: ;(6,3)
- 178:     -	0EFC  FF1F0000	    db 255,31,0,0,0,0,0,0
+ 177:     -	0EF7          	tile_30: ;(6,3)
+ 178:     -	0EF7  FF1F0000	    db 255,31,0,0,0,0,0,0
 	              00000000
- 179:     -	0F04          	tile_31: ;(7,3)
- 180:     -	0F04  FCE00000	    db 252,224,0,0,0,0,0,0
+ 179:     -	0EFF          	tile_31: ;(7,3)
+ 180:     -	0EFF  FCE00000	    db 252,224,0,0,0,0,0,0
 	              00000000
 **** main.asm ****
  396:				; Strings
- 397:     -	0F0C          	STR_Banner_Start:
- 398:     -	0F0C  5A384320	    db "Z8C Monitor V2 by Dennis Gunia (2022)",0
+ 397:     -	0F07          	STR_Banner_Start:
+ 398:     -	0F07  5A384320	    db "Z8C Monitor V2 by Dennis Gunia (2022)",0
 	              4D6F6E69
 	              746F7220
 	              56322062
@@ -3919,14 +3921,14 @@
 	              69612028
 	              32303232
 	              2900
- 399:     -	0F32          	STR_SyntaxError:
- 400:     -	0F32  73796E3F	    db "syn?",0
+ 399:     -	0F2D          	STR_SyntaxError:
+ 400:     -	0F2D  73796E3F	    db "syn?",0
 	              00
- 401:     -	0F37          	STR_Unknown:
- 402:     -	0F37  636D643F	    db "cmd?",0
+ 401:     -	0F32          	STR_Unknown:
+ 402:     -	0F32  636D643F	    db "cmd?",0
 	              00
- 403:     -	0F3C          	STR_HEXDUMP_HEADER:
- 404:     -	0F3C  42415345	    db 'BASE 0  1  2  3  4  5  6  7',0
+ 403:     -	0F37          	STR_HEXDUMP_HEADER:
+ 404:     -	0F37  42415345	    db 'BASE 0  1  2  3  4  5  6  7',0
 	              20302020
 	              31202032
 	              20203320
@@ -3962,176 +3964,176 @@
   24:     -	4400          	MEM_LOC_LOAD  equ 0x4400    ;load location for program
   25:				
   26:				;XMODEM routine
-  27:     -	0F58          	xmodem_init:
-  28: 7092+17	0F58  CD8302  	    call A_RTS_OFF
+  27:     -	0F53          	xmodem_init:
+  28: 7068+17	0F53  CD8302  	    call A_RTS_OFF
   29:				    
-  30: 7109+7	0F5B  3EA7    	    LD A,10100111b      ; Init CTC Channel 3
-  31: 7116+11	0F5D  D302    	    OUT (IO_CTC0_C2),A
-  32: 7127+7	0F5F  3E0E    	    LD A,14             ; 1028.57Hz ISR
-  33: 7134+11	0F61  D302    	    OUT (IO_CTC0_C2),A
-  34: 7145+7	0F63  3E00    	    LD A,00h            ; Set CTC Ch3 Interrupt Vector
-  35: 7152+11	0F65  D300    	    OUT (IO_CTC0_C0),A
+  30: 7085+7	0F56  3EA7    	    LD A,10100111b      ; Init CTC Channel 3
+  31: 7092+11	0F58  D302    	    OUT (IO_CTC0_C2),A
+  32: 7103+7	0F5A  3E0E    	    LD A,14             ; 1028.57Hz ISR
+  33: 7110+11	0F5C  D302    	    OUT (IO_CTC0_C2),A
+  34: 7121+7	0F5E  3E00    	    LD A,00h            ; Set CTC Ch3 Interrupt Vector
+  35: 7128+11	0F60  D300    	    OUT (IO_CTC0_C0),A
   36:				    ;load int vector to ram
-  37: 7163+10	0F67  213510  	    ld hl,xmodem_int        ;CTC Ch3 INT routine
-  38: 7173+16	0F6A  220442  	    ld (0x4200 + 0x04),hl   
+  37: 7139+10	0F62  213010  	    ld hl,xmodem_int        ;CTC Ch3 INT routine
+  38: 7149+16	0F65  220442  	    ld (0x4200 + 0x04),hl   
   39:				    ;reset timer vars
-  40: 7189+10	0F6D  210000  	    ld hl,0x0000
-  41: 7199+16	0F70  22FC40  	    ld (MEM_VAR_TIMEA),hl
-  42: 7215+16	0F73  22FE40  	    ld (MEM_VAR_TIMER),hl
+  40: 7165+10	0F68  210000  	    ld hl,0x0000
+  41: 7175+16	0F6B  22FC40  	    ld (MEM_VAR_TIMEA),hl
+  42: 7191+16	0F6E  22FE40  	    ld (MEM_VAR_TIMER),hl
   43:				
-  44: 7231+7	0F76  3E42    	    ld a,0x42           ; Set interrupt vector register
-  45: 7238+9	0F78  ED47    	    ld i,a
-  46: 7247+8	0F7A  ED5E    	    im 2                ; Z80 Interrupt mode
+  44: 7207+7	0F71  3E42    	    ld a,0x42           ; Set interrupt vector register
+  45: 7214+9	0F73  ED47    	    ld i,a
+  46: 7223+8	0F75  ED5E    	    im 2                ; Z80 Interrupt mode
   47:				
-  48: 7255+10	0F7C  21B010  	    ld hl,MSG_START     ; Print start banner
-  49: 7265+17	0F7F  CD2402  	    call print_str
-  50: 7282+4	0F82  FB      	    ei                  ; Enable interrupts
+  48: 7231+10	0F77  21AB10  	    ld hl,MSG_START     ; Print start banner
+  49: 7241+17	0F7A  CD2402  	    call print_str
+  50: 7258+4	0F7D  FB      	    ei                  ; Enable interrupts
   51:				    ; init done. Continue with xmodem_await_conn
   52:				
-  53:     -	0F83          	xmodem_await_conn:          ;Wait for initial connection
-  54: 7286+7	0F83  3E43    	    ld a, SYM_C             ;Send C to notify sender, that we want CRC
-  55: 7293+17	0F85  CD8610  	    call xmodem_out         
-  56: 7310+17	0F88  CD5910  	    call xmodem_read_wait   ;Read with timeout
-  57: 7327+10	0F8B  DA830F  	    jp c, xmodem_await_conn ;Carry flag set = timeout -> repeat
+  53:     -	0F7E          	xmodem_await_conn:          ;Wait for initial connection
+  54: 7262+7	0F7E  3E43    	    ld a, SYM_C             ;Send C to notify sender, that we want CRC
+  55: 7269+17	0F80  CD8110  	    call xmodem_out         
+  56: 7286+17	0F83  CD5410  	    call xmodem_read_wait   ;Read with timeout
+  57: 7303+10	0F86  DA7E0F  	    jp c, xmodem_await_conn ;Carry flag set = timeout -> repeat
   58:				    ;else continue
   59:				
-  60:     -	0F8E          	xmodem_packet:              ;XmodemCRC packet start
+  60:     -	0F89          	xmodem_packet:              ;XmodemCRC packet start
   61:				    ;use 1st byte to decide further processing
-  62: 7337+7	0F8E  FE04    	    cp SYM_EOT              ;End of Transmission 
-  63: 7344+10	0F90  CAEC0F  	    jp z, xmodem_packet_EOT
-  64: 7354+7	0F93  FE18    	    cp SYM_CAN              ;Cancel (Force receiver to start sending C's)
-  65: 7361+10	0F95  CA830F  	    jp z, xmodem_await_conn
-  66: 7371+7	0F98  FE01    	    cp SYM_SOH              ;Start of 
-  67: 7378+10	0F9A  CAA00F  	    jp z, xmodem_packet_get
+  62: 7313+7	0F89  FE04    	    cp SYM_EOT              ;End of Transmission 
+  63: 7320+10	0F8B  CAE70F  	    jp z, xmodem_packet_EOT
+  64: 7330+7	0F8E  FE18    	    cp SYM_CAN              ;Cancel (Force receiver to start sending C's)
+  65: 7337+10	0F90  CA7E0F  	    jp z, xmodem_await_conn
+  66: 7347+7	0F93  FE01    	    cp SYM_SOH              ;Start of 
+  67: 7354+10	0F95  CA9B0F  	    jp z, xmodem_packet_get
   68:				
-  69: 7388+10	0F9D  C3F40F  	    jp xmodem_err           ;anything else is an error -> abort transmission
+  69: 7364+10	0F98  C3EF0F  	    jp xmodem_err           ;anything else is an error -> abort transmission
   70:				
-  71:     -	0FA0          	xmodem_packet_get:          ;if first byte == SYM_SOH -> receive block
-  72: 7398+17	0FA0  CD5910  	    call xmodem_read_wait   ;get byte 2 => block ID
-  73: 7415+10	0FA3  DAD810  	    jp c, xmodem_nak
-  74: 7425+4	0FA6  47      	    ld b,a
-  75: 7429+13	0FA7  32FB40  	    ld (MEM_VAR_BLOCK), a   ;store block id to memory
-  76: 7442+17	0FAA  CD5910  	    call xmodem_read_wait   ;get byte 3 => block ID complement 
-  77: 7459+10	0FAD  DAD810  	    jp c, xmodem_nak
-  78: 7469+4	0FB0  80      	    add b
-  79: 7473+7	0FB1  FEFF    	    cp 255                  ;both size infos should always sum to 255
-  80: 7480+10	0FB3  C2F40F  	    jp nz,xmodem_err        ;if not 255 then its an error
+  71:     -	0F9B          	xmodem_packet_get:          ;if first byte == SYM_SOH -> receive block
+  72: 7374+17	0F9B  CD5410  	    call xmodem_read_wait   ;get byte 2 => block ID
+  73: 7391+10	0F9E  DAD310  	    jp c, xmodem_nak
+  74: 7401+4	0FA1  47      	    ld b,a
+  75: 7405+13	0FA2  32FB40  	    ld (MEM_VAR_BLOCK), a   ;store block id to memory
+  76: 7418+17	0FA5  CD5410  	    call xmodem_read_wait   ;get byte 3 => block ID complement 
+  77: 7435+10	0FA8  DAD310  	    jp c, xmodem_nak
+  78: 7445+4	0FAB  80      	    add b
+  79: 7449+7	0FAC  FEFF    	    cp 255                  ;both size infos should always sum to 255
+  80: 7456+10	0FAE  C2EF0F  	    jp nz,xmodem_err        ;if not 255 then its an error
   81:				
   82:				    ;calculate block start address in RAM
   83:				    ;multiply by 128
   84:				    ;use more efficient bit-wise operations
-  85: 7490+4	0FB6  3D      	    dec a       ;a-1 to remove 1 sector offset
-  86: 7494+4	0FB7  78      	    ld a,b
-  87: 7498+4	0FB8  1F      	    rra         ;shift 1 bit to the right
-  88: 7502+7	0FB9  E67F    	    and 0x7F
-  89: 7509+4	0FBB  67      	    ld h,a
-  90: 7513+4	0FBC  78      	    ld a,b
-  91: 7517+4	0FBD  3D      	    dec a       ;a-1 to remove 1 sector offset
-  92: 7521+4	0FBE  0F      	    rrca        ;shift bit0 to bit 7
-  93: 7525+7	0FBF  E680    	    and 0x80    ;mask out all other bits
-  94: 7532+4	0FC1  6F      	    ld l,a
+  85: 7466+4	0FB1  3D      	    dec a       ;a-1 to remove 1 sector offset
+  86: 7470+4	0FB2  78      	    ld a,b
+  87: 7474+4	0FB3  1F      	    rra         ;shift 1 bit to the right
+  88: 7478+7	0FB4  E67F    	    and 0x7F
+  89: 7485+4	0FB6  67      	    ld h,a
+  90: 7489+4	0FB7  78      	    ld a,b
+  91: 7493+4	0FB8  3D      	    dec a       ;a-1 to remove 1 sector offset
+  92: 7497+4	0FB9  0F      	    rrca        ;shift bit0 to bit 7
+  93: 7501+7	0FBA  E680    	    and 0x80    ;mask out all other bits
+  94: 7508+4	0FBC  6F      	    ld l,a
   95:				    ;result:
   96:				    ;hl = 0aaaaaaa a000000
   97:				
-  98: 7536+10	0FC2  110044  	    ld de,MEM_LOC_LOAD  
-  99: 7546+11	0FC5  19      	    add hl,de               ;add calculated offset to base address
+  98: 7512+10	0FBD  110044  	    ld de,MEM_LOC_LOAD  
+  99: 7522+11	0FC0  19      	    add hl,de               ;add calculated offset to base address
  100:				    ;hl now contains the true start address of this sector
  101:				
- 102: 7557+7	0FC6  0680    	    ld b,128    ;preload counter for data baytes
- 103: 7564+7	0FC8  0E00    	    ld c,0      ;packet length counter ( used for overflow error )
+ 102: 7533+7	0FC1  0680    	    ld b,128    ;preload counter for data baytes
+ 103: 7540+7	0FC3  0E00    	    ld c,0      ;packet length counter ( used for overflow error )
  104:				
- 105:     -	0FCA          	xmodem_packet_get_data: ;get 128 data bytes (loop)
- 106: 7571+11	0FCA  E5      	    push hl                 ;push hl onto stack because xmodem_read_wait destroys hl
- 107: 7582+17	0FCB  CD5910  	    call xmodem_read_wait   ;read byte or timeout
- 108: 7599+10	0FCE  DAD810  	    jp c, xmodem_nak        ;if timeout -> nak and retry
- 109: 7609+10	0FD1  E1      	    pop hl                  ;restore hl
- 110: 7619+7	0FD2  77      	    ld (hl), a              ;store received byte in memory
- 111: 7626+6	0FD3  23      	    inc hl                  ;increment pointer
- 112: 7632+4	0FD4  0C      	    inc c                   ;increment packet length counter 
- 113: 7636+4	0FD5  05      	    dec b                   ;decerment data bytes remmaining
- 114: 7640+10	0FD6  C2CA0F  	    jp nz, xmodem_packet_get_data   ;if bytes remaining, loop
+ 105:     -	0FC5          	xmodem_packet_get_data: ;get 128 data bytes (loop)
+ 106: 7547+11	0FC5  E5      	    push hl                 ;push hl onto stack because xmodem_read_wait destroys hl
+ 107: 7558+17	0FC6  CD5410  	    call xmodem_read_wait   ;read byte or timeout
+ 108: 7575+10	0FC9  DAD310  	    jp c, xmodem_nak        ;if timeout -> nak and retry
+ 109: 7585+10	0FCC  E1      	    pop hl                  ;restore hl
+ 110: 7595+7	0FCD  77      	    ld (hl), a              ;store received byte in memory
+ 111: 7602+6	0FCE  23      	    inc hl                  ;increment pointer
+ 112: 7608+4	0FCF  0C      	    inc c                   ;increment packet length counter 
+ 113: 7612+4	0FD0  05      	    dec b                   ;decerment data bytes remmaining
+ 114: 7616+10	0FD1  C2C50F  	    jp nz, xmodem_packet_get_data   ;if bytes remaining, loop
  115:				    ;else continue with crc bytes
  116:				
- 117:     -	0FD9          	xmodem_packet_get_crc:      ;get 16-Bit CRC
- 118: 7650+17	0FD9  CD5910  	    call xmodem_read_wait  
- 119: 7667+10	0FDC  DAD810  	    jp c, xmodem_nak
- 120: 7677+4	0FDF  57      	    ld d,a
- 121: 7681+4	0FE0  0C      	    inc c
- 122: 7685+17	0FE1  CD5910  	    call xmodem_read_wait   
- 123: 7702+10	0FE4  DAD810  	    jp c, xmodem_nak
- 124: 7712+4	0FE7  5F      	    ld e,a 
- 125: 7716+4	0FE8  0C      	    inc c
+ 117:     -	0FD4          	xmodem_packet_get_crc:      ;get 16-Bit CRC
+ 118: 7626+17	0FD4  CD5410  	    call xmodem_read_wait  
+ 119: 7643+10	0FD7  DAD310  	    jp c, xmodem_nak
+ 120: 7653+4	0FDA  57      	    ld d,a
+ 121: 7657+4	0FDB  0C      	    inc c
+ 122: 7661+17	0FDC  CD5410  	    call xmodem_read_wait   
+ 123: 7678+10	0FDF  DAD310  	    jp c, xmodem_nak
+ 124: 7688+4	0FE2  5F      	    ld e,a 
+ 125: 7692+4	0FE3  0C      	    inc c
  126:				    ;de now contains CRC value
  127:				    ;check if c is not bigger than 130 byte (128 data + 2crc)
  128:				    ;TODO if so NACK
  129:				
  130:				    ;de contains 16-bit CRC
  131:				    ;TODO if crc error NACK
- 132: 7720+10	0FE9  C3CA10  	    jp xmodem_ack         ;ack block -> then jump to start again
+ 132: 7696+10	0FE4  C3C510  	    jp xmodem_ack         ;ack block -> then jump to start again
  133:				
- 134:     -	0FEC          	xmodem_packet_EOT:          ;End of transmission SUB. 
- 135: 7730+7	0FEC  3E06    	    ld a, SYM_ACK           ;Acknowledge EOT
- 136: 7737+17	0FEE  CD8610  	    call xmodem_out
- 137: 7754+10	0FF1  C32E10  	    jp xmodem_end           ;and end xmodem
+ 134:     -	0FE7          	xmodem_packet_EOT:          ;End of transmission SUB. 
+ 135: 7706+7	0FE7  3E06    	    ld a, SYM_ACK           ;Acknowledge EOT
+ 136: 7713+17	0FE9  CD8110  	    call xmodem_out
+ 137: 7730+10	0FEC  C32910  	    jp xmodem_end           ;and end xmodem
  138:				
  139:				
  140:				
- 141:     -	0FF4          	xmodem_err:                 ;non recoverable error -> abort
- 142: 7764+7	0FF4  3E18    	    ld a, SYM_CAN
- 143: 7771+17	0FF6  CD8610  	    call xmodem_out
- 144: 7788+7	0FF9  3E18    	    ld a, SYM_CAN
- 145: 7795+17	0FFB  CD8610  	    call xmodem_out
- 146: 7812+7	0FFE  3E18    	    ld a, SYM_CAN
- 147: 7819+17	1000  CD8610  	    call xmodem_out
- 148: 7836+7	1003  3E18    	    ld a, SYM_CAN
- 149: 7843+17	1005  CD8610  	    call xmodem_out
- 150: 7860+7	1008  3E18    	    ld a, SYM_CAN
- 151: 7867+17	100A  CD8610  	    call xmodem_out
- 152: 7884+7	100D  3E18    	    ld a, SYM_CAN
- 153: 7891+17	100F  CD8610  	    call xmodem_out
- 154: 7908+7	1012  3E18    	    ld a, SYM_CAN
- 155: 7915+17	1014  CD8610  	    call xmodem_out
- 156: 7932+7	1017  3E18    	    ld a, SYM_CAN
- 157: 7939+17	1019  CD8610  	    call xmodem_out
- 158: 7956+7	101C  3E18    	    ld a, SYM_CAN
- 159: 7963+17	101E  CD8610  	    call xmodem_out
- 160: 7980+7	1021  3E18    	    ld a, SYM_CAN
- 161: 7987+17	1023  CD8610  	    call xmodem_out
- 162: 8004+7	1026  3E18    	    ld a, SYM_CAN
+ 141:     -	0FEF          	xmodem_err:                 ;non recoverable error -> abort
+ 142: 7740+7	0FEF  3E18    	    ld a, SYM_CAN
+ 143: 7747+17	0FF1  CD8110  	    call xmodem_out
+ 144: 7764+7	0FF4  3E18    	    ld a, SYM_CAN
+ 145: 7771+17	0FF6  CD8110  	    call xmodem_out
+ 146: 7788+7	0FF9  3E18    	    ld a, SYM_CAN
+ 147: 7795+17	0FFB  CD8110  	    call xmodem_out
+ 148: 7812+7	0FFE  3E18    	    ld a, SYM_CAN
+ 149: 7819+17	1000  CD8110  	    call xmodem_out
+ 150: 7836+7	1003  3E18    	    ld a, SYM_CAN
+ 151: 7843+17	1005  CD8110  	    call xmodem_out
+ 152: 7860+7	1008  3E18    	    ld a, SYM_CAN
+ 153: 7867+17	100A  CD8110  	    call xmodem_out
+ 154: 7884+7	100D  3E18    	    ld a, SYM_CAN
+ 155: 7891+17	100F  CD8110  	    call xmodem_out
+ 156: 7908+7	1012  3E18    	    ld a, SYM_CAN
+ 157: 7915+17	1014  CD8110  	    call xmodem_out
+ 158: 7932+7	1017  3E18    	    ld a, SYM_CAN
+ 159: 7939+17	1019  CD8110  	    call xmodem_out
+ 160: 7956+7	101C  3E18    	    ld a, SYM_CAN
+ 161: 7963+17	101E  CD8110  	    call xmodem_out
+ 162: 7980+7	1021  3E18    	    ld a, SYM_CAN
  163:				
- 164: 8011+10	1028  219710  	    ld hl, MSG_ERROR
- 165: 8021+17	102B  CD2402  	    call print_str
+ 164: 7987+10	1023  219210  	    ld hl, MSG_ERROR
+ 165: 7997+17	1026  CD2402  	    call print_str
  166:				
  167:				    ;overflow to end
- 168:     -	102E          	xmodem_end:
- 169: 8038+4	102E  F3      	    di                      ;disable interrupts
- 170: 8042+17	102F  CD3002  	    call print_newLine      ;print new line
- 171: 8059+10	1032  C38900  	    jp PROMPT_BEGIN         ;return ti prompt
+ 168:     -	1029          	xmodem_end:
+ 169: 8014+4	1029  F3      	    di                      ;disable interrupts
+ 170: 8018+17	102A  CD3002  	    call print_newLine      ;print new line
+ 171: 8035+10	102D  C38900  	    jp PROMPT_BEGIN         ;return ti prompt
  172:				
  173:				;isr is used as counter for timeouts
- 174:     -	1035          	xmodem_int:
- 175: 8069+4	1035  F3      	    di                      ;setup ISR (disable further interrupts, exchange registers)
- 176: 8073+4	1036  08      	    ex AF,AF'
- 177: 8077+4	1037  D9      	    exx
+ 174:     -	1030          	xmodem_int:
+ 175: 8045+4	1030  F3      	    di                      ;setup ISR (disable further interrupts, exchange registers)
+ 176: 8049+4	1031  08      	    ex AF,AF'
+ 177: 8053+4	1032  D9      	    exx
  178:				
- 179: 8081+16	1038  2AFC40  	    ld hl,(MEM_VAR_TIMEA)   ;millis counter
- 180: 8097+6	103B  23      	    inc hl
- 181: 8103+16	103C  22FC40  	    ld (MEM_VAR_TIMEA),hl
+ 179: 8057+16	1033  2AFC40  	    ld hl,(MEM_VAR_TIMEA)   ;millis counter
+ 180: 8073+6	1036  23      	    inc hl
+ 181: 8079+16	1037  22FC40  	    ld (MEM_VAR_TIMEA),hl
  182:				
- 183: 8119+10	103F  110404  	    ld de,1028              ;every 1028 millis counter
- 184: 8129+15	1042  ED52    	    sbc hl,de
- 185: 8144+10	1044  C25410  	    jp nz, xmodem_int_cont  ;if less than 1028 millis, loop
+ 183: 8095+10	103A  110404  	    ld de,1028              ;every 1028 millis counter
+ 184: 8105+15	103D  ED52    	    sbc hl,de
+ 185: 8120+10	103F  C24F10  	    jp nz, xmodem_int_cont  ;if less than 1028 millis, loop
  186:				
- 187: 8154+10	1047  210000  	    ld hl,0                 ;reset millis
- 188: 8164+16	104A  22FC40  	    ld (MEM_VAR_TIMEA),hl   
- 189: 8180+16	104D  2AFE40  	    ld hl,(MEM_VAR_TIMER)   ;incement seconds
- 190: 8196+6	1050  23      	    inc hl
- 191: 8202+16	1051  22FE40  	    ld (MEM_VAR_TIMER),hl
- 192:     -	1054          	xmodem_int_cont:            ;end isr
- 193: 8218+4	1054  08      	    ex AF,AF'               ;restore registers
- 194: 8222+4	1055  D9      	    exx
- 195: 8226+4	1056  FB      	    EI                      ;enable interrupts
- 196: 8230+14	1057  ED4D    	    reti                    ;exit ISR
+ 187: 8130+10	1042  210000  	    ld hl,0                 ;reset millis
+ 188: 8140+16	1045  22FC40  	    ld (MEM_VAR_TIMEA),hl   
+ 189: 8156+16	1048  2AFE40  	    ld hl,(MEM_VAR_TIMER)   ;incement seconds
+ 190: 8172+6	104B  23      	    inc hl
+ 191: 8178+16	104C  22FE40  	    ld (MEM_VAR_TIMER),hl
+ 192:     -	104F          	xmodem_int_cont:            ;end isr
+ 193: 8194+4	104F  08      	    ex AF,AF'               ;restore registers
+ 194: 8198+4	1050  D9      	    exx
+ 195: 8202+4	1051  FB      	    EI                      ;enable interrupts
+ 196: 8206+14	1052  ED4D    	    reti                    ;exit ISR
  197:				
  198:				
  199:				
@@ -4140,57 +4142,57 @@
  202:				; A returns char
  203:				; Carry is set if timeout
  204:     -	0003          	xmodem_read_timeount    equ     3  ;3 seconds timeout
- 205:     -	1059          	xmodem_read_wait:
- 206: 8244+4	1059  F3      	    di
- 207: 8248+10	105A  210000  	    ld hl,0
- 208: 8258+16	105D  22FC40  	    ld (MEM_VAR_TIMEA),hl
- 209: 8274+16	1060  22FE40  	    ld (MEM_VAR_TIMER),hl
- 210: 8290+4	1063  FB      	    ei
- 211: 8294+17	1064  CD8C02  	    call A_RTS_ON
- 212:     -	1067          	xmodem_read_wait_loop:
+ 205:     -	1054          	xmodem_read_wait:
+ 206: 8220+4	1054  F3      	    di
+ 207: 8224+10	1055  210000  	    ld hl,0
+ 208: 8234+16	1058  22FC40  	    ld (MEM_VAR_TIMEA),hl
+ 209: 8250+16	105B  22FE40  	    ld (MEM_VAR_TIMER),hl
+ 210: 8266+4	105E  FB      	    ei
+ 211: 8270+17	105F  CD8C02  	    call A_RTS_ON
+ 212:     -	1062          	xmodem_read_wait_loop:
  213:				    ;check timeout
- 214: 8311+16	1067  2AFE40  	    ld hl,(MEM_VAR_TIMER)
- 215: 8327+4	106A  7D      	    ld a, l
- 216: 8331+7	106B  FE03    	    cp xmodem_read_timeount
- 217: 8338+10	106D  CA8410  	    jp z, xmodem_read_wait_timeout    ;if timeout retry
+ 214: 8287+16	1062  2AFE40  	    ld hl,(MEM_VAR_TIMER)
+ 215: 8303+4	1065  7D      	    ld a, l
+ 216: 8307+7	1066  FE03    	    cp xmodem_read_timeount
+ 217: 8314+10	1068  CA7F10  	    jp z, xmodem_read_wait_timeout    ;if timeout retry
  218:				
  219:				    ; if no timeout
- 220: 8348+4	1070  AF      	    xor a               ; a = 0
- 221: 8352+11	1071  D313    	    out (IO_SIO0B_C), a ; select reg 0
- 222: 8363+11	1073  DB13    	    in a, (IO_SIO0B_C)  ; read reg 0
- 223: 8374+7	1075  E601    	    and	1               ; mask D0 (recieve char available)
- 224: 8381+10	1077  CA6710  	    jp Z,xmodem_read_wait_loop  ; wait if no char
+ 220: 8324+4	106B  AF      	    xor a               ; a = 0
+ 221: 8328+11	106C  D313    	    out (IO_SIO0B_C), a ; select reg 0
+ 222: 8339+11	106E  DB13    	    in a, (IO_SIO0B_C)  ; read reg 0
+ 223: 8350+7	1070  E601    	    and	1               ; mask D0 (recieve char available)
+ 224: 8357+10	1072  CA6210  	    jp Z,xmodem_read_wait_loop  ; wait if no char
  225:				    
  226:				    ; if char avail
- 227: 8391+11	107A  DB11    	    in a, (IO_SIO0B_D)  ; read char 
+ 227: 8367+11	1075  DB11    	    in a, (IO_SIO0B_D)  ; read char 
  228:				    ;call debug_a_hex
- 229: 8402+11	107C  F5      	    push af
- 230: 8413+17	107D  CD8302  	    call A_RTS_OFF
- 231: 8430+10	1080  F1      	    pop af
- 232: 8440+4	1081  37      	    scf
- 233: 8444+4	1082  3F      	    ccf
- 234: 8448+10	1083  C9      	    ret                 ; return
- 235:     -	1084          	xmodem_read_wait_timeout:
- 236: 8458+4	1084  37      	    scf
- 237: 8462+10	1085  C9      	    ret
+ 229: 8378+11	1077  F5      	    push af
+ 230: 8389+17	1078  CD8302  	    call A_RTS_OFF
+ 231: 8406+10	107B  F1      	    pop af
+ 232: 8416+4	107C  37      	    scf
+ 233: 8420+4	107D  3F      	    ccf
+ 234: 8424+10	107E  C9      	    ret                 ; return
+ 235:     -	107F          	xmodem_read_wait_timeout:
+ 236: 8434+4	107F  37      	    scf
+ 237: 8438+10	1080  C9      	    ret
  238:				
  239:				
- 240:     -	1086          	xmodem_out:
- 241: 8472+11	1086  D311    	    out (IO_SIO0B_D), a
- 242: 8483+17	1088  CD8C10  	    call xmodem_wait_out
- 243: 8500+10	108B  C9      	    ret
+ 240:     -	1081          	xmodem_out:
+ 241: 8448+11	1081  D311    	    out (IO_SIO0B_D), a
+ 242: 8459+17	1083  CD8710  	    call xmodem_wait_out
+ 243: 8476+10	1086  C9      	    ret
  244:				
- 245:     -	108C          	xmodem_wait_out:
- 246: 8510+4	108C  97      	    sub a ;clear a, write into WR0: select RR0
- 247: 8514+4	108D  3C      	    inc a ;select RR1
- 248: 8518+11	108E  D313    	    out (IO_SIO0B_C),A
- 249: 8529+11	1090  DB13    	    in A,(IO_SIO0B_C) ;read RRx
- 250: 8540+8	1092  CB47    	    bit 0,A
- 251: 8548+7+5	1094  28F6    	    jr z,xmodem_wait_out
- 252: 8555+10	1096  C9      	    ret
+ 245:     -	1087          	xmodem_wait_out:
+ 246: 8486+4	1087  97      	    sub a ;clear a, write into WR0: select RR0
+ 247: 8490+4	1088  3C      	    inc a ;select RR1
+ 248: 8494+11	1089  D313    	    out (IO_SIO0B_C),A
+ 249: 8505+11	108B  DB13    	    in A,(IO_SIO0B_C) ;read RRx
+ 250: 8516+8	108D  CB47    	    bit 0,A
+ 251: 8524+7+5	108F  28F6    	    jr z,xmodem_wait_out
+ 252: 8531+10	1091  C9      	    ret
  253:				
- 254:     -	1097          	MSG_ERROR:
- 255:     -	1097  4572726F	    db "Error: unexpected byte",13,10,0
+ 254:     -	1092          	MSG_ERROR:
+ 255:     -	1092  4572726F	    db "Error: unexpected byte",13,10,0
 	              723A2075
 	              6E657870
 	              65637465
@@ -4198,8 +4200,8 @@
 	              74650D0A
 	              00
  256:				
- 257:     -	10B0          	MSG_START:
- 258:     -	10B0  41776169	    db "Await xmodem connection",13,10,0
+ 257:     -	10AB          	MSG_START:
+ 258:     -	10AB  41776169	    db "Await xmodem connection",13,10,0
 	              7420786D
 	              6F64656D
 	              20636F6E
@@ -4208,19 +4210,19 @@
 	              0A00
  259:				
  260:				
- 261:     -	10CA          	xmodem_ack:             ;ack routine. Only use when expecting transmission afterwards.
- 262: 8565+7	10CA  3E06    	    ld a, SYM_ACK       ;send ACK
- 263: 8572+17	10CC  CD8610  	    call xmodem_out 
- 264: 8589+17	10CF  CD5910  	    call xmodem_read_wait   ;wait for response
- 265: 8606+10	10D2  DACA10  	    jp c, xmodem_ack        ;if timeout repeat
- 266: 8616+10	10D5  C38E0F  	    jp xmodem_packet        ;if received, continue with new packet
+ 261:     -	10C5          	xmodem_ack:             ;ack routine. Only use when expecting transmission afterwards.
+ 262: 8541+7	10C5  3E06    	    ld a, SYM_ACK       ;send ACK
+ 263: 8548+17	10C7  CD8110  	    call xmodem_out 
+ 264: 8565+17	10CA  CD5410  	    call xmodem_read_wait   ;wait for response
+ 265: 8582+10	10CD  DAC510  	    jp c, xmodem_ack        ;if timeout repeat
+ 266: 8592+10	10D0  C3890F  	    jp xmodem_packet        ;if received, continue with new packet
  267:				
- 268:     -	10D8          	xmodem_nak:             ;nak routine. Only use when expecting transmission afterwards.
- 269: 8626+7	10D8  3E15    	    ld a, SYM_NAK           ;send NAK
- 270: 8633+17	10DA  CD8610  	    call xmodem_out         
- 271: 8650+17	10DD  CD5910  	    call xmodem_read_wait   ;wait for response
- 272: 8667+10	10E0  DAD810  	    jp c, xmodem_nak        ;if timeout repeat
- 273: 8677+10	10E3  C38E0F  	    jp xmodem_packet        ;if received, continue with new packet
+ 268:     -	10D3          	xmodem_nak:             ;nak routine. Only use when expecting transmission afterwards.
+ 269: 8602+7	10D3  3E15    	    ld a, SYM_NAK           ;send NAK
+ 270: 8609+17	10D5  CD8110  	    call xmodem_out         
+ 271: 8626+17	10D8  CD5410  	    call xmodem_read_wait   ;wait for response
+ 272: 8643+10	10DB  DAD310  	    jp c, xmodem_nak        ;if timeout repeat
+ 273: 8653+10	10DE  C3890F  	    jp xmodem_packet        ;if received, continue with new packet
 **** main.asm ****
 **** main.asm ****
  407:				;.include "debug.s"
@@ -4232,7 +4234,7 @@ Statistics:
      4	passes
      0	jr promotions
    248	symbols
-  4326	bytes
+  4321	bytes
 
 
 
@@ -4300,8 +4302,8 @@ MEM_LOC_LOAD   =4400      17408
 MEM_VAR_BLOCK  =40FB      16635
 MEM_VAR_TIMEA  =40FC      16636
 MEM_VAR_TIMER  =40FE      16638
-MSG_ERROR       1097      4247
-MSG_START       10B0      4272
+MSG_ERROR       1092      4242
+MSG_START       10AB      4267
 PRG_RAM_START  =4110      16656
 PRG_RAM_TOP    =FF00      65280
 PROG_MEM_START =4000      16384
@@ -4315,13 +4317,13 @@ START_ROM      =00        0
 STRCONV_BYTES_TO_HEX  2CC      716
 STRCONV_BYTES_TO_HEX_1  2DB      731
 STRCONV_BYTES_TO_HEX_2  2E5      741
-STR_Banner_Start  F0C      3852
-STR_HEXDUMP_HEADER  F3C      3900
-STR_SyntaxError  F32      3890
-STR_Title1       DD0      3536
-STR_Title2       DE4      3556
-STR_Title3       DF9      3577
-STR_Unknown      F37      3895
+STR_Banner_Start  F07      3847
+STR_HEXDUMP_HEADER  F37      3895
+STR_SyntaxError  F2D      3885
+STR_Title1       DCB      3531
+STR_Title2       DDF      3551
+STR_Title3       DF4      3572
+STR_Unknown      F32      3890
 SYM_ACK        =06        6
 SYM_C          =43        67
 SYM_CAN        =18        24
@@ -4371,22 +4373,22 @@ VAR_CONSOLE_BAUD=18        24
 VAR_CONSOLE_CONF=0F        15
 VDP_MEM        =80        128
 VDP_REG        =81        129
-_pattern_loop_column  D71      3441
-_pattern_loop_next_end  D96      3478
-_pattern_loop_next_row  D81      3457
-keyboard_abort   CE5      3301
-keyboard_abort_delay  CF1      3313
+_pattern_loop_column  D6C      3436
+_pattern_loop_next_end  D91      3473
+_pattern_loop_next_row  D7C      3452
+keyboard_abort   CE0      3296
+keyboard_abort_delay  CEC      3308
 keyboard_init    C84      3204
-keyboard_off     CFE      3326
-keyboard_on      D03      3331
+keyboard_off     CF9      3321
+keyboard_on      CFE      3326
 keyboard_read    C94      3220
-keyboard_read_eol  CB3      3251
-keyboard_read_fault  CC8      3272
-keyboard_read_loop  CA5      3237
-keyboard_wait_clk  CCE      3278
-keyboard_wait_clk_high  CCE      3278
-keyboard_wait_clk_high_only  CDD      3293
-keyboard_wait_clk_low  CD5      3285
+keyboard_read_eol  CB1      3249
+keyboard_read_fault  CC3      3267
+keyboard_read_loop  CA4      3236
+keyboard_wait_clk  CC9      3273
+keyboard_wait_clk_high  CC9      3273
+keyboard_wait_clk_high_only  CD8      3288
+keyboard_wait_clk_low  CD0      3280
 main            00        0
 mon_start_complete 71        113
 mon_start_init_serial 2D        45
@@ -4404,45 +4406,45 @@ print_newLine    230      560
 print_newLine_scroll  244      580
 print_str        224      548
 print_str_end    22E      558
-ps2demo_run      D08      3336
-ps2demo_run_loop  D0B      3339
+ps2demo_run      D03      3331
+ps2demo_run_loop  D06      3334
 read_char        261      609
-spash_pattern    E0C      3596
-splash_run       D17      3351
-splash_run_ld_clr_loop  D3B      3387
-splash_run_ld_clr_loop2  D46      3398
-tile_0           E0C      3596
-tile_1           E14      3604
-tile_10          E5C      3676
-tile_11          E64      3684
-tile_12          E6C      3692
-tile_13          E74      3700
-tile_14          E7C      3708
-tile_15          E84      3716
-tile_16          E8C      3724
-tile_17          E94      3732
-tile_18          E9C      3740
-tile_19          EA4      3748
-tile_2           E1C      3612
-tile_20          EAC      3756
-tile_21          EB4      3764
-tile_22          EBC      3772
-tile_23          EC4      3780
-tile_24          ECC      3788
-tile_25          ED4      3796
-tile_26          EDC      3804
-tile_27          EE4      3812
-tile_28          EEC      3820
-tile_29          EF4      3828
-tile_3           E24      3620
-tile_30          EFC      3836
-tile_31          F04      3844
-tile_4           E2C      3628
-tile_5           E34      3636
-tile_6           E3C      3644
-tile_7           E44      3652
-tile_8           E4C      3660
-tile_9           E54      3668
+spash_pattern    E07      3591
+splash_run       D12      3346
+splash_run_ld_clr_loop  D36      3382
+splash_run_ld_clr_loop2  D41      3393
+tile_0           E07      3591
+tile_1           E0F      3599
+tile_10          E57      3671
+tile_11          E5F      3679
+tile_12          E67      3687
+tile_13          E6F      3695
+tile_14          E77      3703
+tile_15          E7F      3711
+tile_16          E87      3719
+tile_17          E8F      3727
+tile_18          E97      3735
+tile_19          E9F      3743
+tile_2           E17      3607
+tile_20          EA7      3751
+tile_21          EAF      3759
+tile_22          EB7      3767
+tile_23          EBF      3775
+tile_24          EC7      3783
+tile_25          ECF      3791
+tile_26          ED7      3799
+tile_27          EDF      3807
+tile_28          EE7      3815
+tile_29          EEF      3823
+tile_3           E1F      3615
+tile_30          EF7      3831
+tile_31          EFF      3839
+tile_4           E27      3623
+tile_5           E2F      3631
+tile_6           E37      3639
+tile_7           E3F      3647
+tile_8           E47      3655
+tile_9           E4F      3663
 var_buffer      4014      16404
 var_buffer_len  4000      16384
 var_curserx     4002      16386
@@ -4467,22 +4469,22 @@ vdp_tms_clear    37B      891
 vdp_tms_clear_loop  388      904
 vdp_wait         360      864
 vdpconsole_init  2E6      742
-xmodem_ack      10CA      4298
-xmodem_await_conn  F83      3971
-xmodem_end      102E      4142
-xmodem_err       FF4      4084
-xmodem_init      F58      3928
-xmodem_int      1035      4149
-xmodem_int_cont 1054      4180
-xmodem_nak      10D8      4312
-xmodem_out      1086      4230
-xmodem_packet    F8E      3982
-xmodem_packet_EOT  FEC      4076
-xmodem_packet_get  FA0      4000
-xmodem_packet_get_crc  FD9      4057
-xmodem_packet_get_data  FCA      4042
+xmodem_ack      10C5      4293
+xmodem_await_conn  F7E      3966
+xmodem_end      1029      4137
+xmodem_err       FEF      4079
+xmodem_init      F53      3923
+xmodem_int      1030      4144
+xmodem_int_cont 104F      4175
+xmodem_nak      10D3      4307
+xmodem_out      1081      4225
+xmodem_packet    F89      3977
+xmodem_packet_EOT  FE7      4071
+xmodem_packet_get  F9B      3995
+xmodem_packet_get_crc  FD4      4052
+xmodem_packet_get_data  FC5      4037
 xmodem_read_timeount=03        3
-xmodem_read_wait 1059      4185
-xmodem_read_wait_loop 1067      4199
-xmodem_read_wait_timeout 1084      4228
-xmodem_wait_out 108C      4236
+xmodem_read_wait 1054      4180
+xmodem_read_wait_loop 1062      4194
+xmodem_read_wait_timeout 107F      4223
+xmodem_wait_out 1087      4231

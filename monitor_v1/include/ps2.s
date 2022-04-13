@@ -22,12 +22,12 @@ keyboard_init:
 ; a contains result
 keyboard_read:
     call keyboard_on
+    nop
     call keyboard_wait_clk
     in a,(IO_PIO_1_B_D) ;read data bit
     and 0x02
     jp nz, keyboard_read_fault  ;if startbit not 0 then fault
-    ld b,0      ;b is buffer for input data
-    ld c,8      ;c is counter for data bytes
+    ld b,0x80      ;b is buffer for input data
 keyboard_read_loop:
     call keyboard_wait_clk
     in a,(IO_PIO_1_B_D) ;read data bit
@@ -36,19 +36,18 @@ keyboard_read_loop:
     ld a,b      ;load buffer in a
     rra         ;carry bit is now appended to buffer
     ld b,a      ;store a to buffer
-    dec c       ;count chars
-    jp nz, keyboard_read_loop   ;repeat for 8 times
+    jp nc, keyboard_read_loop   ;repeat for 8 times
 keyboard_read_eol:
     call keyboard_wait_clk      ;ignore parity for now
     call keyboard_wait_clk    
     in a,(IO_PIO_1_B_D) ;read data bit
     and 0x02
     jp z, keyboard_read_fault  ;if stopbit not 1 then fault
-    call keyboard_wait_clk_high_only
-    nop
-    nop
-    nop
-    nop
+    ;call keyboard_wait_clk_high_only
+    ;nop
+    ;nop
+    ;nop
+    ;nop
     call keyboard_off
     ld a,b  ;else load buffer to a
     ret     ;and return
@@ -103,6 +102,6 @@ keyboard_off:
     ret
 
 keyboard_on:
-    ld a,0x0C   ;activate clock pulldown
+    ld a,0x0C   ;deactivate clock pulldown
     out (IO_PIO_1_B_D),a
     ret
