@@ -389,6 +389,7 @@ Includes:
 .include "ps2.s"
 .include "prg_ps2demo.s"
 .include "prg_splash.s"
+.include "parity.s"
 ; Strings
 STR_Banner_Start:
     db "Z8C Monitor V2 by Dennis Gunia (2022)",0

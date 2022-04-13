@@ -76,6 +76,18 @@ print_delete:
 print_delete_end:
     ret
 
+print_parity:
+    jr c, print_parity_odd
+    ld a, "E"
+    call print_char
+    or a
+    ret
+print_parity_odd:
+    ld a, "O"
+    call print_char
+    scf
+    ret
+
 ; Serial Util Functions
 A_RTS_OFF:
     ld a,005h ;write into WR0: select WR5
