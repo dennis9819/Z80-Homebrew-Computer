@@ -35,6 +35,8 @@ var_cursery:
     defb 0
 var_scratch:
     defs 16 ;16 bytes space for scratch vars
+var_ps2mem:
+    defs 16 ;16 bytes space for scratch vars
 var_buffer:
     defb 0  ;var lentgh 
 
@@ -97,6 +99,7 @@ mon_start_ram_loop:
     ;template copy done
 
 mon_start_complete:
+    call keyboard_init_io
     call vdpconsole_init
     ;call print_clear
     ld hl, [STR_Banner_Start]
